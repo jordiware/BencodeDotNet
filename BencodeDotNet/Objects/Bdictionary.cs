@@ -6,31 +6,36 @@ namespace Jordiware.BencodeDotNet.Objects;
 
 public sealed class Bdictionary : IBobject, IReadOnlyDictionary<Bstring, IBobject>
 {
-    private readonly ImmutableSortedDictionary<Bstring, IBobject> keyValuePairs = ImmutableSortedDictionary<Bstring, IBobject>.Empty;
+    private readonly ImmutableSortedDictionary<Bstring, IBobject> _keyValuePairs = ImmutableSortedDictionary<Bstring, IBobject>.Empty;
+
+    public Bdictionary(IDictionary<Bstring, IBobject> keyValuePairs)
+    {
+        _keyValuePairs = keyValuePairs.ToImmutableSortedDictionary();
+    }
 
     #region Interfaces implementation
-    public IBobject this[Bstring key] => keyValuePairs[key];
+    public IBobject this[Bstring key] => _keyValuePairs[key];
 
-    public IEnumerable<Bstring> Keys => keyValuePairs.Keys;
+    public IEnumerable<Bstring> Keys => _keyValuePairs.Keys;
 
-    public IEnumerable<IBobject> Values => keyValuePairs.Values;
+    public IEnumerable<IBobject> Values => _keyValuePairs.Values;
 
-    public int Count => keyValuePairs.Count;
+    public int Count => _keyValuePairs.Count;
 
     public bool ContainsKey(Bstring key)
     {
-        return keyValuePairs.ContainsKey(key);
+        return _keyValuePairs.ContainsKey(key);
     }
 
     public IEnumerator<KeyValuePair<Bstring, IBobject>> GetEnumerator()
     {
-        return keyValuePairs.GetEnumerator();
+        return _keyValuePairs.GetEnumerator();
     }
 
     public byte[] ToBinaryEncoding()
     {
         var encoded = new List<byte>([(byte)'d']);
-        foreach (var kvp in keyValuePairs)
+        foreach (var kvp in _keyValuePairs)
         {
             encoded.AddRange(kvp.Key.ToBinaryEncoding());
             encoded.AddRange(kvp.Value.ToBinaryEncoding());
@@ -41,7 +46,7 @@ public sealed class Bdictionary : IBobject, IReadOnlyDictionary<Bstring, IBobjec
 
     public bool TryGetValue(Bstring key, [MaybeNullWhen(false)] out IBobject value)
     {
-        return keyValuePairs.TryGetValue(key, out value);
+        return _keyValuePairs.TryGetValue(key, out value);
     }
 
     IEnumerator IEnumerable.GetEnumerator()
@@ -52,7 +57,7 @@ public sealed class Bdictionary : IBobject, IReadOnlyDictionary<Bstring, IBobjec
 
     public override string ToString()
     {
-        var kvps = keyValuePairs.Select(kvp => $"{kvp.Key}{kvp.Value}").ToArray();
+        var kvps = _keyValuePairs.Select(kvp => $"{kvp.Key}{kvp.Value}").ToArray();
         return $"d{string.Join(string.Empty, kvps)}e";
     }
 }

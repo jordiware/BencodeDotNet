@@ -4,23 +4,28 @@ namespace Jordiware.BencodeDotNet.Objects;
 
 public sealed class Binteger : IBobject, IEquatable<Binteger>, IComparable<Binteger>
 {
-    private readonly long value;
+    private readonly long _value;
 
-    public long Value => value;
+    public long Value => _value;
+
+    public Binteger(long value)
+    {
+        _value = value;
+    }
 
     #region Interfaces implementation
     public int CompareTo(Binteger? other)
     {
         if (other == null) return 1;
         
-        return value.CompareTo(other.value);
+        return _value.CompareTo(other._value);
     }
 
     public bool Equals(Binteger? other)
     {
         if (other == null) return false;
 
-        return value.Equals(other.value);
+        return _value.Equals(other._value);
     }
 
     public byte[] ToBinaryEncoding()
@@ -31,6 +36,6 @@ public sealed class Binteger : IBobject, IEquatable<Binteger>, IComparable<Binte
 
     public override string ToString()
     {
-        return $"i{value}e";
+        return $"i{_value}e";
     }
 }

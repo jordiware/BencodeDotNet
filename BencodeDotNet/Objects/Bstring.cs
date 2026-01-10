@@ -6,39 +6,49 @@ namespace Jordiware.BencodeDotNet.Objects;
 
 public sealed class Bstring : IBobject, IReadOnlyList<byte>, IEquatable<Bstring>, IComparable<Bstring>
 {
-    private readonly ImmutableArray<byte> bytes;
+    private readonly ImmutableArray<byte> _bytes;
 
-    public byte[] Value => bytes.ToArray();
+    public byte[] Value => _bytes.ToArray();
+
+    public Bstring(byte[] bytes)
+    {
+        _bytes = bytes.ToImmutableArray();
+    }
+
+    public Bstring(string s, Encoding encoding)
+    {
+        _bytes = encoding.GetBytes(s).ToImmutableArray();
+    }
 
     #region Interfaces implementation
-    public byte this[int index] => bytes[index];
+    public byte this[int index] => _bytes[index];
 
-    public int Count => bytes.Length;
+    public int Count => _bytes.Length;
 
     public int CompareTo(Bstring? other)
     {
         if (other == null) return 1;
 
-        var minLength = Math.Min(bytes.Length, other.bytes.Length);
+        var minLength = Math.Min(_bytes.Length, other._bytes.Length);
         for (int i = 0; i < minLength; i++)
         {
-            var comparison = bytes[i].CompareTo(other.bytes[i]);
+            var comparison = _bytes[i].CompareTo(other._bytes[i]);
             if (comparison != 0) 
                 return comparison;
         }
-        return bytes.Length.CompareTo(other.bytes.Length);
+        return _bytes.Length.CompareTo(other._bytes.Length);
     }
 
     public bool Equals(Bstring? other)
     {
         if (other == null) return false;
         
-        return bytes.SequenceEqual(other.bytes);
+        return _bytes.SequenceEqual(other._bytes);
     }
 
     public IEnumerator<byte> GetEnumerator()
     {
-        return (IEnumerator<byte>)bytes.ToArray().GetEnumerator();
+        return (IEnumerator<byte>)_bytes.ToArray().GetEnumerator();
     }
 
     public byte[] ToBinaryEncoding()
@@ -54,11 +64,11 @@ public sealed class Bstring : IBobject, IReadOnlyList<byte>, IEquatable<Bstring>
 
     public override string ToString()
     {
-        return $"{bytes.Length}:{Encoding.Latin1.GetString(bytes.ToArray())}";
+        return $"{_bytes.Length}:{Encoding.Latin1.GetString(_bytes.ToArray())}";
     }
 
     public string ToHexString()
     {
-        return $"{bytes.Length}:{BitConverter.ToString(bytes.ToArray())}";
+        return $"{_bytes.Length}:{BitConverter.ToString(_bytes.ToArray())}";
     }
 }
