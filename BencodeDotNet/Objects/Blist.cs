@@ -1,6 +1,6 @@
 ﻿using System.Collections;
 
-namespace Jordiware.BencodeDotNet;
+namespace Jordiware.BencodeDotNet.Objects;
 
 public sealed class Blist : IBobject, IReadOnlyList<IBobject>
 {

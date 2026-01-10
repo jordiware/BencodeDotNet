@@ -1,7 +1,7 @@
 ﻿using System.Collections;
 using System.Diagnostics.CodeAnalysis;
 
-namespace Jordiware.BencodeDotNet;
+namespace Jordiware.BencodeDotNet.Objects;
 
 public sealed class Bdictionary : IBobject, IReadOnlyDictionary<Bstring, IBobject>
 {

@@ -1,4 +1,4 @@
-﻿namespace Jordiware.BencodeDotNet;
+﻿namespace Jordiware.BencodeDotNet.Objects;
 
 public sealed class Binteger : IBobject, IEquatable<Binteger>, IComparable<Binteger>
 {

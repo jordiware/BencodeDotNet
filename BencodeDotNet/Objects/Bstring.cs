@@ -1,6 +1,6 @@
 ﻿using System.Text;
 
-namespace Jordiware.BencodeDotNet;
+namespace Jordiware.BencodeDotNet.Objects;
 
 public sealed class Bstring : IBobject, IEquatable<Bstring>, IComparable<Bstring>
 {
