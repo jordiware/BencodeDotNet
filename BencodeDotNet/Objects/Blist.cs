@@ -17,6 +17,17 @@ public sealed class Blist : IBobject, IReadOnlyList<IBobject>
         return (IEnumerator<IBobject>)objects.ToArray().GetEnumerator();
     }
 
+    public byte[] ToBinaryEncoding()
+    {
+        var encoded = new List<byte>([ (byte)'l' ]);
+        foreach (IBobject o in objects)
+        {
+            encoded.AddRange(o.ToBinaryEncoding());
+        }
+        encoded.Add((byte)'e');
+        return encoded.ToArray();
+    }
+
     IEnumerator IEnumerable.GetEnumerator()
     {
         return GetEnumerator();

@@ -27,6 +27,18 @@ public sealed class Bdictionary : IBobject, IReadOnlyDictionary<Bstring, IBobjec
         return keyValuePairs.GetEnumerator();
     }
 
+    public byte[] ToBinaryEncoding()
+    {
+        var encoded = new List<byte>([(byte)'d']);
+        foreach (var kvp in keyValuePairs)
+        {
+            encoded.AddRange(kvp.Key.ToBinaryEncoding());
+            encoded.AddRange(kvp.Value.ToBinaryEncoding());
+        }
+        encoded.Add((byte)'e');
+        return encoded.ToArray();
+    }
+
     public bool TryGetValue(Bstring key, [MaybeNullWhen(false)] out IBobject value)
     {
         return keyValuePairs.TryGetValue(key, out value);

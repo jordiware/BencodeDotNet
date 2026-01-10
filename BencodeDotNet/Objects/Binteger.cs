@@ -1,4 +1,6 @@
-﻿namespace Jordiware.BencodeDotNet.Objects;
+﻿using System.Text;
+
+namespace Jordiware.BencodeDotNet.Objects;
 
 public sealed class Binteger : IBobject, IEquatable<Binteger>, IComparable<Binteger>
 {
@@ -19,6 +21,11 @@ public sealed class Binteger : IBobject, IEquatable<Binteger>, IComparable<Binte
         if (other == null) return false;
 
         return value.Equals(other.value);
+    }
+
+    public byte[] ToBinaryEncoding()
+    {
+        return Encoding.ASCII.GetBytes(ToString());
     }
     #endregion
 

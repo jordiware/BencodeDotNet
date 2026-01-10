@@ -11,9 +11,9 @@ public sealed class Bstring : IBobject, IReadOnlyList<byte>, IEquatable<Bstring>
     public byte[] Value => bytes.ToArray();
 
     #region Interfaces implementation
-    public int Count => bytes.Length;
-
     public byte this[int index] => bytes[index];
+
+    public int Count => bytes.Length;
 
     public int CompareTo(Bstring? other)
     {
@@ -39,6 +39,11 @@ public sealed class Bstring : IBobject, IReadOnlyList<byte>, IEquatable<Bstring>
     public IEnumerator<byte> GetEnumerator()
     {
         return (IEnumerator<byte>)bytes.ToArray().GetEnumerator();
+    }
+
+    public byte[] ToBinaryEncoding()
+    {
+        return Value;
     }
 
     IEnumerator IEnumerable.GetEnumerator()
