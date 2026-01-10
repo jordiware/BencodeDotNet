@@ -34,26 +34,30 @@ public sealed class Bencode
 
     private static Binteger DecodeInteger(byte[] bytes, long startAt = 0)
     {
-        var builder = new StringBuilder();
+        var isNegative = false;
+        var value = 0L;
         for (long i = startAt; bytes[i] != TerminationCharacter; i++)
         {
             var character = bytes[i];
-            if (character == '-')
+            if (Convert.ToChar(character) == '-')
             {
-                builder.Append('-');
+                if (isNegative)
+                    throw new ArgumentException($"Invalid character at position: {i}");
+
+                isNegative = true;
                 continue;
             }
 
             var digit = character - NumberPaddingCharacter;
             if (digit >= 0 && digit <= 9)
             {
-                builder.Append(Convert.ToChar(character));
+                value = (value * 10) + digit;
                 continue;
             }
 
             throw new ArgumentException($"Invalid character at position: {i}");
         }
-        var result = long.Parse(builder.ToString());
+        var result = isNegative ? -value : value;
         return new Binteger(result);
     }
 
