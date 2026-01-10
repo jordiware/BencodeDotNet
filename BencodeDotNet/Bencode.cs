@@ -63,7 +63,28 @@ public sealed class Bencode
 
     private static Bstring DecodeString(byte[] bytes, long startAt = 0)
     {
-        throw new NotImplementedException();
+        var length = 0L;
+        var i = startAt;
+        for (; bytes[i] != StringPaddingCharacter; i++)
+        {
+            var character = bytes[i];
+            var digit = character - NumberPaddingCharacter;
+            if (digit >= 0 && digit <= 9)
+            {
+                length = (length * 10) + digit;
+            }
+            else
+                throw new ArgumentException($"Invalid character at position: {i}");
+        }
+
+        var content = new List<byte>();
+        var endAt = i + startAt;
+        for (i++; i < endAt; i++)
+        {
+            var b = bytes[i];
+            content.Add(b);
+        }
+        return new Bstring(content.ToArray());
     }
 
     private static Blist DecodeList(byte[] bytes, long startAt = 0)
