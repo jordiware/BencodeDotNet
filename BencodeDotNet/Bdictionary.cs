@@ -1,12 +1,11 @@
 ﻿using System.Collections;
-using System.Collections.ObjectModel;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Jordiware.BencodeDotNet;
 
 public sealed class Bdictionary : IBobject, IReadOnlyDictionary<Bstring, IBobject>
 {
-    private ReadOnlyDictionary<Bstring, IBobject> keyValuePairs { get; set; } = ReadOnlyDictionary<Bstring, IBobject>.Empty;
+    private Dictionary<Bstring, IBobject> keyValuePairs { get; set; } = new();
 
     #region Interfaces implementation
     public IBobject this[Bstring key] => keyValuePairs[key];

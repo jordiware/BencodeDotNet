@@ -2,11 +2,15 @@
 
 namespace Jordiware.BencodeDotNet;
 
-public sealed class Blist : IBobject, IEnumerable<IBobject>
+public sealed class Blist : IBobject, IReadOnlyList<IBobject>
 {
     private IBobject[] objects { get; set; } = [];
 
     #region Interfaces implementation
+    public IBobject this[int index] => objects[index];
+
+    public int Count => objects.Length;
+
     public IEnumerator<IBobject> GetEnumerator()
     {
         yield return (IBobject)objects.GetEnumerator();
