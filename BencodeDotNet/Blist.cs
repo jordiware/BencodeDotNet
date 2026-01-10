@@ -24,6 +24,6 @@ public sealed class Blist : IBobject, IReadOnlyList<IBobject>
 
     public override string ToString()
     {
-        return $"[ {string.Join(", ", objects)} ]";
+        return $"l{string.Join(string.Empty, objects)}e";
     }
 }

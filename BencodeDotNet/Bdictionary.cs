@@ -39,7 +39,7 @@ public sealed class Bdictionary : IBobject, IReadOnlyDictionary<Bstring, IBobjec
 
     public override string ToString()
     {
-        var kvps = keyValuePairs.Select(kvp => $"{kvp.Key} = {kvp.Value}").ToArray();
-        return $"{{\n\t{string.Join("\n\t", kvps)}\n}}";
+        var kvps = keyValuePairs.Select(kvp => $"{kvp.Key}{kvp.Value}").ToArray();
+        return $"d{string.Join(string.Empty, kvps)}e";
     }
 }
