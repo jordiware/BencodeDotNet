@@ -1,10 +1,11 @@
 ﻿using System.Collections;
+using System.Collections.Immutable;
 
 namespace Jordiware.BencodeDotNet.Objects;
 
 public sealed class Blist : IBobject, IReadOnlyList<IBobject>
 {
-    private IBobject[] objects { get; set; } = [];
+    private readonly ImmutableArray<IBobject> objects;
 
     #region Interfaces implementation
     public IBobject this[int index] => objects[index];
@@ -13,7 +14,7 @@ public sealed class Blist : IBobject, IReadOnlyList<IBobject>
 
     public IEnumerator<IBobject> GetEnumerator()
     {
-        yield return (IBobject)objects.GetEnumerator();
+        return (IEnumerator<IBobject>)objects.ToArray().GetEnumerator();
     }
 
     IEnumerator IEnumerable.GetEnumerator()

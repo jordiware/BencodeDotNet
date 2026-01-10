@@ -2,26 +2,28 @@
 
 public sealed class Binteger : IBobject, IEquatable<Binteger>, IComparable<Binteger>
 {
-    public long Value { get; private set; } = 0;
+    private readonly long value;
+
+    public long Value => value;
 
     #region Interfaces implementation
     public int CompareTo(Binteger? other)
     {
         if (other == null) return 1;
         
-        return Value.CompareTo(other.Value);
+        return value.CompareTo(other.value);
     }
 
     public bool Equals(Binteger? other)
     {
         if (other == null) return false;
 
-        return Value.Equals(other.Value);
+        return value.Equals(other.value);
     }
     #endregion
 
     public override string ToString()
     {
-        return $"i{Value}e";
+        return $"i{value}e";
     }
 }
