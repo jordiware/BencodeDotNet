@@ -4,6 +4,7 @@ public sealed class Binteger : IBobject, IEquatable<Binteger>, IComparable<Binte
 {
     public long Value { get; private set; } = 0;
 
+    #region Interfaces implementation
     public int CompareTo(Binteger? other)
     {
         if (other == null) return 1;
@@ -16,5 +17,11 @@ public sealed class Binteger : IBobject, IEquatable<Binteger>, IComparable<Binte
         if (other == null) return false;
 
         return Value.Equals(other.Value);
+    }
+    #endregion
+
+    public override string ToString()
+    {
+        return $"i{Value}e";
     }
 }

@@ -1,9 +1,12 @@
-﻿namespace Jordiware.BencodeDotNet;
+﻿using System.Text;
+
+namespace Jordiware.BencodeDotNet;
 
 public sealed class Bstring : IBobject, IEquatable<Bstring>, IComparable<Bstring>
 {
     public byte[] Value { get; private set; } = [];
 
+    #region Interfaces implementation
     public int CompareTo(Bstring? other)
     {
         if (other == null) return 1;
@@ -23,5 +26,16 @@ public sealed class Bstring : IBobject, IEquatable<Bstring>, IComparable<Bstring
         if (other == null) return false;
         
         return Value.SequenceEqual(other.Value);
+    }
+    #endregion
+
+    public override string ToString()
+    {
+        return $"{Value.Length}:{Encoding.Latin1.GetString(Value)}";
+    }
+
+    public string ToHexString()
+    {
+        return $"{Value.Length}:{BitConverter.ToString(Value)}";
     }
 }

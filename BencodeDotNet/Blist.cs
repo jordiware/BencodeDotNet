@@ -17,4 +17,9 @@ public sealed class Blist : IBobject, IEnumerable<IBobject>
         return GetEnumerator();
     }
     #endregion
+
+    public override string ToString()
+    {
+        return $"[ {string.Join(", ", objects)} ]";
+    }
 }

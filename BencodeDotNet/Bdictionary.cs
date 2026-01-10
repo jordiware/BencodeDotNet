@@ -37,4 +37,10 @@ public sealed class Bdictionary : IBobject, IReadOnlyDictionary<Bstring, IBobjec
         return GetEnumerator();
     }
     #endregion
+
+    public override string ToString()
+    {
+        var kvps = keyValuePairs.Select(kvp => $"{kvp.Key} = {kvp.Value}").ToArray();
+        return $"{{\n\t{string.Join("\n\t", kvps)}\n}}";
+    }
 }
