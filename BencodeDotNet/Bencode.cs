@@ -1,5 +1,4 @@
 ﻿using Jordiware.BencodeDotNet.Objects;
-using System.Text;
 
 namespace Jordiware.BencodeDotNet;
 
@@ -14,8 +13,8 @@ public sealed class Bencode
 
     public static IBobject Decode(byte[] bytes)
     {
-        if (bytes == null) throw new ArgumentNullException();
-        if (bytes.Length == 0) throw new ArgumentException("Byte array is empty.");
+        if (bytes == null) throw new ArgumentNullException(nameof(bytes), "Byte array is null");
+        if (bytes.Length == 0) throw new ArgumentException("Byte array is empty");
 
         switch (bytes[0])
         {
@@ -32,11 +31,11 @@ public sealed class Bencode
         }
     }
 
-    private static Binteger DecodeInteger(byte[] bytes, long startAt = 0)
+    private static Binteger DecodeInteger(byte[] bytes, int startAt = 0)
     {
         var isNegative = false;
         var value = 0L;
-        for (long i = startAt; bytes[i] != TerminationCharacter; i++)
+        for (int i = startAt; bytes[i] != TerminationCharacter; i++)
         {
             var character = bytes[i];
             if (Convert.ToChar(character) == '-')
@@ -61,9 +60,9 @@ public sealed class Bencode
         return new Binteger(result);
     }
 
-    private static Bstring DecodeString(byte[] bytes, long startAt = 0)
+    private static Bstring DecodeString(byte[] bytes, int startAt = 0)
     {
-        var length = 0L;
+        var length = 0;
         var i = startAt;
         for (; bytes[i] != StringPaddingCharacter; i++)
         {
@@ -78,7 +77,7 @@ public sealed class Bencode
         }
 
         var content = new List<byte>();
-        var endAt = i + startAt;
+        var endAt = i + length;
         for (i++; i < endAt; i++)
         {
             var b = bytes[i];
@@ -87,13 +86,13 @@ public sealed class Bencode
         return new Bstring(content.ToArray());
     }
 
-    private static Blist DecodeList(byte[] bytes, long startAt = 0)
+    private static Blist DecodeList(byte[] bytes, int startAt = 0)
     {
         var list = new List<IBobject>();
         return new Blist(list);
     }
 
-    private static Bdictionary DecodeDictionary(byte[] bytes, long startAt = 0)
+    private static Bdictionary DecodeDictionary(byte[] bytes, int startAt = 0)
     {
         var dictionary = new Dictionary<Bstring, IBobject>();
         return new Bdictionary(dictionary);
