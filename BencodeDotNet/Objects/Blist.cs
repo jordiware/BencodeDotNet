@@ -24,12 +24,12 @@ public sealed class Blist : IBobject, IReadOnlyList<IBobject>
 
     public byte[] ToBinaryEncoding()
     {
-        var encoded = new List<byte>([ (byte)'l' ]);
+        var encoded = new List<byte>([ Bencode.ListBeginCharacter ]);
         foreach (IBobject o in _objects)
         {
             encoded.AddRange(o.ToBinaryEncoding());
         }
-        encoded.Add((byte)'e');
+        encoded.Add(Bencode.TerminationCharacter);
         return encoded.ToArray();
     }
 

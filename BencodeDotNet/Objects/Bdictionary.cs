@@ -34,13 +34,13 @@ public sealed class Bdictionary : IBobject, IReadOnlyDictionary<Bstring, IBobjec
 
     public byte[] ToBinaryEncoding()
     {
-        var encoded = new List<byte>([(byte)'d']);
+        var encoded = new List<byte>([ Bencode.DictionaryBeginCharacter ]);
         foreach (var kvp in _keyValuePairs)
         {
             encoded.AddRange(kvp.Key.ToBinaryEncoding());
             encoded.AddRange(kvp.Value.ToBinaryEncoding());
         }
-        encoded.Add((byte)'e');
+        encoded.Add(Bencode.TerminationCharacter);
         return encoded.ToArray();
     }
 
