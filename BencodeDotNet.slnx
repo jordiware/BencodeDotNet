@@ -1,3 +1,4 @@
 <Solution>
+  <Project Path="BencodeDotNet.Tests/BencodeDotNet.Tests.csproj" Id="e9ccd9a9-3592-40c6-a056-15b44a39530a" />
   <Project Path="BencodeDotNet/BencodeDotNet.csproj" />
 </Solution>
