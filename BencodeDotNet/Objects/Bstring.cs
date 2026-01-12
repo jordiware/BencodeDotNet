@@ -28,6 +28,7 @@ public sealed class Bstring : IBobject, IReadOnlyList<byte>, IEquatable<Bstring>
     public int CompareTo(Bstring? other)
     {
         if (other == null) return 1;
+        if (ReferenceEquals(this, other)) return 0;
 
         var minLength = Math.Min(_bytes.Length, other._bytes.Length);
         for (int i = 0; i < minLength; i++)
@@ -42,7 +43,8 @@ public sealed class Bstring : IBobject, IReadOnlyList<byte>, IEquatable<Bstring>
     public bool Equals(Bstring? other)
     {
         if (other == null) return false;
-        
+        if (ReferenceEquals(this, other)) return true;
+
         return _bytes.SequenceEqual(other._bytes);
     }
 
