@@ -53,7 +53,11 @@ public sealed class Bstring : IBobject, IReadOnlyList<byte>, IEquatable<Bstring>
 
     public byte[] ToBinaryEncoding()
     {
-        return Value;
+        var length = Encoding.ASCII.GetBytes($"{_bytes.Length}:");
+        var bytes = new byte[length.Length + _bytes.Length];
+        length.CopyTo(bytes, 0);
+        _bytes.CopyTo(bytes, length.Length);
+        return bytes;
     }
 
     IEnumerator IEnumerable.GetEnumerator()
