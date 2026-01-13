@@ -45,6 +45,17 @@ public class BdictionaryTests
     }
 
     [Fact]
+    public void ContainsKeyReturnsTrueForInlineKey()
+    {
+        var dict = new Bdictionary(new Dictionary<Bstring, IBobject>
+        {
+            [new Bstring([0x61])] = new Binteger(1)
+        });
+
+        Assert.True(dict.ContainsKey(new Bstring([0x61])));
+    }
+
+    [Fact]
     public void TryGetValueReturnsValueWhenKeyExists()
     {
         var key = new Bstring([0x61]);
@@ -59,6 +70,20 @@ public class BdictionaryTests
 
         Assert.True(found);
         Assert.Same(value, result);
+    }
+
+    [Fact]
+    public void TryGetValueReturnsValueWhenInlineKeyAndValueExist()
+    {
+        var dict = new Bdictionary(new Dictionary<Bstring, IBobject>
+        {
+            [new Bstring([0x61])] = new Binteger(1)
+        });
+
+        var found = dict.TryGetValue(new Bstring([0x61]), out var result);
+
+        Assert.True(found);
+        Assert.Equal(new Binteger(1), result);
     }
 
     [Fact]
