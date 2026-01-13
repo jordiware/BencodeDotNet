@@ -34,6 +34,16 @@ public sealed class Binteger : IBobject, IEquatable<Binteger>, IComparable<Binte
     }
     #endregion
 
+    public override bool Equals(object? obj)
+    {
+        return obj is Binteger other && Equals(other);
+    }
+
+    public override int GetHashCode()
+    {
+        return ToString().GetHashCode();
+    }
+
     public override string ToString()
     {
         return $"i{_value}e";

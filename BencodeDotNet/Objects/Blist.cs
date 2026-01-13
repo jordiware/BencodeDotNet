@@ -3,7 +3,7 @@ using System.Collections.Immutable;
 
 namespace Jordiware.BencodeDotNet.Objects;
 
-public sealed class Blist : IBobject, IReadOnlyList<IBobject>
+public sealed class Blist : IBobject, IReadOnlyList<IBobject>, IEquatable<Blist>
 {
     private readonly ImmutableArray<IBobject> _objects;
 
@@ -19,7 +19,15 @@ public sealed class Blist : IBobject, IReadOnlyList<IBobject>
 
     public IEnumerator<IBobject> GetEnumerator()
     {
-        return (IEnumerator<IBobject>)_objects.ToArray().GetEnumerator();
+        return _objects.AsEnumerable().GetEnumerator();
+    }
+
+    public bool Equals(Blist? other)
+    {
+        if (other == null) return false;
+        if (ReferenceEquals(this, other)) return true;
+
+        return Enumerable.SequenceEqual(this, other);
     }
 
     public byte[] ToBinaryEncoding()
@@ -38,6 +46,16 @@ public sealed class Blist : IBobject, IReadOnlyList<IBobject>
         return GetEnumerator();
     }
     #endregion
+
+    public override bool Equals(object? obj)
+    {
+        return obj is Blist other && Equals(other);
+    }
+
+    public override int GetHashCode()
+    {
+        return ToString().GetHashCode();
+    }
 
     public override string ToString()
     {

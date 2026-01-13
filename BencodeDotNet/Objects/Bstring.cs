@@ -50,7 +50,7 @@ public sealed class Bstring : IBobject, IReadOnlyList<byte>, IEquatable<Bstring>
 
     public IEnumerator<byte> GetEnumerator()
     {
-        return (IEnumerator<byte>)_bytes.ToArray().GetEnumerator();
+        return _bytes.AsEnumerable().GetEnumerator();
     }
 
     public byte[] ToBinaryEncoding()
@@ -67,6 +67,16 @@ public sealed class Bstring : IBobject, IReadOnlyList<byte>, IEquatable<Bstring>
         return GetEnumerator();
     }
     #endregion
+
+    public override bool Equals(object? obj)
+    {
+        return obj is Bstring other && Equals(other);
+    }
+
+    public override int GetHashCode()
+    {
+        return ToString().GetHashCode();
+    }
 
     public override string ToString()
     {
