@@ -54,7 +54,12 @@ public sealed class Blist : IBobject, IReadOnlyList<IBobject>, IEquatable<Blist>
 
     public override int GetHashCode()
     {
-        return ToString().GetHashCode();
+        var hash = new HashCode();
+        foreach (var o in _objects)
+        {
+            hash.Add(o);
+        }
+        return hash.ToHashCode();
     }
 
     public override string ToString()

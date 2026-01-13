@@ -75,7 +75,12 @@ public sealed class Bstring : IBobject, IReadOnlyList<byte>, IEquatable<Bstring>
 
     public override int GetHashCode()
     {
-        return ToString().GetHashCode();
+        var hash = new HashCode();
+        foreach (var b in _bytes)
+        {
+            hash.Add(b);
+        }
+        return hash.ToHashCode();
     }
 
     public override string ToString()

@@ -41,7 +41,7 @@ public sealed class Binteger : IBobject, IEquatable<Binteger>, IComparable<Binte
 
     public override int GetHashCode()
     {
-        return ToString().GetHashCode();
+        return _value.GetHashCode();
     }
 
     public override string ToString()
