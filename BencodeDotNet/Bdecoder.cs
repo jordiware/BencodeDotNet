@@ -24,15 +24,24 @@ public static class Bdecoder
 
     public static Bdecoder<FileStream> FromFile(string filePath)
     {
-        var stream = new FileStream(filePath, FileMode.Open);
-        var decoder = new Bdecoder<FileStream>(ref stream);
-        return decoder;
+        var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
+        try
+        {
+            var decoder = new Bdecoder<FileStream>(ref stream);
+            return decoder;
+        }
+        catch
+        {
+            stream.Dispose();
+            throw;
+        }
     }
 }
 
 public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
 {
     private readonly TStream _stream;
+    private readonly Stack<Frame> _stack = new();
 
     public Bdecoder(ref TStream stream)
     {
@@ -44,8 +53,10 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
 
     public async Task<IBobject> DecodeAsync(CancellationToken ct = default)
     {
+        _stack.Clear();
+
         IBobject? bobject = default;
-        var reader = PipeReader.Create(_stream);
+        var reader = PipeReader.Create(_stream, new StreamPipeReaderOptions(leaveOpen: true));
 
         while (true)
         {
@@ -65,163 +76,262 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
         }
 
         await reader.CompleteAsync();
-        return bobject!;
+
+        if (bobject is null)
+            throw new FormatException("Incomplete or invalid bencode object");
+
+        return bobject;
     }
 
     private bool TryParseBencode(ref ReadOnlySequence<byte> buffer, out IBobject value)
     {
-        if (buffer.IsEmpty)
-        {
-            value = default!;
-            return false;
-        }
-
-        byte prefix = buffer.FirstSpan[0];
-
-        return prefix switch
-        {
-            Bencode.IntegerBeginCharacter => TryParseInteger(ref buffer, out value),
-            Bencode.ListBeginCharacter => TryParseList(ref buffer, out value),
-            Bencode.DictionaryBeginCharacter => TryParseDictionary(ref buffer, out value),
-            >= Bencode.MinNumberCharacter and <= Bencode.MaxNumberCharacter => TryParseString(ref buffer, out value),
-            _ => throw new FormatException("Invalid bencode data")
-        };
-    }
-
-    private bool TryParseInteger(ref ReadOnlySequence<byte> buffer, out IBobject value)
-    {
         value = default!;
         var reader = new SequenceReader<byte>(buffer);
 
-        if (!reader.TryRead(out byte i) || i != Bencode.IntegerBeginCharacter)
-            throw new FormatException();
+        while (true)
+        {
+            if (!reader.TryPeek(out byte prefix))
+                return false;
+
+            // --- termination ---
+            if (prefix == Bencode.TerminationCharacter)
+            {
+                reader.Advance(1);
+
+                if (_stack.Count == 0)
+                    throw new FormatException("Unexpected 'e'");
+
+                var frame = _stack.Pop();
+                var completed = default(IBobject);
+                if (frame is ListFrame lf)
+                {
+                    completed = new Blist(lf.Items);
+                }
+                else if (frame is DictFrame df)
+                {
+                    if (!df.ExpectingKey)
+                        throw new FormatException("Dictionary missing value");
+
+                    completed = new Bdictionary(df.Items);
+                }
+                else
+                {
+                    throw new InvalidOperationException();
+                }
+
+                if (_stack.Count == 0)
+                {
+                    buffer = buffer.Slice(reader.Position);
+                    value = completed;
+                    return true;
+                }
+
+                AttachToParent(_stack.Peek(), completed);
+                continue;
+            }
+
+            // --- integer ---
+            if (prefix == Bencode.IntegerBeginCharacter)
+            {
+                if (!TryReadInteger(ref reader, out var i))
+                    return false;
+
+                AttachOrReturn(ref buffer, reader.Position, i, out value);
+                if (value is not null)
+                    return true;
+
+                continue;
+            }
+
+            // --- string ---
+            if (prefix is >= Bencode.MinNumberCharacter and <= Bencode.MaxNumberCharacter)
+            {
+                if (!TryReadString(ref reader, out var s))
+                    return false;
+
+                AttachOrReturn(ref buffer, reader.Position, s, out value);
+                if (value is not null)
+                    return true;
+
+                continue;
+            }
+
+            // --- list ---
+            if (prefix == Bencode.ListBeginCharacter)
+            {
+                BeginList(ref reader);
+                continue;
+            }
+
+            // --- dictionary ---
+            if (prefix == Bencode.DictionaryBeginCharacter)
+            {
+                BeginDictionary(ref reader);
+                continue;
+            }
+
+            throw new FormatException($"Invalid prefix {(char)prefix}");
+        }
+    }
+
+    private bool TryReadInteger(ref SequenceReader<byte> reader, out IBobject value)
+    {
+        value = default!;
+
+        if (!reader.TryRead(out byte prefix) ||
+            prefix != Bencode.IntegerBeginCharacter)
+            throw new FormatException("Invalid integer start");
 
         if (!reader.TryReadTo(out ReadOnlySpan<byte> digits, Bencode.TerminationCharacter))
             return false;
 
-        long number = long.Parse(Encoding.ASCII.GetString(digits));
-        value = new Binteger(number);
+        // --- strict bencode validation ---
+        if (digits.Length == 0)
+            throw new FormatException("Empty integer");
 
-        buffer = buffer.Slice(reader.Position);
+        if (digits.Length > 1 && digits[0] == Bencode.MinNumberCharacter)
+            throw new FormatException("Leading zero");
+
+        if (digits.Length > 1 &&
+            digits[0] == (byte)'-' &&
+            digits[1] == Bencode.MinNumberCharacter)
+            throw new FormatException("Negative zero");
+
+        long number = 0;
+        bool negative = false;
+        int i = 0;
+
+        if (digits[0] == (byte)'-')
+        {
+            negative = true;
+            i = 1;
+        }
+
+        for (; i < digits.Length; i++)
+        {
+            byte c = digits[i];
+            if (c < Bencode.MinNumberCharacter || c > Bencode.MaxNumberCharacter)
+                throw new FormatException();
+
+            number = number * 10 + (c - Bencode.MinNumberCharacter);
+        }
+
+        if (negative) 
+            number = -number;
+
+        value = new Binteger(number);
         return true;
     }
 
-    private bool TryParseString(ref ReadOnlySequence<byte> buffer, out IBobject value)
+    private bool TryReadString(ref SequenceReader<byte> reader, out IBobject value)
     {
         value = default!;
 
-        var reader = new SequenceReader<byte>(buffer);
-
         if (!reader.TryReadTo(out ReadOnlySpan<byte> lengthBytes, Bencode.StringPaddingCharacter))
-            return false; // need more data
+            return false;
 
-        if (!int.TryParse(Encoding.ASCII.GetString(lengthBytes), out int length))
+        if (lengthBytes.Length > 1 && lengthBytes[0] == (byte)'0')
+            throw new FormatException("Leading zero in string length");
+
+        if (!int.TryParse(Encoding.ASCII.GetString(lengthBytes), out int length) || length < 0)
             throw new FormatException("Invalid string length");
 
         if (reader.Remaining < length)
-            return false; // string not fully available yet
+            return false;
 
-        ReadOnlySequence<byte> strBytes = buffer.Slice(reader.Position, length);
+        ReadOnlySequence<byte> strBytes =
+            reader.Sequence.Slice(reader.Position, length);
+
+        reader.Advance(length);
 
         value = new Bstring(strBytes.ToArray());
-        buffer = buffer.Slice(reader.Position).Slice(length);
-
         return true;
     }
 
-    private bool TryParseList(ref ReadOnlySequence<byte> buffer, out IBobject value)
+    private void BeginList(ref SequenceReader<byte> reader)
     {
-        value = default!;
-
-        var reader = new SequenceReader<byte>(buffer);
-
-        // Need at least the 'l'
-        if (!reader.TryRead(out byte start) || start != Bencode.ListBeginCharacter)
-            throw new FormatException("Invalid list start");
-
-        var items = new List<IBobject>();
-
-        while (true)
+        reader.Advance(1); // consume 'l'
+        _stack.Push(new ListFrame()
         {
-            // Need at least one byte to decide
-            if (reader.End)
-                return false;
-
-            // End of list?
-            if (reader.CurrentSpan[reader.CurrentSpanIndex] == Bencode.TerminationCharacter)
-            {
-                reader.Advance(1); // consume 'e'
-                buffer = buffer.Slice(reader.Position);
-                value = new Blist(items);
-                return true;
-            }
-
-            // Parse next element
-            ReadOnlySequence<byte> remaining = buffer.Slice(reader.Position);
-
-            if (!TryParseBencode(ref remaining, out var element))
-                return false;
-
-            items.Add(element);
-
-            // Advance reader to where the nested parser stopped
-            reader = new SequenceReader<byte>(remaining);
-        }
+            Items = new()
+        });
     }
 
-    private bool TryParseDictionary(ref ReadOnlySequence<byte> buffer, out IBobject value)
+    private void BeginDictionary(ref SequenceReader<byte> reader)
     {
-        value = default!;
-
-        var reader = new SequenceReader<byte>(buffer);
-
-        // Need at least the 'd'
-        if (!reader.TryRead(out byte start) || start != Bencode.DictionaryBeginCharacter)
-            throw new FormatException("Invalid dictionary start");
-
-        var dict = new Dictionary<Bstring, IBobject>();
-
-        while (true)
+        reader.Advance(1); // consume 'd'
+        _stack.Push(new DictFrame()
         {
-            if (reader.End)
-                return false;
+            Items = new(),
+            LastKey = null,
+            ExpectingKey = true
+        });
+    }
 
-            // End of dictionary?
-            if (reader.CurrentSpan[reader.CurrentSpanIndex] == Bencode.TerminationCharacter)
-            {
-                reader.Advance(1); // consume 'e'
-                buffer = buffer.Slice(reader.Position);
-                value = new Bdictionary(dict);
-                return true;
-            }
+    private bool AttachOrReturn(ref ReadOnlySequence<byte> buffer,
+                                SequencePosition pos,
+                                IBobject obj,
+                                out IBobject? value)
+    {
+        value = null;
 
-            // --- Parse key (must be string) ---
-            ReadOnlySequence<byte> keyBuffer = buffer.Slice(reader.Position);
+        if (_stack.Count == 0)
+        {
+            buffer = buffer.Slice(pos);
+            value = obj;
+            return true;
+        }
 
-            if (!TryParseString(ref keyBuffer, out var keyValue))
-                return false;
+        AttachToParent(_stack.Peek(), obj);
+        return false;
+    }
 
-            if (keyValue is not Bstring keyString)
-                throw new FormatException("Dictionary key must be a string");
+    private void AttachToParent(Frame frame, IBobject obj)
+    {
+        switch (frame)
+        {
+            case ListFrame lf:
+                lf.Items.Add(obj);
+                break;
 
-            // Advance reader past key
-            reader = new SequenceReader<byte>(keyBuffer);
+            case DictFrame df:
+                if (df.ExpectingKey)
+                {
+                    if (obj is not Bstring key)
+                        throw new FormatException("Dictionary key must be string");
 
-            // --- Parse value ---
-            ReadOnlySequence<byte> valueBuffer = buffer.Slice(reader.Position);
+                    if (df.LastKey is not null &&
+                        key.CompareTo(df.LastKey) <= 0)
+                        throw new FormatException("Dictionary keys must be sorted");
 
-            if (!TryParseBencode(ref valueBuffer, out var element))
-                return false;
-
-            dict[keyString] = element;
-
-            // Advance reader past value
-            reader = new SequenceReader<byte>(valueBuffer);
+                    df.LastKey = key;
+                    df.ExpectingKey = false;
+                }
+                else
+                {
+                    df.Items[df.LastKey!] = obj;
+                    df.ExpectingKey = true;
+                }
+                break;
         }
     }
 
     public void Dispose()
     {
         _stream.Dispose();
+    }
+
+    private abstract class Frame;
+
+    private sealed class ListFrame : Frame
+    {
+        public List<IBobject> Items = default!;
+    }
+
+    private sealed class DictFrame : Frame
+    {
+        public Dictionary<Bstring, IBobject> Items = default!;
+        public Bstring? LastKey;
+        public bool ExpectingKey;
     }
 }
