@@ -14,6 +14,14 @@ public static class Bdecoder
         return decoder;
     }
 
+    public static Bdecoder<MemoryStream> FromString(string s, Encoding encoding)
+    {
+        var bytes = encoding.GetBytes(s);
+        var stream = new MemoryStream(bytes);
+        var decoder = new Bdecoder<MemoryStream>(ref stream);
+        return decoder;
+    }
+
     public static Bdecoder<FileStream> FromFile(string filePath)
     {
         var stream = new FileStream(filePath, FileMode.Open);
