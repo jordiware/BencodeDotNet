@@ -107,6 +107,7 @@ public class BdecoderStressTests
     [InlineData(100)]
     [InlineData(200)]
     [InlineData(500)]
+    [InlineData(850)]
     [InlineData(1_000)]
     [InlineData(2_000)]
     [InlineData(5_000)]
@@ -153,11 +154,10 @@ public class BdecoderStressTests
         Assert.Equal(99, Assert.IsType<Binteger>(dict[new Bstring("foo", Encoding.ASCII)]).Value);
     }
 
-    [Theory]
-    [InlineData(10_000)]
-    public async Task DecodeRandomValidObjects(int amount)
+    [Fact]
+    public async Task DecodeRandomValidObjects()
     {
-        for (int i = 0; i < amount; i++)
+        for (int i = 0; i < 10_000; i++)
         {
             var input = BencodeFuzzer.Generate();
 
