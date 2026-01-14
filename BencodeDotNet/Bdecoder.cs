@@ -1,5 +1,6 @@
 ﻿using Jordiware.BencodeDotNet.Objects;
 using System.Buffers;
+using System.Diagnostics;
 using System.IO.Pipelines;
 using System.Text;
 
@@ -7,27 +8,27 @@ namespace Jordiware.BencodeDotNet;
 
 public static class Bdecoder
 {
-    public static Bdecoder<MemoryStream> FromBytes(byte[] bytes)
+    public static Bdecoder<MemoryStream> FromBytes(byte[] bytes, BdecodingOptions? options = default)
     {
         var stream = new MemoryStream(bytes);
-        var decoder = new Bdecoder<MemoryStream>(ref stream);
+        var decoder = new Bdecoder<MemoryStream>(ref stream, options);
         return decoder;
     }
 
-    public static Bdecoder<MemoryStream> FromString(string s, Encoding encoding)
+    public static Bdecoder<MemoryStream> FromString(string s, Encoding encoding, BdecodingOptions? options = default)
     {
         var bytes = encoding.GetBytes(s);
         var stream = new MemoryStream(bytes);
-        var decoder = new Bdecoder<MemoryStream>(ref stream);
+        var decoder = new Bdecoder<MemoryStream>(ref stream, options);
         return decoder;
     }
 
-    public static Bdecoder<FileStream> FromFile(string filePath)
+    public static Bdecoder<FileStream> FromFile(string filePath, BdecodingOptions? options = default)
     {
         var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
         try
         {
-            var decoder = new Bdecoder<FileStream>(ref stream);
+            var decoder = new Bdecoder<FileStream>(ref stream, options);
             return decoder;
         }
         catch
@@ -41,14 +42,16 @@ public static class Bdecoder
 public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
 {
     private readonly TStream _stream;
+    private readonly BdecodingOptions _options;
     private readonly Stack<Frame> _stack = new();
 
-    public Bdecoder(ref TStream stream)
+    public Bdecoder(ref TStream stream, BdecodingOptions? options = default)
     {
         if (!stream.CanRead)
             throw new ArgumentException("Stream can not be read");
 
         _stream = stream;
+        _options = options ?? new();
     }
 
     public async Task<IBobject> DecodeAsync(CancellationToken ct = default)
@@ -66,7 +69,9 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
             while (TryParseBencode(ref buffer, out var element))
             {
                 bobject = element;
-                break;
+
+                if (_stack.Count == 0)
+                    break;
             }
 
             reader.AdvanceTo(buffer.Start, buffer.End);
@@ -216,7 +221,7 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
             number = number * 10 + (c - Bencode.MinNumberCharacter);
         }
 
-        if (negative) 
+        if (negative)
             number = -number;
 
         value = new Binteger(number);
@@ -235,6 +240,9 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
 
         if (!int.TryParse(Encoding.ASCII.GetString(lengthBytes), out int length) || length < 0)
             throw new FormatException("Invalid string length");
+
+        if (length > _options.MaxStringLength)
+            throw new FormatException("String length exceeds limit");
 
         if (reader.Remaining < length)
             return false;
@@ -255,6 +263,12 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
         {
             Items = new()
         });
+
+        if (_stack.Count >= _options.MaxDepth)
+        {
+            _stack.Pop();
+            throw new FormatException("Maximum nesting depth exceeded");
+        }
     }
 
     private void BeginDictionary(ref SequenceReader<byte> reader)
@@ -266,6 +280,12 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
             LastKey = null,
             ExpectingKey = true
         });
+
+        if (_stack.Count >= _options.MaxDepth)
+        {
+            _stack.Pop();
+            throw new FormatException("Maximum nesting depth exceeded");
+        }
     }
 
     private bool AttachOrReturn(ref ReadOnlySequence<byte> buffer,
@@ -291,10 +311,15 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
         switch (frame)
         {
             case ListFrame lf:
+                if (lf.Items.Count >= _options.MaxContainerItems)
+                    throw new FormatException("List item limit exceeded");
+
                 lf.Items.Add(obj);
                 break;
-
             case DictFrame df:
+                if (df.Items.Count >= _options.MaxContainerItems)
+                    throw new FormatException("Dictionary item limit exceeded");
+
                 if (df.ExpectingKey)
                 {
                     if (obj is not Bstring key)
