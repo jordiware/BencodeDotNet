@@ -5,6 +5,8 @@ namespace Jordiware.BencodeDotNet.Tests;
 
 public class BdecoderStressTests
 {
+    private static readonly BdecodingOptions options = new();
+
     [Theory]
     [InlineData(1_000_000)]
     [InlineData(2_000_000)]
@@ -15,16 +17,22 @@ public class BdecoderStressTests
     [InlineData(100_000_000)]
     public async Task DecodeHugeString(int size)
     {
-        var payload = new string('a', size);
-        var bencode = $"{size}:{payload}";
+        var bencode = $"{size}:{new string('a', size)}";
 
-        using var decoder = Bdecoder.FromString(bencode, Encoding.ASCII);
+        using var decoder = Bdecoder.FromString(bencode, Encoding.ASCII, options);
 
-        var result = await decoder.DecodeAsync();
+        if (size > options.MaxStringLength)
+        {
+            await Assert.ThrowsAsync<FormatException>(() => decoder.DecodeAsync());
+        }
+        else
+        {
+            var result = await decoder.DecodeAsync();
 
-        var str = Assert.IsType<Bstring>(result);
-        Assert.Equal(size, str.Value.Length);
-        Assert.All(str.Value, b => Assert.Equal((byte)'a', b));
+            var str = Assert.IsType<Bstring>(result);
+            Assert.Equal(size, str.Value.Length);
+            Assert.All(str.Value, b => Assert.Equal((byte)'a', b));
+        }
     }
 
     [Theory]
@@ -43,14 +51,20 @@ public class BdecoderStressTests
             sb.Append("i1e");
         sb.Append('e');
 
-        using var decoder =
-            Bdecoder.FromString(sb.ToString(), Encoding.ASCII);
+        using var decoder = Bdecoder.FromString(sb.ToString(), Encoding.ASCII, options);
 
-        var result = await decoder.DecodeAsync();
+        if (count > options.MaxContainerItems)
+        {
+            await Assert.ThrowsAsync<FormatException>(() => decoder.DecodeAsync());
+        }
+        else
+        {
+            var result = await decoder.DecodeAsync();
 
-        var list = Assert.IsType<Blist>(result);
-        Assert.Equal(count, list.Count);
-        Assert.All(list, i => Assert.Equal(1, Assert.IsType<Binteger>(i).Value));
+            var list = Assert.IsType<Blist>(result);
+            Assert.Equal(count, list.Count);
+            Assert.All(list, i => Assert.Equal(1, Assert.IsType<Binteger>(i).Value));
+        }
     }
 
     [Theory]
@@ -64,22 +78,28 @@ public class BdecoderStressTests
     public async Task DecodeDeeplyNestedLists(int depth)
     {
         var sb = new StringBuilder(depth * 2);
-        for (int i = 0; i < depth; i++)
+        for (int i = 0; i <= depth; i++)
             sb.Append('l');
-        for (int i = 0; i < depth; i++)
+        for (int i = 0; i <= depth; i++)
             sb.Append('e');
 
-        using var decoder =
-            Bdecoder.FromString(sb.ToString(), Encoding.ASCII);
+        using var decoder = Bdecoder.FromString(sb.ToString(), Encoding.ASCII, options);
 
-        var result = await decoder.DecodeAsync();
-
-        IBobject current = result;
-        for (int i = 0; i < depth; i++)
+        if (depth >= options.MaxDepth)
         {
-            var list = Assert.IsType<Blist>(current);
-            Assert.Single(list);
-            current = list[0];
+            await Assert.ThrowsAsync<FormatException>(() => decoder.DecodeAsync());
+        }
+        else
+        {
+            var result = await decoder.DecodeAsync();
+
+            IBobject current = result;
+            for (int i = 0; i < depth; i++)
+            {
+                var list = Assert.IsType<Blist>(current);
+                Assert.Single(list);
+                current = list[0];
+            }
         }
     }
 
@@ -100,50 +120,48 @@ public class BdecoderStressTests
         for (int i = 0; i < depth; i++)
             sb.Append('e');
 
-        using var decoder =
-            Bdecoder.FromString(sb.ToString(), Encoding.ASCII);
+        using var decoder = Bdecoder.FromString(sb.ToString(), Encoding.ASCII, options);
 
-        var result = await decoder.DecodeAsync();
-
-        IBobject current = result;
-        for (int i = 0; i < depth; i++)
+        if (depth >= options.MaxDepth)
         {
-            var dict = Assert.IsType<Bdictionary>(current);
-            current = dict[new Bstring("a", Encoding.ASCII)];
+            await Assert.ThrowsAsync<FormatException>(() => decoder.DecodeAsync());
+        }
+        else
+        {
+            var result = await decoder.DecodeAsync();
+
+            IBobject current = result;
+            for (int i = 0; i < depth; i++)
+            {
+                var dict = Assert.IsType<Bdictionary>(current);
+                current = dict[new Bstring("a", Encoding.ASCII)];
+            }
         }
     }
 
     [Fact]
     public async Task DecodeWithChunkedStream()
     {
-        var data = Encoding.ASCII.GetBytes("d3:fool4:spami42ee3:bari99ee");
+        var data = Encoding.ASCII.GetBytes("d3:barl4:spami42ee3:fooi99ee");
 
         var stream = new ChunkedStream(data, 1);
-        using var decoder = new Bdecoder<ChunkedStream>(ref stream);
+        using var decoder = new Bdecoder<ChunkedStream>(ref stream, options);
 
         var result = await decoder.DecodeAsync();
 
         var dict = Assert.IsType<Bdictionary>(result);
-        Assert.Equal(99, 
-                     Assert.IsType<Binteger>(dict[new Bstring("bar", Encoding.ASCII)]).Value);
+        Assert.Equal(99, Assert.IsType<Binteger>(dict[new Bstring("foo", Encoding.ASCII)]).Value);
     }
 
     [Theory]
-    [InlineData(100)]
-    [InlineData(200)]
-    [InlineData(500)]
-    [InlineData(1_000)]
-    [InlineData(2_000)]
-    [InlineData(5_000)]
     [InlineData(10_000)]
     public async Task DecodeRandomValidObjects(int amount)
     {
-        for (int i = 0; i <= amount; i++)
+        for (int i = 0; i < amount; i++)
         {
             var input = BencodeFuzzer.Generate();
 
-            using var decoder =
-                Bdecoder.FromString(input, Encoding.ASCII);
+            using var decoder = Bdecoder.FromString(input, Encoding.ASCII, options);
 
             var result = await decoder.DecodeAsync();
 
