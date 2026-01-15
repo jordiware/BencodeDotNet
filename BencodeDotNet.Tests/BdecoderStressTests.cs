@@ -107,6 +107,7 @@ public class BdecoderStressTests
     [InlineData(100)]
     [InlineData(200)]
     [InlineData(500)]
+    [InlineData(800)]
     [InlineData(850)]
     [InlineData(1_000)]
     [InlineData(2_000)]
