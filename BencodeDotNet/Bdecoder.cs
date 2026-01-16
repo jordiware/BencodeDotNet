@@ -1,4 +1,5 @@
 ﻿using Jordiware.BencodeDotNet.Objects;
+using System;
 using System.Buffers;
 using System.IO.Pipelines;
 using System.Text;
@@ -68,12 +69,13 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
                 throw new OperationCanceledException();
 
             var buffer = result.Buffer;
-            while (TryParseBencode(ref buffer, out var element))
+            if (TryParseBencode(ref buffer, out var element, out var consumed))
             {
-                bobject = element;
+                ct.ThrowIfCancellationRequested();
+                reader.AdvanceTo(consumed);
 
-                if (_stack.Count == 0)
-                    break;
+                bobject = element;
+                break;
             }
 
             reader.AdvanceTo(buffer.Start, buffer.End);
@@ -87,10 +89,12 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
         return bobject;
     }
 
-    private bool TryParseBencode(ref ReadOnlySequence<byte> buffer, out IBobject value)
+    private bool TryParseBencode(ref ReadOnlySequence<byte> buffer, out IBobject value, out SequencePosition consumed)
     {
-        value = default!;
         var reader = new SequenceReader<byte>(buffer);
+
+        value = default!;
+        consumed = reader.Position;
 
         while (reader.Consumed < reader.Length)
         {
@@ -101,6 +105,7 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
             {
                 case Bencode.TerminationCharacter:
                     reader.Advance(1);
+                    consumed = reader.Position;
 
                     if (_stack.Count == 0)
                         throw new FormatException("Unexpected 'e'");
@@ -113,7 +118,7 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
                     }
                     else if (frame is DictFrame df)
                     {
-                        if (df.LastKey is not null)
+                        if (df.PendingKey is not null)
                             throw new FormatException("Dictionary missing value");
 
                         completed = new Bdictionary(df.Items);
@@ -135,7 +140,7 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
                     }
                     break;
                 case Bencode.IntegerBeginCharacter:
-                    if (!TryReadInteger(ref reader, out var i))
+                    if (!TryReadInteger(ref reader, ref consumed, out var i))
                         return false;
 
                     if (AttachOrReturn(ref buffer, reader.Position, i, out value))
@@ -148,7 +153,7 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
                     BeginDictionary(ref reader);
                     break;
                 case >= Bencode.MinNumberCharacter and <= Bencode.MaxNumberCharacter:
-                    if (!TryReadString(ref reader, out var s))
+                    if (!TryReadString(ref reader, ref consumed, out var s))
                         return false;
 
                     if (AttachOrReturn(ref buffer, reader.Position, s, out value))
@@ -157,15 +162,17 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
                 default:
                     throw new FormatException($"Invalid prefix {(char)prefix}");
             }
+
+            consumed = reader.Position;
         }
 
         return false;
     }
 
-    private bool TryReadInteger(ref SequenceReader<byte> reader, out IBobject value)
+    private bool TryReadInteger(ref SequenceReader<byte> reader, ref SequencePosition consumed, out IBobject value)
     {
         value = default!;
-        SequencePosition checkpoint = reader.Position;
+        var checkpoint = reader.Position;
 
         if (!reader.TryRead(out byte prefix) ||
             prefix != Bencode.IntegerBeginCharacter)
@@ -173,9 +180,11 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
 
         if (!reader.TryReadTo(out ReadOnlySpan<byte> digits, Bencode.TerminationCharacter))
         {
-            reader.Rewind(reader.Consumed);
+            reader.Rewind(reader.Consumed - reader.Sequence.GetOffset(checkpoint));
+            consumed = reader.Position;
             return false;
         }
+        consumed = reader.Position;
 
         // --- strict bencode validation ---
         if (digits.Length == 0)
@@ -205,7 +214,7 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
             if (c < Bencode.MinNumberCharacter || c > Bencode.MaxNumberCharacter)
                 throw new FormatException();
 
-            number = number * 10 + (c - Bencode.MinNumberCharacter);
+                number = checked(number * 10 + (c - Bencode.MinNumberCharacter));
         }
 
         if (negative)
@@ -215,22 +224,29 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
         return true;
     }
 
-    private bool TryReadString(ref SequenceReader<byte> reader, out IBobject value)
+    private bool TryReadString(ref SequenceReader<byte> reader, ref SequencePosition consumed, out IBobject value)
     {
         value = default!;
         var checkpoint = reader.Position;
 
         if (!reader.TryReadTo(out ReadOnlySpan<byte> lengthBytes, Bencode.StringPaddingCharacter))
         {
-            reader.Rewind(reader.Consumed);
+            reader.Rewind(reader.Consumed - reader.Sequence.GetOffset(checkpoint));
+            consumed = reader.Position;
             return false;
         }
 
         if (lengthBytes.Length > 1 && lengthBytes[0] == (byte)'0')
             throw new FormatException("Leading zero in string length");
 
-        if (!int.TryParse(Encoding.ASCII.GetString(lengthBytes), out int length) || length < 0)
-            throw new FormatException("Invalid string length");
+        int length = 0;
+        foreach (var b in lengthBytes)
+        {
+            if (b < Bencode.MinNumberCharacter || b > Bencode.MaxNumberCharacter)
+                throw new FormatException("Invalid string length");
+
+            length = checked(length * 10 + (b - Bencode.MinNumberCharacter));
+        }
 
         if (length > _options.MaxStringLength)
             throw new FormatException("String length exceeds limit");
@@ -242,6 +258,7 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
             reader.Sequence.Slice(reader.Position, length);
 
         reader.Advance(length);
+        consumed = reader.Position;
 
         value = new Bstring(strBytes.ToArray());
         return true;
@@ -249,7 +266,7 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
 
     private void BeginList(ref SequenceReader<byte> reader)
     {
-        if (_stack.Count >= _options.MaxDepth)
+        if (_stack.Count > _options.MaxDepth)
         {
             throw new FormatException("Maximum nesting depth exceeded");
         }
@@ -263,7 +280,7 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
 
     private void BeginDictionary(ref SequenceReader<byte> reader)
     {
-        if (_stack.Count >= _options.MaxDepth)
+        if (_stack.Count > _options.MaxDepth)
         {
             throw new FormatException("Maximum nesting depth exceeded");
         }
@@ -272,14 +289,11 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
         _stack.Push(new DictFrame()
         {
             Items = new(),
-            LastKey = null,
+            PendingKey = null,
         });
     }
 
-    private bool AttachOrReturn(ref ReadOnlySequence<byte> buffer,
-                                SequencePosition pos,
-                                IBobject obj,
-                                out IBobject? value)
+    private bool AttachOrReturn(ref ReadOnlySequence<byte> buffer, SequencePosition pos, IBobject obj, out IBobject? value)
     {
         value = null;
 
@@ -308,21 +322,22 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
                 if (df.Items.Count >= _options.MaxContainerItems)
                     throw new FormatException("Dictionary item limit exceeded");
 
-                if (df.LastKey is null)
+                if (df.PendingKey is null)
                 {
                     if (obj is not Bstring key)
                         throw new FormatException("Dictionary key must be string");
 
-                    if (df.LastKey is not null &&
-                        key.CompareTo(df.LastKey) <= 0)
+                    if (df.LastKey is not null
+                        && key.CompareTo(df.LastKey) <= 0)
                         throw new FormatException("Dictionary keys must be sorted");
 
-                    df.LastKey = key;
+                    df.PendingKey = key;
                 }
                 else
                 {
-                    df.Items[df.LastKey!] = obj;
-                    df.LastKey = null;
+                    df.Items[df.PendingKey] = obj;
+                    df.LastKey = df.PendingKey;
+                    df.PendingKey = null;
                 }
                 break;
         }
@@ -330,9 +345,9 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
 
     public void Dispose()
     {
-        _stream.Dispose();
     }
 
+    #region Utility types
     private abstract class Frame;
 
     private sealed class ListFrame : Frame
@@ -343,6 +358,8 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
     private sealed class DictFrame : Frame
     {
         public Dictionary<Bstring, IBobject> Items = default!;
-        public Bstring? LastKey = default!;
+        public Bstring? PendingKey;
+        public Bstring? LastKey;
     }
+    #endregion
 }
