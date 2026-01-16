@@ -141,18 +141,28 @@ public class BdecoderStressTests
         }
     }
 
-    [Fact]
-    public async Task DecodeWithChunkedStream()
+    [Theory]
+    [InlineData("i1e")]
+    [InlineData("1:a")]
+    [InlineData("li1ee")]
+    [InlineData("l1:ae")]
+    [InlineData("li1ei2ei3ee")]
+    [InlineData("l1:a1:b1:ce")]
+    [InlineData("d1:ai1ee")]
+    [InlineData("d1:a1:ae")]
+    [InlineData("d1:a1:a1:bi1ee")]
+    [InlineData("d3:barl4:spami42ee3:fooi99ee")]
+    public async Task DecodeWithChunkedStream(string input)
     {
-        var data = Encoding.ASCII.GetBytes("d3:barl4:spami42ee3:fooi99ee");
+        var data = Encoding.ASCII.GetBytes(input);
 
         var stream = new ChunkedStream(data, 1);
         using var decoder = new Bdecoder<ChunkedStream>(ref stream, options);
 
         var result = await decoder.DecodeAsync();
 
-        var dict = Assert.IsType<Bdictionary>(result);
-        Assert.Equal(99, Assert.IsType<Binteger>(dict[new Bstring("foo", Encoding.ASCII)]).Value);
+        var bobject = Assert.IsType<IBobject>(result, exactMatch: false);
+        Assert.Equal(input, bobject.ToString());
     }
 
     [Fact]

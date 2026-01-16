@@ -57,14 +57,17 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
     {
         _stack.Clear();
 
-        IBobject? bobject = default;
         var reader = PipeReader.Create(_stream, new StreamPipeReaderOptions(leaveOpen: true));
 
-        while (true)
+        IBobject? bobject = default;
+        ReadResult result = default!;
+        while (!result.IsCompleted)
         {
-            var result = await reader.ReadAsync(ct);
-            var buffer = result.Buffer;
+            result = await reader.ReadAsync(ct);
+            if (result.IsCanceled)
+                throw new OperationCanceledException();
 
+            var buffer = result.Buffer;
             while (TryParseBencode(ref buffer, out var element))
             {
                 bobject = element;
@@ -74,9 +77,6 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
             }
 
             reader.AdvanceTo(buffer.Start, buffer.End);
-
-            if (result.IsCompleted)
-                break;
         }
 
         await reader.CompleteAsync();
@@ -92,11 +92,7 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
         value = default!;
         var reader = new SequenceReader<byte>(buffer);
 
-        var checkpoint = reader.Position;
-        int stackDepth = _stack.Count;
-
-        bool exit = false;
-        while (!exit)
+        while (reader.Consumed < reader.Length)
         {
             if (!reader.TryPeek(out byte prefix))
                 return false;
@@ -140,10 +136,7 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
                     break;
                 case Bencode.IntegerBeginCharacter:
                     if (!TryReadInteger(ref reader, out var i))
-                    {
-                        exit = true;
-                        break;
-                    }
+                        return false;
 
                     if (AttachOrReturn(ref buffer, reader.Position, i, out value))
                         return true;
@@ -156,10 +149,7 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
                     break;
                 case >= Bencode.MinNumberCharacter and <= Bencode.MaxNumberCharacter:
                     if (!TryReadString(ref reader, out var s))
-                    {
-                        exit = true;
-                        break;
-                    }
+                        return false;
 
                     if (AttachOrReturn(ref buffer, reader.Position, s, out value))
                         return true;
@@ -169,8 +159,6 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
             }
         }
 
-        Rollback(stackDepth);
-        buffer = buffer.Slice(checkpoint);
         return false;
     }
 
@@ -338,12 +326,6 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
                 }
                 break;
         }
-    }
-
-    private void Rollback(int depth)
-    {
-        while (_stack.Count > depth)
-            _stack.Pop();
     }
 
     public void Dispose()
