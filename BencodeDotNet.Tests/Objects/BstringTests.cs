@@ -1,7 +1,7 @@
 ﻿using Jordiware.BencodeDotNet.Objects;
 using System.Text;
 
-namespace Jordiware.BencodeDotNet.Tests;
+namespace Jordiware.BencodeDotNet.Tests.Objects;
 
 public class BstringTests
 {

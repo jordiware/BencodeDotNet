@@ -343,6 +343,6 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
     private sealed class DictFrame : Frame
     {
         public Dictionary<Bstring, IBobject> Items = default!;
-        public Bstring? LastKey;
+        public Bstring? LastKey = default!;
     }
 }

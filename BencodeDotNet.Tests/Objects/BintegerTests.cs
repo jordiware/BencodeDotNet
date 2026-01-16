@@ -1,6 +1,6 @@
 ﻿using Jordiware.BencodeDotNet.Objects;
 
-namespace Jordiware.BencodeDotNet.Tests;
+namespace Jordiware.BencodeDotNet.Tests.Objects;
 
 public class BintegerTests
 {
