@@ -2,6 +2,7 @@
 using Jordiware.BencodeDotNet.Objects;
 using System.Buffers;
 using System.IO.Pipelines;
+using System.Security.Cryptography;
 using System.Text;
 
 namespace Jordiware.BencodeDotNet;
@@ -82,6 +83,12 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
 
         await reader.CompleteAsync();
 
+        if (bobject is null
+            && _stack.TryPop(out var builder)
+            && builder is BstringBuilder bstringBuilder
+            && bstringBuilder.IsCompleted)
+            bobject = bstringBuilder.ToBobject();
+
         if (bobject is null)
             throw new FormatException("Incomplete or invalid bencode object");
 
@@ -102,10 +109,23 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
                         if (b is >= Bencode.MinNumberCharacter and <= Bencode.MaxNumberCharacter && !sb.IsLengthFinished)
                         {
                             sb.PushLengthDigit(b);
+
+                            continue;
                         }
                         if (b == Bencode.StringPaddingCharacter && !sb.IsLengthFinished)
                         {
                             sb.FinishLength();
+
+                            if (sb.IsCompleted)
+                            {
+                                var stringBuilder = (BstringBuilder)_stack.Pop();
+                                var bstring = (Bstring)stringBuilder.ToBobject();
+
+                                if (AttachOrReturn(bstring, out value))
+                                    return true;
+                            }
+
+                            continue;
                         }
                         if (sb.IsLengthFinished && !sb.IsCompleted)
                         {
@@ -156,13 +176,13 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
                     break;
                 case Bencode.ListBeginCharacter:
                     if (_stack.Count > _options.MaxDepth)
-                        throw new FormatException("Maximum nesting depth exceeded");
+                        throw new InvalidOperationException("Maximum nesting depth exceeded");
 
                     _stack.Push(new BlistBuilder());
                     break;
                 case Bencode.DictionaryBeginCharacter:
                     if (_stack.Count > _options.MaxDepth)
-                        throw new FormatException("Maximum nesting depth exceeded");
+                        throw new InvalidOperationException("Maximum nesting depth exceeded");
 
                     _stack.Push(new BdictionaryBuilder());
                     break;
@@ -171,6 +191,8 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
                     strBuilder.PushLengthDigit(b);
                     _stack.Push(strBuilder);
                     break;
+                default:
+                    throw new FormatException($"Unexpected character {(char)b}");
             }
         }
 
