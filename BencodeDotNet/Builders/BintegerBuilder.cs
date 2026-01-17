@@ -21,6 +21,10 @@ internal sealed class BintegerBuilder : BobjectBuilder
         set
         {
             ThrowIfDisposed();
+
+            if (!_isPositive && !value)
+                throw new InvalidOperationException("Value is already negative");
+
             _isPositive = value;
         }
     }
@@ -29,7 +33,13 @@ internal sealed class BintegerBuilder : BobjectBuilder
     {
         ThrowIfDisposed();
 
-        _value = checked((_value * 10) + digit);
+        if (digit < Bencode.MinNumberCharacter || digit > Bencode.MaxNumberCharacter)
+            throw new ArgumentOutOfRangeException("Digit outside the 0-9 range");
+
+        if (digit == Bencode.MinNumberCharacter && _value == 0)
+            throw new ArgumentException("Unallowed '0' padding");
+
+        _value = checked((_value * 10) + (digit - Bencode.MinNumberCharacter));
     }
 
     public override IBobject ToBobject()

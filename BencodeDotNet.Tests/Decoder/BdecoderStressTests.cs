@@ -23,7 +23,7 @@ public class BdecoderStressTests
 
         if (size > options.MaxStringLength)
         {
-            await Assert.ThrowsAsync<FormatException>(() => decoder.DecodeAsync());
+            await Assert.ThrowsAsync<InvalidOperationException>(() => decoder.DecodeAsync());
         }
         else
         {
@@ -55,7 +55,7 @@ public class BdecoderStressTests
 
         if (count > options.MaxContainerItems)
         {
-            await Assert.ThrowsAsync<FormatException>(() => decoder.DecodeAsync());
+            await Assert.ThrowsAsync<InvalidOperationException>(() => decoder.DecodeAsync());
         }
         else
         {
@@ -87,7 +87,7 @@ public class BdecoderStressTests
 
         if (depth >= options.MaxDepth)
         {
-            await Assert.ThrowsAsync<FormatException>(() => decoder.DecodeAsync());
+            await Assert.ThrowsAsync<InvalidOperationException>(() => decoder.DecodeAsync());
         }
         else
         {
@@ -126,7 +126,7 @@ public class BdecoderStressTests
 
         if (depth >= options.MaxDepth)
         {
-            await Assert.ThrowsAsync<FormatException>(() => decoder.DecodeAsync());
+            await Assert.ThrowsAsync<InvalidOperationException>(() => decoder.DecodeAsync());
         }
         else
         {

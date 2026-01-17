@@ -13,6 +13,7 @@ internal sealed class BstringBuilder : BobjectBuilder
     }
 
     public bool IsLengthFinished => !ThrowIfDisposed() && _bytes is not null;
+    public bool IsCompleted => !ThrowIfDisposed() && _offset == _length;
 
     public void PushLengthDigit(byte digit)
     {
@@ -58,6 +59,9 @@ internal sealed class BstringBuilder : BobjectBuilder
 
         if (_bytes is null)
             throw new InvalidOperationException("Unfinished length value");
+
+        if (!IsCompleted)
+            throw new InvalidOperationException("Unfinished value");
 
         return new Bstring(_bytes);
     }

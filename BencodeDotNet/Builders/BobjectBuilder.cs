@@ -18,7 +18,7 @@ internal abstract class BobjectBuilder : IBobjectBuilder
 
     protected BobjectBuilder(BdecodingOptions options)
     {
-        _options = options;
+        _options = options ?? new();
     }
 
     public abstract IBobject ToBobject();
