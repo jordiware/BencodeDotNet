@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Jordiware.BencodeDotNet;
 
-public static class Bdecoder
+public static partial class Bdecoder
 {
     public static Bdecoder<MemoryStream> FromBytes(byte[] bytes, BdecodingOptions? options = default)
     {
@@ -67,17 +67,16 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
             if (result.IsCanceled)
                 throw new OperationCanceledException();
 
-            var buffer = result.Buffer;
-            if (TryParseBencode(ref buffer, out var element, out var consumed))
+            var seqReader = new SequenceReader<byte>(result.Buffer);
+            if (TryParseBencode(ref seqReader, out var element))
             {
                 ct.ThrowIfCancellationRequested();
-                reader.AdvanceTo(consumed);
 
                 bobject = element;
                 break;
             }
-
-            reader.AdvanceTo(buffer.Start, buffer.End);
+            
+            reader.AdvanceTo(seqReader.Position);
         }
 
         await reader.CompleteAsync();
@@ -88,17 +87,14 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
         return bobject;
     }
 
-    private bool TryParseBencode(ref ReadOnlySequence<byte> buffer, out IBobject? value, out SequencePosition consumed)
+    private bool TryParseBencode(ref SequenceReader<byte> reader, out IBobject? value)
     {
-        var reader = new SequenceReader<byte>(buffer);
-
         value = default!;
 
         while (reader.Consumed < reader.Length)
         {
             if (!reader.TryPeek(out byte prefix))
             {
-                consumed = reader.Position;
                 return false;
             }
 
@@ -106,7 +102,6 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
             {
                 case Bencode.TerminationCharacter:
                     reader.Advance(1);
-                    consumed = reader.Position;
 
                     if (_stack.Count == 0)
                         throw new FormatException("Unexpected 'e'");
@@ -131,7 +126,6 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
 
                     if (_stack.Count == 0)
                     {
-                        buffer = buffer.Slice(consumed);
                         value = completed;
                         return true;
                     }
@@ -142,46 +136,29 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
                     break;
                 case Bencode.IntegerBeginCharacter:
                     if (!TryReadInteger(ref reader, out var i))
-                    {
-                        consumed = reader.Position;
                         return false;
-                    }
 
-                    if (AttachOrReturn(ref buffer, reader.Position, i, out value))
-                    {
-                        consumed = buffer.Start; // reader.Position;
+                    if (AttachOrReturn(i, out value))
                         return true;
-                    }
                     break;
                 case Bencode.ListBeginCharacter:
                     BeginList(ref reader);
-                    consumed = reader.Position;
-                    buffer = buffer.Slice(consumed);
                     break;
                 case Bencode.DictionaryBeginCharacter:
                     BeginDictionary(ref reader);
-                    consumed = reader.Position;
-                    buffer = buffer.Slice(consumed);
                     break;
                 case >= Bencode.MinNumberCharacter and <= Bencode.MaxNumberCharacter:
                     if (!TryReadString(ref reader, out var s))
-                    {
-                        consumed = reader.Position;
                         return false;
-                    }
 
-                    if (AttachOrReturn(ref buffer, reader.Position, s, out value))
-                    {
-                        consumed = buffer.Start; // reader.Position;
+                    if (AttachOrReturn(s, out value))
                         return true;
-                    }
                     break;
                 default:
                     throw new FormatException($"Invalid prefix {(char)prefix}");
             }
         }
 
-        consumed = reader.Position;
         return false;
     }
 
@@ -305,10 +282,9 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
         });
     }
 
-    private bool AttachOrReturn(ref ReadOnlySequence<byte> buffer, SequencePosition pos, IBobject obj, out IBobject? value)
+    private bool AttachOrReturn(IBobject obj, out IBobject? value)
     {
         value = null;
-        buffer = buffer.Slice(pos);
 
         if (_stack.Count == 0)
         {
@@ -357,6 +333,7 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
 
     public void Dispose()
     {
+        _stack.Clear();
     }
 
     #region Utility types
