@@ -20,7 +20,7 @@ internal sealed class BstringBuilder : BobjectBuilder
         ThrowIfDisposed();
 
         if (digit < Bencode.MinNumberCharacter || digit > Bencode.MaxNumberCharacter)
-            throw new ArgumentOutOfRangeException(nameof(digit));
+            throw new FormatException("Digit outside the 0-9 range");
 
         if (IsLengthFinished)
             throw new InvalidOperationException("Finished length value");

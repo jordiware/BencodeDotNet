@@ -24,7 +24,10 @@ public class BdecoderTests
     [Theory]
     [InlineData("i01e")]
     [InlineData("i-0e")]
+    [InlineData("i--1e")]
+    [InlineData("i+1e")]
     [InlineData("i12xe")]
+    [InlineData("i-e")]
     public async Task DecodeInvalidIntegerThrows(string input)
     {
         using var decoder = Bdecoder.FromString(input, Encoding.ASCII);
@@ -37,7 +40,7 @@ public class BdecoderTests
     {
         using var decoder = Bdecoder.FromString("ie", Encoding.ASCII);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => decoder.DecodeAsync());
+        await Assert.ThrowsAsync<FormatException>(() => decoder.DecodeAsync());
     }
 
     [Theory]
@@ -57,7 +60,11 @@ public class BdecoderTests
     [Theory]
     [InlineData("01:a")]
     [InlineData("-1:a")]
+    [InlineData("--1:a")]
     [InlineData("3:ab")]
+    [InlineData("2:abc")]
+    [InlineData("2::ab")]
+    [InlineData("2x:ab")]
     public async Task DecodeInvalidStringThrows(string input)
     {
         using var decoder = Bdecoder.FromString(input, Encoding.ASCII);

@@ -2,7 +2,6 @@
 using Jordiware.BencodeDotNet.Objects;
 using System.Buffers;
 using System.IO.Pipelines;
-using System.Security.Cryptography;
 using System.Text;
 
 namespace Jordiware.BencodeDotNet;
@@ -75,7 +74,6 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
                 ct.ThrowIfCancellationRequested();
 
                 bobject = element;
-                break;
             }
 
             reader.AdvanceTo(seqReader.Position);
@@ -112,8 +110,11 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
 
                             continue;
                         }
-                        if (b == Bencode.StringPaddingCharacter && !sb.IsLengthFinished)
+                        if (b == Bencode.StringPaddingCharacter)
                         {
+                            if (sb.IsLengthFinished)
+                                throw new FormatException($"Unexpected character {(char)b}");
+
                             sb.FinishLength();
 
                             if (sb.IsCompleted)
@@ -175,13 +176,13 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
                     _stack.Push(new BintegerBuilder());
                     break;
                 case Bencode.ListBeginCharacter:
-                    if (_stack.Count > _options.MaxDepth)
+                    if (_stack.Count >= _options.MaxDepth)
                         throw new InvalidOperationException("Maximum nesting depth exceeded");
 
                     _stack.Push(new BlistBuilder());
                     break;
                 case Bencode.DictionaryBeginCharacter:
-                    if (_stack.Count > _options.MaxDepth)
+                    if (_stack.Count >= _options.MaxDepth)
                         throw new InvalidOperationException("Maximum nesting depth exceeded");
 
                     _stack.Push(new BdictionaryBuilder());

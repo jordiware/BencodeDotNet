@@ -23,7 +23,7 @@ internal sealed class BintegerBuilder : BobjectBuilder
             ThrowIfDisposed();
 
             if (!_isPositive && !value)
-                throw new ArgumentException("Value is already negative");
+                throw new FormatException("Value is already negative");
 
             _isPositive = value;
         }
@@ -34,7 +34,7 @@ internal sealed class BintegerBuilder : BobjectBuilder
         ThrowIfDisposed();
 
         if (digit < Bencode.MinNumberCharacter || digit > Bencode.MaxNumberCharacter)
-            throw new ArgumentOutOfRangeException("Digit outside the 0-9 range");
+            throw new FormatException("Digit outside the 0-9 range");
 
         if (!_isPositive && digit == Bencode.MinNumberCharacter && !(_value.HasValue && _value.Value > 0))
             throw new FormatException("Unallowed '0' padding");
@@ -53,7 +53,7 @@ internal sealed class BintegerBuilder : BobjectBuilder
         ThrowIfDisposed();
 
         if (!_value.HasValue)
-            throw new InvalidOperationException("Builder has no value");
+            throw new FormatException("Builder has no value");
 
         var value = _isPositive ? _value : -_value;
         return new Binteger(value.Value);
