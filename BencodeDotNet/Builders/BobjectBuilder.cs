@@ -5,9 +5,9 @@ namespace Jordiware.BencodeDotNet.Builders;
 internal abstract class BobjectBuilder : IBobjectBuilder
 {
     private bool _isDisposed = false;
-    private readonly BdecodingOptions _options;
+    private readonly BencodeOptions _options;
 
-    protected BdecodingOptions Options
+    protected BencodeOptions Options
     {
         get
         {
@@ -16,7 +16,7 @@ internal abstract class BobjectBuilder : IBobjectBuilder
         }
     }
 
-    protected BobjectBuilder(BdecodingOptions options)
+    protected BobjectBuilder(BencodeOptions? options)
     {
         _options = options ?? new();
     }

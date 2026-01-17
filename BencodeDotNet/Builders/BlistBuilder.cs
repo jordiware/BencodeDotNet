@@ -6,7 +6,7 @@ internal sealed class BlistBuilder : BobjectBuilder
 {
     private List<IBobject>? _objects = new();
 
-    public BlistBuilder(BdecodingOptions options = default!) : base(options)
+    public BlistBuilder(BencodeOptions? options = default) : base(options)
     {
     }
 

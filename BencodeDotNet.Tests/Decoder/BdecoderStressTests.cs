@@ -5,7 +5,7 @@ namespace Jordiware.BencodeDotNet.Tests.Decoder;
 
 public class BdecoderStressTests
 {
-    private static readonly BdecodingOptions options = new();
+    private static readonly BencodeOptions options = new();
 
     [Theory]
     [InlineData(1_000_000)]

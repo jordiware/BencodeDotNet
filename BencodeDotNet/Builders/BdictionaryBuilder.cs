@@ -8,7 +8,7 @@ internal sealed class BdictionaryBuilder : BobjectBuilder
     private Bstring? _pendingKey;
     private Bstring? _lastKey;
 
-    public BdictionaryBuilder(BdecodingOptions options = default!) : base(options)
+    public BdictionaryBuilder(BencodeOptions? options = default) : base(options)
     {
     }
 

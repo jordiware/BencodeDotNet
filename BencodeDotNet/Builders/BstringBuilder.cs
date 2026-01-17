@@ -8,7 +8,7 @@ internal sealed class BstringBuilder : BobjectBuilder
     private long _offset = 0;
     private byte[]? _bytes = null;
 
-    public BstringBuilder(BdecodingOptions options = default!) : base(options)
+    public BstringBuilder(BencodeOptions? options = default) : base(options)
     {
     }
 

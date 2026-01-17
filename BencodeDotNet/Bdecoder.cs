@@ -8,14 +8,14 @@ namespace Jordiware.BencodeDotNet;
 
 public static partial class Bdecoder
 {
-    public static Bdecoder<MemoryStream> FromBytes(byte[] bytes, BdecodingOptions? options = default)
+    public static Bdecoder<MemoryStream> FromBytes(byte[] bytes, BencodeOptions? options = default)
     {
         var stream = new MemoryStream(bytes);
         var decoder = new Bdecoder<MemoryStream>(ref stream, options);
         return decoder;
     }
 
-    public static Bdecoder<MemoryStream> FromString(string s, Encoding encoding, BdecodingOptions? options = default)
+    public static Bdecoder<MemoryStream> FromString(string s, Encoding encoding, BencodeOptions? options = default)
     {
         var bytes = encoding.GetBytes(s);
         var stream = new MemoryStream(bytes);
@@ -23,7 +23,7 @@ public static partial class Bdecoder
         return decoder;
     }
 
-    public static Bdecoder<FileStream> FromFile(string filePath, BdecodingOptions? options = default)
+    public static Bdecoder<FileStream> FromFile(string filePath, BencodeOptions? options = default)
     {
         var stream = new FileStream(filePath, FileMode.Open, FileAccess.Read);
         try
@@ -42,10 +42,10 @@ public static partial class Bdecoder
 public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
 {
     private readonly TStream _stream;
-    private readonly BdecodingOptions _options;
+    private readonly BencodeOptions _options;
     private readonly Stack<BobjectBuilder> _stack = new();
 
-    public Bdecoder(ref TStream stream, BdecodingOptions? options = default)
+    public Bdecoder(ref TStream stream, BencodeOptions? options = default)
     {
         if (!stream.CanRead)
             throw new ArgumentException("Stream can not be read");

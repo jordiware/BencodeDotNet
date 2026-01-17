@@ -7,7 +7,7 @@ internal sealed class BintegerBuilder : BobjectBuilder
     private long? _value = null;
     private bool _isPositive = true;
 
-    public BintegerBuilder(BdecodingOptions options = default!) : base(options)
+    public BintegerBuilder(BencodeOptions? options = default) : base(options)
     {
     }
 
