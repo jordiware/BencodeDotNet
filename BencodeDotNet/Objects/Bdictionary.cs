@@ -4,39 +4,131 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Jordiware.BencodeDotNet.Objects;
 
+/// <summary>
+/// Represents a Bencode dictionary.
+/// </summary>
+/// <remarks>
+/// A Bencode dictionary is a collection of key-value pairs where
+/// keys are Bencode byte strings and values are arbitrary Bencode objects.
+/// The dictionary is encoded as the ASCII character <c>'d'</c>,
+/// followed by each key-value pair encoded in lexicographical key order,
+/// and terminated by the character <c>'e'</c>.
+/// <para>
+/// Dictionary keys are ordered using lexicographical byte comparison
+/// of their underlying byte sequences, as defined by the Bencode
+/// specification.
+/// </para>
+/// <para>
+/// Example:
+/// <c>d3:cow3:moo4:spam4:eggse</c>
+/// </para>
+/// </remarks>
 public sealed class Bdictionary : IBobject, IReadOnlyDictionary<Bstring, IBobject>, IEquatable<Bdictionary>
 {
     private readonly ImmutableSortedDictionary<Bstring, IBobject> _keyValuePairs = ImmutableSortedDictionary<Bstring, IBobject>.Empty;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="Bdictionary"/> class
+    /// from the specified key-value pairs.
+    /// </summary>
+    /// <param name="keyValuePairs">
+    /// The dictionary entries to include. Keys must be unique.
+    /// </param>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown if <paramref name="keyValuePairs"/> is <see langword="null"/>.
+    /// </exception>
+    /// <remarks>
+    /// Entries are stored in canonical lexicographical order
+    /// of their keys.
+    /// </remarks>
     public Bdictionary(IDictionary<Bstring, IBobject> keyValuePairs)
     {
         _keyValuePairs = keyValuePairs.ToImmutableSortedDictionary();
     }
 
     #region Interfaces implementation
+    /// <summary>
+    /// Gets the Bencode object associated with the specified key.
+    /// </summary>
+    /// <param name="key">
+    /// The Bencode string key.
+    /// </param>
     public IBobject this[Bstring key] => _keyValuePairs[key];
 
+    /// <summary>
+    /// Gets a collection containing the keys of the dictionary.
+    /// </summary>
     public IEnumerable<Bstring> Keys => _keyValuePairs.Keys;
 
+    /// <summary>
+    /// Gets a collection containing the values of the dictionary.
+    /// </summary>
     public IEnumerable<IBobject> Values => _keyValuePairs.Values;
 
+    /// <summary>
+    /// Gets the number of key-value pairs contained in the dictionary.
+    /// </summary>
     public int Count => _keyValuePairs.Count;
 
+    /// <summary>
+    /// Determines whether the dictionary contains the specified key.
+    /// </summary>
+    /// <param name="key">
+    /// The key to locate in the dictionary.
+    /// </param>
+    /// <returns>
+    /// <see langword="true"/> if the dictionary contains the specified key;
+    /// otherwise, <see langword="false"/>.
+    /// </returns>
     public bool ContainsKey(Bstring key)
     {
         return _keyValuePairs.ContainsKey(key);
     }
 
+    /// <summary>
+    /// Returns an enumerator that iterates through the key-value pairs
+    /// of the dictionary in canonical key order.
+    /// </summary>
     public IEnumerator<KeyValuePair<Bstring, IBobject>> GetEnumerator()
     {
         return _keyValuePairs.GetEnumerator();
     }
 
+    /// <summary>
+    /// Gets the value associated with the specified key.
+    /// </summary>
+    /// <param name="key">
+    /// The key whose value to retrieve.
+    /// </param>
+    /// <param name="value">
+    /// When this method returns, contains the value associated with
+    /// the specified key, if the key is found; otherwise, <see langword="null"/>.
+    /// </param>
+    /// <returns>
+    /// <see langword="true"/> if the dictionary contains the specified key;
+    /// otherwise, <see langword="false"/>.
+    /// </returns>
     public bool TryGetValue(Bstring key, [MaybeNullWhen(false)] out IBobject value)
     {
         return _keyValuePairs.TryGetValue(key, out value);
     }
 
+    /// <summary>
+    /// Determines whether the current <see cref="Bdictionary"/> is equal to
+    /// another <see cref="Bdictionary"/>.
+    /// </summary>
+    /// <param name="other">
+    /// The <see cref="Bdictionary"/> to compare with this instance.
+    /// </param>
+    /// <returns>
+    /// <see langword="true"/> if both dictionaries contain the same keys
+    /// and all corresponding values are equal; otherwise,
+    /// <see langword="false"/>.
+    /// </returns>
+    /// <remarks>
+    /// Equality is independent of insertion order and is evaluated
+    /// based on canonical key ordering.
+    /// </remarks>
     public bool Equals(Bdictionary? other)
     {
         if (other == null) return false;
@@ -54,6 +146,14 @@ public sealed class Bdictionary : IBobject, IReadOnlyDictionary<Bstring, IBobjec
         return true;
     }
 
+    /// <summary>
+    /// Serializes the current <see cref="Bdictionary"/> into its binary
+    /// Bencode representation.
+    /// </summary>
+    /// <returns>
+    /// A byte array containing the canonical Bencode encoding
+    /// of this dictionary.
+    /// </returns>
     public byte[] ToBinaryEncoding()
     {
         var encoded = new List<byte>([ Bencode.DictionaryBeginCharacter ]);
@@ -72,11 +172,13 @@ public sealed class Bdictionary : IBobject, IReadOnlyDictionary<Bstring, IBobjec
     }
     #endregion
 
+    /// <inheritdoc />
     public override bool Equals(object? obj)
     {
         return obj is Bdictionary other && Equals(other);
     }
 
+    /// <inheritdoc />
     public override int GetHashCode()
     {
         var hash = new HashCode();
@@ -88,6 +190,16 @@ public sealed class Bdictionary : IBobject, IReadOnlyDictionary<Bstring, IBobjec
         return hash.ToHashCode();
     }
 
+    /// <summary>
+    /// Returns the canonical Bencode string representation of the dictionary.
+    /// </summary>
+    /// <remarks>
+    /// The output reflects canonical key ordering and is intended
+    /// primarily for diagnostics and debugging.
+    /// </remarks>
+    /// <returns>
+    /// A string in the form <c>d&lt;key&gt;&lt;value&gt;...e</c>.
+    /// </returns>
     public override string ToString()
     {
         var kvps = _keyValuePairs.Select(kvp => $"{kvp.Key}{kvp.Value}").ToArray();

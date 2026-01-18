@@ -4,27 +4,101 @@ using System.Text;
 
 namespace Jordiware.BencodeDotNet.Objects;
 
+/// <summary>
+/// Represents a Bencode byte string.
+/// </summary>
+/// <remarks>
+/// A Bencode string is an arbitrary sequence of bytes, encoded as
+/// its byte length in base-10 ASCII, followed by a colon (<c>':'</c>),
+/// and then the raw byte sequence.
+/// <para>
+/// Bencode strings are <em>byte-oriented</em> and do not imply any
+/// character encoding. Any textual interpretation is the responsibility
+/// of the caller.
+/// </para>
+/// <para>
+/// Examples:
+/// <list type="bullet">
+/// <item><description><c>4:spam</c></description></item>
+/// <item><description><c>0:</c></description></item>
+/// </list>
+/// </para>
+/// </remarks>
 public sealed class Bstring : IBobject, IReadOnlyList<byte>, IEquatable<Bstring>, IComparable<Bstring>
 {
     private readonly ImmutableArray<byte> _bytes;
 
+    /// <summary>
+    /// Gets the raw byte value of the Bencode string.
+    /// </summary>
+    /// <remarks>
+    /// A new array is returned on each access to preserve immutability.
+    /// </remarks>
     public byte[] Value => _bytes.ToArray();
 
+    /// <summary>
+    /// Initializes a new <see cref="Bstring"/> from a raw byte array.
+    /// </summary>
+    /// <param name="bytes">
+    /// The byte sequence represented by the Bencode string.
+    /// </param>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown if <paramref name="bytes"/> is <see langword="null"/>.
+    /// </exception>
     public Bstring(byte[] bytes)
     {
         _bytes = bytes.ToImmutableArray();
     }
 
+    /// <summary>
+    /// Initializes a new <see cref="Bstring"/> from a string using
+    /// the specified text encoding.
+    /// </summary>
+    /// <param name="s">
+    /// The string to encode as a Bencode byte string.
+    /// </param>
+    /// <param name="encoding">
+    /// The encoding used to convert <paramref name="s"/> into bytes.
+    /// </param>
+    /// <exception cref="ArgumentNullException">
+    /// Thrown if <paramref name="s"/> or <paramref name="encoding"/> is
+    /// <see langword="null"/>.
+    /// </exception>
     public Bstring(string s, Encoding encoding)
     {
         _bytes = encoding.GetBytes(s).ToImmutableArray();
     }
 
     #region Interfaces implementation
+    /// <summary>
+    /// Gets the byte at the specified index.
+    /// </summary>
+    /// <param name="index">
+    /// The zero-based index of the byte to retrieve.
+    /// </param>
     public byte this[int index] => _bytes[index];
 
+    /// <summary>
+    /// Gets the number of bytes contained in the Bencode string.
+    /// </summary>
     public int Count => _bytes.Length;
 
+    /// <summary>
+    /// Compares the current <see cref="Bstring"/> with another
+    /// <see cref="Bstring"/> using lexicographical byte ordering.
+    /// </summary>
+    /// <param name="other">
+    /// The <see cref="Bstring"/> to compare with this instance.
+    /// </param>
+    /// <returns>
+    /// A value less than zero if this instance precedes <paramref name="other"/>,
+    /// zero if they are equal, or a value greater than zero if this instance
+    /// follows <paramref name="other"/>.
+    /// </returns>
+    /// <remarks>
+    /// Comparison is performed byte-by-byte. If all compared bytes are equal,
+    /// the shorter string is considered smaller.
+    /// </remarks>
     public int CompareTo(Bstring? other)
     {
         if (other == null) return 1;
@@ -40,6 +114,17 @@ public sealed class Bstring : IBobject, IReadOnlyList<byte>, IEquatable<Bstring>
         return _bytes.Length.CompareTo(other._bytes.Length);
     }
 
+    /// <summary>
+    /// Determines whether the current <see cref="Bstring"/> is equal to
+    /// another <see cref="Bstring"/>.
+    /// </summary>
+    /// <param name="other">
+    /// The <see cref="Bstring"/> to compare with this instance.
+    /// </param>
+    /// <returns>
+    /// <see langword="true"/> if the underlying byte sequences are equal;
+    /// otherwise, <see langword="false"/>.
+    /// </returns>
     public bool Equals(Bstring? other)
     {
         if (other == null) return false;
@@ -48,11 +133,23 @@ public sealed class Bstring : IBobject, IReadOnlyList<byte>, IEquatable<Bstring>
         return _bytes.SequenceEqual(other._bytes);
     }
 
+    /// <summary>
+    /// Returns an enumerator that iterates through the bytes
+    /// of the Bencode string.
+    /// </summary>
     public IEnumerator<byte> GetEnumerator()
     {
         return _bytes.AsEnumerable().GetEnumerator();
     }
 
+    /// <summary>
+    /// Serializes the current <see cref="Bstring"/> into its binary
+    /// Bencode representation.
+    /// </summary>
+    /// <returns>
+    /// A byte array containing the canonical Bencode encoding
+    /// of this string.
+    /// </returns>
     public byte[] ToBinaryEncoding()
     {
         var length = Encoding.ASCII.GetBytes($"{_bytes.Length}:");
@@ -68,11 +165,13 @@ public sealed class Bstring : IBobject, IReadOnlyList<byte>, IEquatable<Bstring>
     }
     #endregion
 
+    /// <inheritdoc />
     public override bool Equals(object? obj)
     {
         return obj is Bstring other && Equals(other);
     }
 
+    /// <inheritdoc />
     public override int GetHashCode()
     {
         var hash = new HashCode();
@@ -83,11 +182,32 @@ public sealed class Bstring : IBobject, IReadOnlyList<byte>, IEquatable<Bstring>
         return hash.ToHashCode();
     }
 
+    /// <summary>
+    /// Returns a human-readable representation of the Bencode string.
+    /// </summary>
+    /// <remarks>
+    /// The byte payload is decoded using ISO-8859-1 (Latin-1) to ensure
+    /// a lossless one-to-one byte-to-character mapping.
+    /// This method is intended for debugging and diagnostics only.
+    /// </remarks>
+    /// <returns>
+    /// A string in the form <c>&lt;length&gt;:&lt;data&gt;</c>.
+    /// </returns>
     public override string ToString()
     {
         return $"{_bytes.Length}:{Encoding.Latin1.GetString(_bytes.ToArray())}";
     }
 
+    /// <summary>
+    /// Returns a hexadecimal representation of the Bencode string.
+    /// </summary>
+    /// <remarks>
+    /// This method is intended for debugging and diagnostics.
+    /// </remarks>
+    /// <returns>
+    /// A string containing the byte length and a hyphen-separated
+    /// hexadecimal representation of the byte sequence.
+    /// </returns>
     public string ToHexString()
     {
         return $"{_bytes.Length}:{BitConverter.ToString(_bytes.ToArray())}";
