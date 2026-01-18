@@ -2,6 +2,7 @@
   <Folder Name="/Elementos de la solución/">
     <File Path="docs/decoding_basics.md" />
     <File Path="docs/overview.md" />
+    <File Path="docs/safety_and_limits.md" />
     <File Path="docs/working_with_objects.md" />
     <File Path="LICENSE" />
     <File Path="README.md" />
