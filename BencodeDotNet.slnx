@@ -1,5 +1,6 @@
 <Solution>
   <Folder Name="/Elementos de la solución/">
+    <File Path="docs/overview.md" />
     <File Path="LICENSE" />
     <File Path="README.md" />
   </Folder>
