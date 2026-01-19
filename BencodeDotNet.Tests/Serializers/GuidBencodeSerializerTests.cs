@@ -83,5 +83,4 @@ public class GuidBencodeSerializerTests
         Assert.True(deserializeResult);
         Assert.Equal(original, roundTripped);
     }
-
 }
