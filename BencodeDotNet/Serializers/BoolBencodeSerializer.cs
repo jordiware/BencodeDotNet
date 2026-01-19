@@ -22,7 +22,7 @@ namespace Jordiware.BencodeDotNet.Serializers;
 /// and causes the operation to fail.
 /// </para>
 /// </remarks>
-public class BoolBencodeSerializer : UnmanagedTypeBencodeSerializer<bool, Binteger>
+public sealed class BoolBencodeSerializer : UnmanagedTypeBencodeSerializer<bool, Binteger>
 {
     /// <summary>
     /// Attempts to serialize a <see cref="bool"/> value into its
