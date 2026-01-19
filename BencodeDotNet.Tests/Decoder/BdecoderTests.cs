@@ -23,6 +23,7 @@ public class BdecoderTests
 
     [Theory]
     [InlineData("i01e")]
+    [InlineData("i1-e")]
     [InlineData("i-0e")]
     [InlineData("i--1e")]
     [InlineData("i+1e")]

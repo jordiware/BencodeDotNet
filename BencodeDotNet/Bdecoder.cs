@@ -210,64 +210,27 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
         {
             if (_stack.TryPeek(out var builder))
             {
-                switch (builder)
+                if (builder is BintegerBuilder ib)
                 {
-                    case BstringBuilder sb:
-                        if (b is >= Bencode.MinNumberCharacter and <= Bencode.MaxNumberCharacter && !sb.IsLengthFinished)
-                        {
-                            sb.PushLengthDigit(b);
+                    if (TryReadBintegerByte(ref ib, b, out value))
+                    {
+                        if (value is not null)
+                            return true;
+                        continue;
+                    }
+                }
 
-                            continue;
-                        }
-                        if (b == Bencode.StringPaddingCharacter)
-                        {
-                            if (sb.IsLengthFinished)
-                                throw new FormatException($"Unexpected character {(char)b}");
-
-                            sb.FinishLength();
-
-                            if (sb.IsCompleted)
-                            {
-                                var stringBuilder = (BstringBuilder)_stack.Pop();
-                                var bstring = (Bstring)stringBuilder.ToBobject();
-
-                                if (AttachOrReturn(bstring, out value))
-                                    return true;
-                            }
-
-                            continue;
-                        }
-                        if (sb.IsLengthFinished && !sb.IsCompleted)
-                        {
-                            sb.PushByte(b);
-
-                            if (sb.IsCompleted)
-                            {
-                                var stringBuilder = (BstringBuilder)_stack.Pop();
-                                var bstring = (Bstring)stringBuilder.ToBobject();
-
-                                if (AttachOrReturn(bstring, out value))
-                                    return true;
-                            }
-
-                            continue;
-                        }
-                        break;
-                    case BintegerBuilder ib:
-                        if (b >= Bencode.MinNumberCharacter && b <= Bencode.MaxNumberCharacter)
-                        {
-                            ib.PushDigit(b);
-                            continue;
-                        }
-                        if (b == (byte)'-')
-                        {
-                            ib.IsPositive = false;
-                            continue;
-                        }
-                        break;
+                if (builder is BstringBuilder sb)
+                {
+                    if (TryReadBstringByte(ref sb, b, out value))
+                    {
+                        if (value is not null)
+                            return true;
+                        continue;
+                    }
+                    throw new FormatException($"Unexpected character {(char)b}");
                 }
             }
-
 
             switch (b)
             {
@@ -306,6 +269,152 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
             }
         }
 
+        return false;
+    }
+
+    /// <summary>
+    /// Attempts to consume a single byte as part of an integer literal.
+    /// </summary>
+    /// <param name="bintegerBuilder">
+    /// The active <see cref="BintegerBuilder"/> receiving integer digits.
+    /// </param>
+    /// <param name="b">
+    /// The next byte from the input stream.
+    /// </param>
+    /// <param name="value">
+    /// When this method returns <c>true</c> and the integer is complete,
+    /// receives the completed <see cref="IBobject"/> or the top-level result.
+    /// </param>
+    /// <returns>
+    /// <c>true</c> if the byte was successfully consumed as part of the integer;
+    /// otherwise <c>false</c>.
+    /// </returns>
+    /// <remarks>
+    /// <para>
+    /// This method processes sign, digit, and termination characters for
+    /// Bencode integers.
+    /// </para>
+    /// <para>
+    /// When the termination character is encountered, the integer builder is
+    /// finalized and either attached to its parent container or returned as
+    /// the completed top-level object.
+    /// </para>
+    /// </remarks>
+    private bool TryReadBintegerByte(ref BintegerBuilder bintegerBuilder, byte b, out IBobject? value)
+    {
+        value = null;
+        switch (b)
+        {
+            case (byte)'-':
+                bintegerBuilder.IsPositive = false;
+                return true;
+            case Bencode.TerminationCharacter:
+                var builder = _stack.Pop();
+                var completed = builder.ToBobject();
+                AttachOrReturn(completed, out value);
+                return true;
+            case >= Bencode.MinNumberCharacter and <= Bencode.MaxNumberCharacter:
+                bintegerBuilder.PushDigit(b);
+                return true;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Attempts to consume a single byte as part of a byte string literal.
+    /// </summary>
+    /// <param name="bstringBuilder">
+    /// The active <see cref="BstringBuilder"/> receiving length digits or data bytes.
+    /// </param>
+    /// <param name="b">
+    /// The next byte from the input stream.
+    /// </param>
+    /// <param name="value">
+    /// When this method returns <c>true</c> and the string is complete,
+    /// receives the completed <see cref="IBobject"/> or the top-level result.
+    /// </param>
+    /// <returns>
+    /// <c>true</c> if the byte was successfully consumed as part of the string;
+    /// otherwise <c>false</c>.
+    /// </returns>
+    /// <exception cref="FormatException">
+    /// Thrown if an unexpected separator or character is encountered.
+    /// </exception>
+    /// <remarks>
+    /// <para>
+    /// This method handles both phases of Bencode string parsing:
+    /// length specification and byte payload consumption.
+    /// </para>
+    /// <para>
+    /// Once the declared number of bytes has been read, the string builder is
+    /// finalized and either attached to its parent container or returned as
+    /// the completed top-level object.
+    /// </para>
+    /// </remarks>
+    private bool TryReadBstringByte(ref BstringBuilder bstringBuilder, byte b, out IBobject? value)
+    {
+        value = null;
+        if (b is >= Bencode.MinNumberCharacter and <= Bencode.MaxNumberCharacter && !bstringBuilder.IsLengthFinished)
+        {
+            bstringBuilder.PushLengthDigit(b);
+
+            return true;
+        }
+        if (b == Bencode.StringPaddingCharacter)
+        {
+            if (bstringBuilder.IsLengthFinished)
+                throw new FormatException($"Unexpected character {(char)b}");
+
+            bstringBuilder.FinishLength();
+
+            TryCloseStringBuilder(ref bstringBuilder, out value);
+            return true;
+        }
+        if (bstringBuilder.IsLengthFinished && !bstringBuilder.IsCompleted)
+        {
+            bstringBuilder.PushByte(b);
+
+            TryCloseStringBuilder(ref bstringBuilder, out value);
+            return true;
+        }
+        return false;
+    }
+
+    /// <summary>
+    /// Finalizes a completed string builder and attaches or returns the result.
+    /// </summary>
+    /// <param name="bstringBuilder">
+    /// The string builder to evaluate for completion.
+    /// </param>
+    /// <param name="value">
+    /// When this method returns <c>true</c>, receives the completed
+    /// <see cref="IBobject"/> if decoding has finished.
+    /// </param>
+    /// <returns>
+    /// <c>true</c> if decoding is complete after closing the string;
+    /// otherwise <c>false</c>.
+    /// </returns>
+    /// <remarks>
+    /// <para>
+    /// If the builder has reached its declared length, it is removed from the
+    /// builder stack and converted into a <see cref="Bstring"/>.
+    /// </para>
+    /// <para>
+    /// The completed string is then either attached to its parent builder or
+    /// returned as the final decoding result.
+    /// </para>
+    /// </remarks>
+    private bool TryCloseStringBuilder(ref BstringBuilder bstringBuilder, out IBobject? value)
+    {
+        value = null;
+        if (bstringBuilder.IsCompleted)
+        {
+            var sb = (BstringBuilder)_stack.Pop();
+            var bstring = (Bstring)sb.ToBobject();
+
+            if (AttachOrReturn(bstring, out value))
+                return true;
+        }
         return false;
     }
 

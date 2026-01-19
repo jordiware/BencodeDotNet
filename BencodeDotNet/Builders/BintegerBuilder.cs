@@ -65,6 +65,9 @@ internal sealed class BintegerBuilder : BobjectBuilder
         {
             ThrowIfDisposed();
 
+            if (_value.HasValue)
+                throw new FormatException("Unexpected sign change");
+
             if (!_isPositive && !value)
                 throw new FormatException("Value is already negative");
 
