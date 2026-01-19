@@ -3,12 +3,10 @@ using Jordiware.BencodeDotNet.Serializers;
 
 namespace Jordiware.BencodeDotNet.Tests.Serializers;
 
-public class NumericLongBencodeSerializerTests
+public class LongBencodeSerializerTests
 {
-    private static readonly LongBencodeSerializer LongSerializer = new();
-    private static readonly UlongBencodeSerializer UlongSerializer = new();
+    private static readonly LongBencodeSerializer Serializer = new();
 
-    #region Test LongSerializer
     [Theory]
     [InlineData(long.MinValue)]
     [InlineData(-1L)]
@@ -17,7 +15,7 @@ public class NumericLongBencodeSerializerTests
     [InlineData(long.MaxValue)]
     public void TrySerializeValidLongAlwaysSucceeds(long value)
     {
-        var result = LongSerializer.TrySerialize(value, out var binteger);
+        var result = Serializer.TrySerialize(value, out var binteger);
 
         Assert.True(result);
         Assert.NotNull(binteger);
@@ -34,7 +32,7 @@ public class NumericLongBencodeSerializerTests
     {
         var binteger = new Binteger(encodedValue);
 
-        var result = LongSerializer.TryDeserialize(binteger, out var value);
+        var result = Serializer.TryDeserialize(binteger, out var value);
 
         Assert.True(result);
         Assert.Equal(encodedValue, value);
@@ -48,14 +46,17 @@ public class NumericLongBencodeSerializerTests
     [InlineData(long.MaxValue)]
     public void RoundTripLongValueIsPreserved(long original)
     {
-        Assert.True(LongSerializer.TrySerialize(original, out var binteger));
-        Assert.True(LongSerializer.TryDeserialize(binteger, out var roundTripped));
+        Assert.True(Serializer.TrySerialize(original, out var binteger));
+        Assert.True(Serializer.TryDeserialize(binteger, out var roundTripped));
 
         Assert.Equal(original, roundTripped);
     }
-    #endregion
+}
 
-    #region Test UlongSerializer
+public class UlongBencodeSerializerTests
+{
+    private static readonly UlongBencodeSerializer Serializer = new();
+
     [Theory]
     [InlineData((ulong)0)]
     [InlineData((ulong)1)]
@@ -63,7 +64,7 @@ public class NumericLongBencodeSerializerTests
     [InlineData((ulong)long.MaxValue)]
     public void TrySerializeValidUlongAlwaysSucceeds(ulong value)
     {
-        var result = UlongSerializer.TrySerialize(value, out var binteger);
+        var result = Serializer.TrySerialize(value, out var binteger);
 
         Assert.True(result);
         Assert.NotNull(binteger);
@@ -75,7 +76,7 @@ public class NumericLongBencodeSerializerTests
     [InlineData(ulong.MaxValue)]
     public void TrySerializeOutOfLongRangeFails(ulong value)
     {
-        var result = UlongSerializer.TrySerialize(value, out var binteger);
+        var result = Serializer.TrySerialize(value, out var binteger);
 
         Assert.False(result);
         Assert.Null(binteger);
@@ -90,7 +91,7 @@ public class NumericLongBencodeSerializerTests
     {
         var binteger = new Binteger(encodedValue);
 
-        var result = UlongSerializer.TryDeserialize(binteger, out var value);
+        var result = Serializer.TryDeserialize(binteger, out var value);
 
         Assert.True(result);
         Assert.Equal((ulong)encodedValue, value);
@@ -104,7 +105,7 @@ public class NumericLongBencodeSerializerTests
     {
         var binteger = new Binteger(encodedValue);
 
-        var result = UlongSerializer.TryDeserialize(binteger, out var value);
+        var result = Serializer.TryDeserialize(binteger, out var value);
 
         Assert.False(result);
         Assert.Equal(default, value);
@@ -117,10 +118,9 @@ public class NumericLongBencodeSerializerTests
     [InlineData((ulong)long.MaxValue)]
     public void RoundTripUlongValueIsPreserved(ulong original)
     {
-        Assert.True(UlongSerializer.TrySerialize(original, out var binteger));
-        Assert.True(UlongSerializer.TryDeserialize(binteger!, out var roundTripped));
+        Assert.True(Serializer.TrySerialize(original, out var binteger));
+        Assert.True(Serializer.TryDeserialize(binteger!, out var roundTripped));
 
         Assert.Equal(original, roundTripped);
     }
-    #endregion
 }

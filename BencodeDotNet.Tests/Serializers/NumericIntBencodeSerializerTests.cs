@@ -3,12 +3,10 @@ using Jordiware.BencodeDotNet.Serializers;
 
 namespace Jordiware.BencodeDotNet.Tests.Serializers;
 
-public class NumericIntBencodeSerializerTests
+public class IntBencodeSerializerTests
 {
-    private static readonly IntBencodeSerializer IntSerializer = new();
-    private static readonly UintBencodeSerializer UintSerializer = new();
+    private static readonly IntBencodeSerializer Serializer = new();
 
-    #region Test IntSerializer
     [Theory]
     [InlineData(int.MinValue)]
     [InlineData(-1)]
@@ -17,7 +15,7 @@ public class NumericIntBencodeSerializerTests
     [InlineData(int.MaxValue)]
     public void TrySerializeValidIntAlwaysSucceeds(int value)
     {
-        var result = IntSerializer.TrySerialize(value, out var binteger);
+        var result = Serializer.TrySerialize(value, out var binteger);
 
         Assert.True(result);
         Assert.NotNull(binteger);
@@ -34,7 +32,7 @@ public class NumericIntBencodeSerializerTests
     {
         var binteger = new Binteger(encodedValue);
 
-        var result = IntSerializer.TryDeserialize(binteger, out var value);
+        var result = Serializer.TryDeserialize(binteger, out var value);
 
         Assert.True(result);
         Assert.Equal((int)encodedValue, value);
@@ -51,7 +49,7 @@ public class NumericIntBencodeSerializerTests
     {
         var binteger = new Binteger(encodedValue);
 
-        var result = IntSerializer.TryDeserialize(binteger, out var value);
+        var result = Serializer.TryDeserialize(binteger, out var value);
 
         Assert.False(result);
         Assert.Equal(default, value);
@@ -65,14 +63,17 @@ public class NumericIntBencodeSerializerTests
     [InlineData(int.MaxValue)]
     public void RoundTripIntValueIsPreserved(int original)
     {
-        Assert.True(IntSerializer.TrySerialize(original, out var binteger));
-        Assert.True(IntSerializer.TryDeserialize(binteger, out var roundTripped));
+        Assert.True(Serializer.TrySerialize(original, out var binteger));
+        Assert.True(Serializer.TryDeserialize(binteger, out var roundTripped));
 
         Assert.Equal(original, roundTripped);
     }
-    #endregion
+}
 
-    #region Test UintSerializer
+public class UintBencodeSerializerTests
+{
+    private static readonly UintBencodeSerializer Serializer = new();
+
     [Theory]
     [InlineData((uint)0)]
     [InlineData((uint)1)]
@@ -80,7 +81,7 @@ public class NumericIntBencodeSerializerTests
     [InlineData(uint.MaxValue)]
     public void TrySerializeValidUintAlwaysSucceeds(uint value)
     {
-        var result = UintSerializer.TrySerialize(value, out var binteger);
+        var result = Serializer.TrySerialize(value, out var binteger);
 
         Assert.True(result);
         Assert.NotNull(binteger);
@@ -96,7 +97,7 @@ public class NumericIntBencodeSerializerTests
     {
         var binteger = new Binteger(encodedValue);
 
-        var result = UintSerializer.TryDeserialize(binteger, out var value);
+        var result = Serializer.TryDeserialize(binteger, out var value);
 
         Assert.True(result);
         Assert.Equal((uint)encodedValue, value);
@@ -113,7 +114,7 @@ public class NumericIntBencodeSerializerTests
     {
         var binteger = new Binteger(encodedValue);
 
-        var result = UintSerializer.TryDeserialize(binteger, out var value);
+        var result = Serializer.TryDeserialize(binteger, out var value);
 
         Assert.False(result);
         Assert.Equal(default, value);
@@ -126,10 +127,9 @@ public class NumericIntBencodeSerializerTests
     [InlineData(uint.MaxValue)]
     public void RoundTripUintValueIsPreserved(uint original)
     {
-        Assert.True(UintSerializer.TrySerialize(original, out var binteger));
-        Assert.True(UintSerializer.TryDeserialize(binteger, out var roundTripped));
+        Assert.True(Serializer.TrySerialize(original, out var binteger));
+        Assert.True(Serializer.TryDeserialize(binteger, out var roundTripped));
 
         Assert.Equal(original, roundTripped);
     }
-    #endregion
 }

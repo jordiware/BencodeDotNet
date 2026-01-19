@@ -5,10 +5,8 @@ namespace Jordiware.BencodeDotNet.Tests.Serializers;
 
 public class NumericByteBencodeSerializerTests
 {
-    private static readonly NumericByteBencodeSerializer ByteSerializer = new();
-    private static readonly SbyteBencodeSerializer SbyteSerializer = new();
+    private static readonly NumericByteBencodeSerializer Serializer = new();
 
-    #region Test ByteSerializer
     [Theory]
     [InlineData((byte)0)]
     [InlineData((byte)1)]
@@ -16,7 +14,7 @@ public class NumericByteBencodeSerializerTests
     [InlineData((byte)255)]
     public void TrySerializeValidByteAlwaysSucceeds(byte value)
     {
-        var result = ByteSerializer.TrySerialize(value, out var bencode);
+        var result = Serializer.TrySerialize(value, out var bencode);
 
         Assert.True(result);
         Assert.NotNull(bencode);
@@ -32,7 +30,7 @@ public class NumericByteBencodeSerializerTests
     {
         var binteger = new Binteger(encodedValue);
 
-        var result = ByteSerializer.TryDeserialize(binteger, out var value);
+        var result = Serializer.TryDeserialize(binteger, out var value);
 
         Assert.True(result);
         Assert.Equal((byte)encodedValue, value);
@@ -49,7 +47,7 @@ public class NumericByteBencodeSerializerTests
     {
         var binteger = new Binteger(encodedValue);
 
-        var result = ByteSerializer.TryDeserialize(binteger, out var value);
+        var result = Serializer.TryDeserialize(binteger, out var value);
 
         Assert.False(result);
         Assert.Equal(default, value);
@@ -62,14 +60,17 @@ public class NumericByteBencodeSerializerTests
     [InlineData((byte)255)]
     public void RoundTripByteValueIsPreserved(byte original)
     {
-        Assert.True(ByteSerializer.TrySerialize(original, out var binteger));
-        Assert.True(ByteSerializer.TryDeserialize(binteger, out var roundTripped));
+        Assert.True(Serializer.TrySerialize(original, out var binteger));
+        Assert.True(Serializer.TryDeserialize(binteger, out var roundTripped));
 
         Assert.Equal(original, roundTripped);
     }
-    #endregion
+}
 
-    #region Test SbyteSerializer
+public class SbyteBencodeSerializerTests
+{
+    private static readonly SbyteBencodeSerializer Serializer = new();
+
     [Theory]
     [InlineData((sbyte)-128)]
     [InlineData((sbyte)-1)]
@@ -78,7 +79,7 @@ public class NumericByteBencodeSerializerTests
     [InlineData((sbyte)127)]
     public void TrySerializeValidSbyteAlwaysSucceeds(sbyte value)
     {
-        var result = SbyteSerializer.TrySerialize(value, out var bencode);
+        var result = Serializer.TrySerialize(value, out var bencode);
 
         Assert.True(result);
         Assert.NotNull(bencode);
@@ -93,13 +94,10 @@ public class NumericByteBencodeSerializerTests
     [InlineData(127)]
     public void TryDeserializeValidSbyteRangeSucceeds(long encodedValue)
     {
-        // Arrange
         var binteger = new Binteger(encodedValue);
 
-        // Act
-        var result = SbyteSerializer.TryDeserialize(binteger, out var value);
+        var result = Serializer.TryDeserialize(binteger, out var value);
 
-        // Assert
         Assert.True(result);
         Assert.Equal((sbyte)encodedValue, value);
     }
@@ -113,13 +111,10 @@ public class NumericByteBencodeSerializerTests
     [InlineData(long.MaxValue)]
     public void TryDeserializeOutOfSbyteRangeFails(long encodedValue)
     {
-        // Arrange
         var binteger = new Binteger(encodedValue);
 
-        // Act
-        var result = SbyteSerializer.TryDeserialize(binteger, out var value);
+        var result = Serializer.TryDeserialize(binteger, out var value);
 
-        // Assert
         Assert.False(result);
         Assert.Equal(default, value);
     }
@@ -132,12 +127,9 @@ public class NumericByteBencodeSerializerTests
     [InlineData((sbyte)127)]
     public void RoundTripSbyteValueIsPreserved(sbyte original)
     {
-        // Act
-        Assert.True(SbyteSerializer.TrySerialize(original, out var binteger));
-        Assert.True(SbyteSerializer.TryDeserialize(binteger, out var roundTripped));
+        Assert.True(Serializer.TrySerialize(original, out var binteger));
+        Assert.True(Serializer.TryDeserialize(binteger, out var roundTripped));
 
-        // Assert
         Assert.Equal(original, roundTripped);
     }
-    #endregion
 }

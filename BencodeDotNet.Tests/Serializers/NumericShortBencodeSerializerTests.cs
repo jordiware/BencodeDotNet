@@ -3,12 +3,10 @@ using Jordiware.BencodeDotNet.Serializers;
 
 namespace Jordiware.BencodeDotNet.Tests.Serializers;
 
-public class NumericShortBencodeSerializerTests
+public class ShortBencodeSerializerTests
 {
-    private static readonly ShortBencodeSerializer ShortSerializer = new();
-    private static readonly UshortBencodeSerializer UshortSerializer = new();
+    private static readonly ShortBencodeSerializer Serializer = new();
 
-    #region Test ShortSerializer
     [Theory]
     [InlineData((short)-32768)]
     [InlineData((short)-1)]
@@ -17,7 +15,7 @@ public class NumericShortBencodeSerializerTests
     [InlineData((short)32767)]
     public void TrySerializeValidShortAlwaysSucceeds(short value)
     {
-        var result = ShortSerializer.TrySerialize(value, out var binteger);
+        var result = Serializer.TrySerialize(value, out var binteger);
 
         Assert.True(result);
         Assert.NotNull(binteger);
@@ -34,7 +32,7 @@ public class NumericShortBencodeSerializerTests
     {
         var binteger = new Binteger(encodedValue);
 
-        var result = ShortSerializer.TryDeserialize(binteger, out var value);
+        var result = Serializer.TryDeserialize(binteger, out var value);
 
         Assert.True(result);
         Assert.Equal((short)encodedValue, value);
@@ -51,7 +49,7 @@ public class NumericShortBencodeSerializerTests
     {
         var binteger = new Binteger(encodedValue);
 
-        var result = ShortSerializer.TryDeserialize(binteger, out var value);
+        var result = Serializer.TryDeserialize(binteger, out var value);
 
         Assert.False(result);
         Assert.Equal(default, value);
@@ -65,14 +63,17 @@ public class NumericShortBencodeSerializerTests
     [InlineData((short)32767)]
     public void RoundTripShortValueIsPreserved(short original)
     {
-        Assert.True(ShortSerializer.TrySerialize(original, out var binteger));
-        Assert.True(ShortSerializer.TryDeserialize(binteger, out var roundTripped));
+        Assert.True(Serializer.TrySerialize(original, out var binteger));
+        Assert.True(Serializer.TryDeserialize(binteger, out var roundTripped));
 
         Assert.Equal(original, roundTripped);
     }
-    #endregion
+}
 
-    #region Test UshortSerializer
+public class UshortBencodeSerializerTests
+{
+    private static readonly UshortBencodeSerializer Serializer = new();
+
     [Theory]
     [InlineData((ushort)0)]
     [InlineData((ushort)1)]
@@ -80,7 +81,7 @@ public class NumericShortBencodeSerializerTests
     [InlineData((ushort)65535)]
     public void TrySerializeValidUshortAlwaysSucceeds(ushort value)
     {
-        var result = UshortSerializer.TrySerialize(value, out var binteger);
+        var result = Serializer.TrySerialize(value, out var binteger);
 
         Assert.True(result);
         Assert.NotNull(binteger);
@@ -96,7 +97,7 @@ public class NumericShortBencodeSerializerTests
     {
         var binteger = new Binteger(encodedValue);
 
-        var result = UshortSerializer.TryDeserialize(binteger, out var value);
+        var result = Serializer.TryDeserialize(binteger, out var value);
 
         Assert.True(result);
         Assert.Equal((ushort)encodedValue, value);
@@ -113,7 +114,7 @@ public class NumericShortBencodeSerializerTests
     {
         var binteger = new Binteger(encodedValue);
 
-        var result = UshortSerializer.TryDeserialize(binteger, out var value);
+        var result = Serializer.TryDeserialize(binteger, out var value);
 
         Assert.False(result);
         Assert.Equal(default, value);
@@ -126,10 +127,9 @@ public class NumericShortBencodeSerializerTests
     [InlineData((ushort)65535)]
     public void RoundTripUshortValueIsPreserved(ushort original)
     {
-        Assert.True(UshortSerializer.TrySerialize(original, out var binteger));
-        Assert.True(UshortSerializer.TryDeserialize(binteger, out var roundTripped));
+        Assert.True(Serializer.TrySerialize(original, out var binteger));
+        Assert.True(Serializer.TryDeserialize(binteger, out var roundTripped));
 
         Assert.Equal(original, roundTripped);
     }
-    #endregion
 }

@@ -68,7 +68,7 @@ public class FloatBencodeSerializerTests
     }
 }
 
-public sealed class DoubleBencodeSerializerTests
+public class DoubleBencodeSerializerTests
 {
     private static readonly DoubleBencodeSerializer Serializer = new();
 
@@ -132,7 +132,7 @@ public sealed class DoubleBencodeSerializerTests
     }
 }
 
-public sealed class DecimalBencodeSerializerTests
+public class DecimalBencodeSerializerTests
 {
     private static readonly DecimalBencodeSerializer Serializer = new();
 
