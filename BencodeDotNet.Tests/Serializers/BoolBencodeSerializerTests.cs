@@ -3,9 +3,9 @@ using Jordiware.BencodeDotNet.Serializers;
 
 namespace Jordiware.BencodeDotNet.Tests.Serializers;
 
-public class BoolSerializerTests
+public class BoolBencodeSerializerTests
 {
-    private static readonly BoolSerializer Serializer = new();
+    private static readonly BoolBencodeSerializer Serializer = new();
 
     [Fact]
     public void TrySerializeFalseProducesIntegerZero()
