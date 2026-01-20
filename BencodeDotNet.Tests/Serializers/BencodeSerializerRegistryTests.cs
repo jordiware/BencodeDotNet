@@ -26,6 +26,7 @@ public sealed class BencodeSerializerRegistryTests
     [InlineData(typeof(DateOnly), typeof(DateOnlyBencodeSerializer))]
     [InlineData(typeof(TimeOnly), typeof(TimeOnlyBencodeSerializer))]
     [InlineData(typeof(TimeSpan), typeof(TimeSpanBencodeSerializer))]
+    [InlineData(typeof(string), typeof(StringBencodeSerializer))]
     public void TryGetInstanceResolvesExpectedSerializer(Type valueType, Type expectedSerializerType)
     {
         var result = BencodeSerializer.TryGetSerializerInstanceForType(valueType, out var serializer);
@@ -36,7 +37,6 @@ public sealed class BencodeSerializerRegistryTests
     }
 
     [Theory]
-    [InlineData(typeof(string))]
     [InlineData(typeof(object))]
     [InlineData(typeof(Guid[]))]
     public void TryGetInstanceReturnsFalseForUnregisteredTypes(Type valueType)

@@ -128,6 +128,7 @@ public static class BencodeSerializer
         [typeof(DateOnly)] = typeof(DateOnlyBencodeSerializer),
         [typeof(TimeOnly)] = typeof(TimeOnlyBencodeSerializer),
         [typeof(TimeSpan)] = typeof(TimeSpanBencodeSerializer),
+        [typeof(string)] = typeof(StringBencodeSerializer)
     }.ToImmutableDictionary();
 
     /// <summary>
@@ -284,7 +285,7 @@ public abstract class BencodeSerializer<TOrigin, TTarget> : IBencodeSerializer
 /// </remarks>
 public abstract class ReferenceTypeBencodeSerializer<TOrigin, TTarget>
     : BencodeSerializer<TOrigin, TTarget>
-    where TOrigin : class, new()
+    where TOrigin : class
     where TTarget : IBobject
 {
     /// <inheritdoc />
