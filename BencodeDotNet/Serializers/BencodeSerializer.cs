@@ -174,6 +174,9 @@ public static class BencodeSerializer
         if (TryResolveFromAttribute(type, out instance))
             return true;
 
+        if (TryResolveEnumerableSerializer(type, out instance))
+            return true;
+
         if (TypeSerializers.TryGetValue(type, out var serializer))
         {
             if (!typeof(IBencodeSerializer).IsAssignableFrom(serializer))
@@ -220,6 +223,51 @@ public static class BencodeSerializer
 
         serializer = typed;
         return true;
+    }
+
+    private static bool TryResolveEnumerableSerializer(Type type, out IBencodeSerializer? instance)
+    {
+        instance = default;
+
+        if (!type.IsGenericType)
+            return false;
+
+        var genericDefinition = type.GetGenericTypeDefinition();
+        var genericArguments = type.GetGenericArguments();
+
+        // IDictionary<TKey, TValue>
+        if (genericDefinition == typeof(IDictionary<,>))
+        {
+            var serializerType = typeof(DictionaryBencodeSerializer<,>).MakeGenericType(genericArguments);
+
+            try
+            {
+                instance = Activator.CreateInstance(serializerType) as IBencodeSerializer;
+                return instance is not null;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        // IEnumerable<T>
+        if (genericDefinition == typeof(IEnumerable<>))
+        {
+            var serializerType = typeof(EnumerableBencodeSerializer<>).MakeGenericType(genericArguments);
+
+            try
+            {
+                instance = Activator.CreateInstance(serializerType) as IBencodeSerializer;
+                return instance is not null;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        return false;
     }
 
     private static bool SupportsOriginType(Type serializerType, Type targetType)
