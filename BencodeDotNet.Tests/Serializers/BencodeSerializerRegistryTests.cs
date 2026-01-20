@@ -29,7 +29,7 @@ public sealed class BencodeSerializerRegistryTests
     [InlineData(typeof(string), typeof(StringBencodeSerializer))]
     public void TryGetInstanceResolvesExpectedSerializer(Type valueType, Type expectedSerializerType)
     {
-        var result = BencodeSerializer.TryGetSerializerInstanceForType(valueType, out var serializer);
+        var result = BencodeSerializer.TryGetSerializerForType(valueType, out var serializer);
 
         Assert.True(result);
         Assert.NotNull(serializer);
@@ -41,7 +41,7 @@ public sealed class BencodeSerializerRegistryTests
     [InlineData(typeof(Guid[]))]
     public void TryGetInstanceReturnsFalseForUnregisteredTypes(Type valueType)
     {
-        var result = BencodeSerializer.TryGetSerializerInstanceForType(valueType, out var serializer);
+        var result = BencodeSerializer.TryGetSerializerForType(valueType, out var serializer);
 
         Assert.False(result);
         Assert.Null(serializer);

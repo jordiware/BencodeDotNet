@@ -1,5 +1,7 @@
-﻿using Jordiware.BencodeDotNet.Objects;
+﻿using Jordiware.BencodeDotNet.Attributes;
+using Jordiware.BencodeDotNet.Objects;
 using System.Collections.Immutable;
+using System.Reflection;
 
 namespace Jordiware.BencodeDotNet.Serializers;
 
@@ -165,9 +167,13 @@ public static class BencodeSerializer
     /// caller.
     /// </para>
     /// </remarks>
-    public static bool TryGetSerializerInstanceForType(Type type, out IBencodeSerializer? instance, params object?[]? args)
+    public static bool TryGetSerializerForType(Type type, out IBencodeSerializer? instance, params object?[]? args)
     {
         instance = default;
+
+        if (TryResolveFromAttribute(type, out instance))
+            return true;
+
         if (TypeSerializers.TryGetValue(type, out var serializer))
         {
             if (!typeof(IBencodeSerializer).IsAssignableFrom(serializer))
@@ -183,6 +189,54 @@ public static class BencodeSerializer
                 return false;
             }
         }
+        return false;
+    }
+
+    private static bool TryResolveFromAttribute(Type type, out IBencodeSerializer? serializer)
+    {
+        serializer = default;
+
+        var attribute = type.GetCustomAttribute<BencodeSerializerAttribute>();
+        if (attribute is null)
+            return false;
+
+        return TryCreateFromAttribute(type, attribute, out serializer);
+    }
+
+    private static bool TryCreateFromAttribute(Type type, BencodeSerializerAttribute attribute, out IBencodeSerializer? serializer)
+    {
+        serializer = default;
+
+        if (attribute.SerializerType.ContainsGenericParameters)
+            return false;
+
+        if (!SupportsOriginType(attribute.SerializerType, type))
+            return false;
+
+        var instance = Activator.CreateInstance(attribute.SerializerType, attribute.Arguments);
+
+        if (instance is not IBencodeSerializer typed)
+            return false;
+
+        serializer = typed;
+        return true;
+    }
+
+    private static bool SupportsOriginType(Type serializerType, Type targetType)
+    {
+        for (var current = serializerType; current is not null; current = current.BaseType)
+        {
+            if (!current.IsGenericType)
+                continue;
+
+            var definition = current.GetGenericTypeDefinition();
+            if (definition != typeof(BencodeSerializer<,>))
+                continue;
+
+            var args = current.GetGenericArguments();
+            return args[0] == targetType;
+        }
+
         return false;
     }
 }

@@ -108,8 +108,8 @@ public class BencodeSerializerRegistryStringTests
     {
         var serializer = default(IBencodeSerializer);
         var result = argument is null
-            ? BencodeSerializer.TryGetSerializerInstanceForType(typeof(string), out serializer)
-            : BencodeSerializer.TryGetSerializerInstanceForType(typeof(string), out serializer, argument);
+            ? BencodeSerializer.TryGetSerializerForType(typeof(string), out serializer)
+            : BencodeSerializer.TryGetSerializerForType(typeof(string), out serializer, argument);
 
         Assert.True(result);
         Assert.NotNull(serializer);
@@ -126,7 +126,7 @@ public class BencodeSerializerRegistryStringTests
     [MemberData(nameof(RegistryRoundTripCases))]
     public void TryGetSerializerInstanceForStringRoundTripsCorrectly(Encoding encoding, string value)
     {
-        var result = BencodeSerializer.TryGetSerializerInstanceForType(typeof(string), out var serializer, encoding);
+        var result = BencodeSerializer.TryGetSerializerForType(typeof(string), out var serializer, encoding);
 
         Assert.True(result);
         Assert.NotNull(serializer);
@@ -144,9 +144,9 @@ public class BencodeSerializerRegistryStringTests
     [Fact]
     public void TryGetSerializerInstanceForStringCreatesDistinctInstancesPerCall()
     {
-        BencodeSerializer.TryGetSerializerInstanceForType(typeof(string), out var first, Encoding.UTF8);
+        BencodeSerializer.TryGetSerializerForType(typeof(string), out var first, Encoding.UTF8);
 
-        BencodeSerializer.TryGetSerializerInstanceForType(typeof(string), out var second, Encoding.ASCII);
+        BencodeSerializer.TryGetSerializerForType(typeof(string), out var second, Encoding.ASCII);
 
         Assert.NotNull(first);
         Assert.NotNull(second);
