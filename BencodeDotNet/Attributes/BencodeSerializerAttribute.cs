@@ -8,18 +8,23 @@ namespace Jordiware.BencodeDotNet.Attributes;
 /// <remarks>
 /// <para>
 /// <see cref="BencodeSerializerAttribute"/> enables a type to explicitly declare
-/// the <see cref="IBencodeSerializer"/> implementation that should be used to
-/// serialize and deserialize instances of that type.
+/// the serializer implementation that should be used to serialize and deserialize
+/// instances of that type.
 /// </para>
 /// <para>
 /// When applied, this attribute participates in the first tier of the serializer
 /// resolution process. The <see cref="BencodeSerializer"/> resolver will inspect
-/// the target type for this attribute and, if present, attempt to instantiate
-/// the declared serializer before consulting the built-in serializer registry.
+/// the annotated CLR type for this attribute and, if present, attempt to resolve
+/// and instantiate the declared serializer before consulting the built-in
+/// serializer registry.
 /// </para>
 /// <para>
-/// Only a single instance of this attribute may be applied to a given type, and
-/// the attribute is not inherited by derived types.
+/// The specified serializer type <b>must derive from</b>
+/// <see cref="BencodeSerializer{TOrigin, TTarget}"/> where <c>TOrigin</c> is the
+/// annotated CLR type. Serializers that only implement
+/// <see cref="IBencodeSerializer"/> without inheriting from
+/// <see cref="BencodeSerializer{TOrigin, TTarget}"/> are not supported and will
+/// be rejected by the serializer resolver.
 /// </para>
 /// </remarks>
 [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct, AllowMultiple = false, Inherited = false)]
