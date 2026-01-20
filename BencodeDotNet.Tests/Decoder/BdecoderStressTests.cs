@@ -19,7 +19,7 @@ public class BdecoderStressTests
     {
         var bencode = $"{size}:{new string('a', size)}";
 
-        using var decoder = Bdecoder.FromString(bencode, Encoding.ASCII, options);
+        var decoder = Bdecoder.FromString(bencode, Encoding.ASCII, options);
 
         if (size > options.MaxStringLength)
         {
@@ -51,7 +51,7 @@ public class BdecoderStressTests
             sb.Append("i1e");
         sb.Append('e');
 
-        using var decoder = Bdecoder.FromString(sb.ToString(), Encoding.ASCII, options);
+        var decoder = Bdecoder.FromString(sb.ToString(), Encoding.ASCII, options);
 
         if (count > options.MaxContainerItems)
         {
@@ -83,7 +83,7 @@ public class BdecoderStressTests
         for (int i = 0; i <= depth; i++)
             sb.Append('e');
 
-        using var decoder = Bdecoder.FromString(sb.ToString(), Encoding.ASCII, options);
+        var decoder = Bdecoder.FromString(sb.ToString(), Encoding.ASCII, options);
 
         if (depth >= options.MaxDepth)
         {
@@ -122,7 +122,7 @@ public class BdecoderStressTests
         for (int i = 0; i < depth; i++)
             sb.Append('e');
 
-        using var decoder = Bdecoder.FromString(sb.ToString(), Encoding.ASCII, options);
+        var decoder = Bdecoder.FromString(sb.ToString(), Encoding.ASCII, options);
 
         if (depth >= options.MaxDepth)
         {
@@ -157,7 +157,7 @@ public class BdecoderStressTests
         var data = Encoding.ASCII.GetBytes(input);
 
         var stream = new ChunkedStream(data, 1);
-        using var decoder = new Bdecoder<ChunkedStream>(ref stream, options);
+        var decoder = new Bdecoder<ChunkedStream>(ref stream, options);
 
         var result = await decoder.DecodeAsync();
 
@@ -172,7 +172,7 @@ public class BdecoderStressTests
         {
             var input = BencodeFuzzer.Generate();
 
-            using var decoder = Bdecoder.FromString(input, Encoding.ASCII, options);
+            var decoder = Bdecoder.FromString(input, Encoding.ASCII, options);
 
             var result = await decoder.DecodeAsync();
 

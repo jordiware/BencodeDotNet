@@ -92,7 +92,7 @@ public static partial class Bdecoder
 /// Bencode object. Trailing data is not consumed.
 /// </para>
 /// </remarks>
-public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
+public sealed class Bdecoder<TStream> where TStream : Stream
 {
     private readonly TStream _stream;
     private readonly BencodeOptions _options;
@@ -479,16 +479,5 @@ public sealed class Bdecoder<TStream> : IDisposable where TStream : Stream
             default:
                 throw new InvalidOperationException("Unexpected object");
         }
-    }
-
-    /// <summary>
-    /// Clears all internal decoder state.
-    /// </summary>
-    /// <remarks>
-    /// This method does not dispose the underlying stream.
-    /// </remarks>
-    public void Dispose()
-    {
-        _stack.Clear();
     }
 }

@@ -13,7 +13,7 @@ public class BdecoderTests
     [InlineData("i123456789e", 123456789)]
     public async Task DecodeValidInteger(string input, long expected)
     {
-        using var decoder = Bdecoder.FromString(input, Encoding.ASCII);
+        var decoder = Bdecoder.FromString(input, Encoding.ASCII);
 
         var result = await decoder.DecodeAsync();
 
@@ -31,7 +31,7 @@ public class BdecoderTests
     [InlineData("i-e")]
     public async Task DecodeInvalidIntegerThrows(string input)
     {
-        using var decoder = Bdecoder.FromString(input, Encoding.ASCII);
+        var decoder = Bdecoder.FromString(input, Encoding.ASCII);
 
         await Assert.ThrowsAsync<FormatException>(() => decoder.DecodeAsync());
     }
@@ -39,7 +39,7 @@ public class BdecoderTests
     [Fact]
     public async Task DecodeEmptyIntegerThrows()
     {
-        using var decoder = Bdecoder.FromString("ie", Encoding.ASCII);
+        var decoder = Bdecoder.FromString("ie", Encoding.ASCII);
 
         await Assert.ThrowsAsync<FormatException>(() => decoder.DecodeAsync());
     }
@@ -50,7 +50,7 @@ public class BdecoderTests
     [InlineData("11:hello world", "hello world")]
     public async Task DecodeValidString(string input, string expected)
     {
-        using var decoder = Bdecoder.FromString(input, Encoding.ASCII);
+        var decoder = Bdecoder.FromString(input, Encoding.ASCII);
 
         var result = await decoder.DecodeAsync();
 
@@ -68,7 +68,7 @@ public class BdecoderTests
     [InlineData("2x:ab")]
     public async Task DecodeInvalidStringThrows(string input)
     {
-        using var decoder = Bdecoder.FromString(input, Encoding.ASCII);
+        var decoder = Bdecoder.FromString(input, Encoding.ASCII);
 
         await Assert.ThrowsAsync<FormatException>(() => decoder.DecodeAsync());
     }
@@ -76,7 +76,7 @@ public class BdecoderTests
     [Fact]
     public async Task DecodeEmptyList()
     {
-        using var decoder = Bdecoder.FromString("le", Encoding.ASCII);
+        var decoder = Bdecoder.FromString("le", Encoding.ASCII);
 
         var result = await decoder.DecodeAsync();
 
@@ -87,7 +87,7 @@ public class BdecoderTests
     [Fact]
     public async Task DecodeMixedList()
     {
-        using var decoder = Bdecoder.FromString("l4:spami42ee", Encoding.ASCII);
+        var decoder = Bdecoder.FromString("l4:spami42ee", Encoding.ASCII);
 
         var result = await decoder.DecodeAsync();
 
@@ -102,7 +102,7 @@ public class BdecoderTests
     [Fact]
     public async Task DecodeEmptyDictionary()
     {
-        using var decoder = Bdecoder.FromString("de", Encoding.ASCII);
+        var decoder = Bdecoder.FromString("de", Encoding.ASCII);
 
         var result = await decoder.DecodeAsync();
 
@@ -113,7 +113,7 @@ public class BdecoderTests
     [Fact]
     public async Task DecodeSimpleDictionary()
     {
-        using var decoder = Bdecoder.FromString("d3:cow3:moo4:spam4:eggse", Encoding.ASCII);
+        var decoder = Bdecoder.FromString("d3:cow3:moo4:spam4:eggse", Encoding.ASCII);
 
         var result = await decoder.DecodeAsync();
         var dict = Assert.IsType<Bdictionary>(result);
@@ -125,7 +125,7 @@ public class BdecoderTests
     [Fact]
     public async Task DecodeComplexDictionary()
     {
-        using var decoder = Bdecoder.FromString("d3:barl4:spami42ee3:fooi99ee", Encoding.ASCII);
+        var decoder = Bdecoder.FromString("d3:barl4:spami42ee3:fooi99ee", Encoding.ASCII);
 
         var result = await decoder.DecodeAsync();
         var dict = Assert.IsType<Bdictionary>(result);
@@ -139,7 +139,7 @@ public class BdecoderTests
     [Fact]
     public async Task DictionaryKeyMustBeString()
     {
-        using var decoder = Bdecoder.FromString("di1e3:fooee", Encoding.ASCII);
+        var decoder = Bdecoder.FromString("di1e3:fooee", Encoding.ASCII);
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => decoder.DecodeAsync());
     }
@@ -148,7 +148,7 @@ public class BdecoderTests
     public async Task DictionaryKeysMustBeSorted()
     {
         // "spam" > "cow" -> invalid
-        using var decoder = Bdecoder.FromString("d4:spam3:moo3:cow3:mooee", Encoding.ASCII);
+        var decoder = Bdecoder.FromString("d4:spam3:moo3:cow3:mooee", Encoding.ASCII);
 
         await Assert.ThrowsAsync<FormatException>(() => decoder.DecodeAsync());
     }
@@ -156,7 +156,7 @@ public class BdecoderTests
     [Fact]
     public async Task DictionaryMissingValueThrows()
     {
-        using var decoder = Bdecoder.FromString("d3:fooee", Encoding.ASCII);
+        var decoder = Bdecoder.FromString("d3:fooee", Encoding.ASCII);
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => decoder.DecodeAsync());
     }
@@ -164,7 +164,7 @@ public class BdecoderTests
     [Fact]
     public async Task DecodeRespectsCancellation()
     {
-        using var decoder = Bdecoder.FromString("l4:spami42ee", Encoding.ASCII);
+        var decoder = Bdecoder.FromString("l4:spami42ee", Encoding.ASCII);
         using var cts = new CancellationTokenSource();
         cts.Cancel();
 
