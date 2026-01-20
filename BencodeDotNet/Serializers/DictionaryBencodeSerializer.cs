@@ -1,0 +1,163 @@
+﻿using Jordiware.BencodeDotNet.Objects;
+using System.Collections.Immutable;
+
+namespace Jordiware.BencodeDotNet.Serializers;
+
+/// <summary>
+/// Provides serialization and deserialization support for
+/// <see cref="IDictionary{TKey, TValue}"/> values using the Bencode
+/// dictionary representation (<see cref="Bdictionary"/>).
+/// </summary>
+/// <remarks>
+/// Both keys and values are serialized using serializers resolved via
+/// <see cref="BencodeSerializer"/>. Dictionary keys are encoded as
+/// <see cref="Bstring"/> instances, as required by the Bencode specification.
+/// </remarks>
+public sealed class DictionaryBencodeSerializer<TKey, TValue> : ReferenceTypeBencodeSerializer<IDictionary<TKey, TValue>, Bdictionary>
+{
+    /// <summary>
+    /// Attempts to serialize an <see cref="IDictionary{TKey, TValue}"/> into a
+    /// <see cref="Bdictionary"/>.
+    /// </summary>
+    /// <remarks>
+    /// Dictionary keys and values are serialized using serializers resolved via
+    /// <see cref="BencodeSerializer"/>. Serialized keys are always encoded as
+    /// <see cref="Bstring"/> instances by writing their full Bencode binary
+    /// representation.
+    /// </remarks>
+    /// <param name="input">The dictionary to serialize.</param>
+    /// <param name="output">
+    /// When this method returns, contains the resulting <see cref="Bdictionary"/>
+    /// if serialization succeeded; otherwise, <see langword="null"/>.
+    /// </param>
+    /// <returns>
+    /// <see langword="true"/> if the dictionary was successfully serialized;
+    /// otherwise, <see langword="false"/>.
+    /// </returns>
+    public override bool TrySerialize(IDictionary<TKey, TValue> input, out Bdictionary? output)
+    {
+        output = default;
+        if (input is null)
+            return false;
+
+        if (input.Count == 0)
+        {
+            output = new Bdictionary(ImmutableDictionary<Bstring, IBobject>.Empty);
+            return true;
+        }
+
+        if (!BencodeSerializer.TryGetSerializerForType(typeof(TKey), out var keySerializer))
+            return false;
+
+        if (!BencodeSerializer.TryGetSerializerForType(typeof(TValue), out var valueSerializer))
+            return false;
+
+        var result = new Dictionary<Bstring, IBobject>();
+        foreach (var (key, value) in input)
+        {
+            if (key is null || value is null)
+                return false;
+
+            if (!keySerializer!.TrySerialize(key, out var serializedKey))
+                return false;
+
+            if (!valueSerializer!.TrySerialize(value, out var serializedValue))
+                return false;
+
+            var bkey = new Bstring(serializedKey!.ToBinaryEncoding());
+
+            if (!result.TryAdd(bkey, serializedValue!))
+                return false;
+        }
+
+        output = new Bdictionary(result);
+        return true;
+    }
+
+    /// <summary>
+    /// Attempts to deserialize a <see cref="Bdictionary"/> into an
+    /// <see cref="IDictionary{TKey, TValue}"/>.
+    /// </summary>
+    /// <remarks>
+    /// Dictionary keys are decoded by interpreting their raw byte contents as a
+    /// complete Bencode value and deserializing the resulting object into
+    /// <typeparamref name="TKey"/>. Values are deserialized directly using the
+    /// resolved value serializer.
+    /// </remarks>
+    /// <param name="input">The <see cref="Bdictionary"/> to deserialize.</param>
+    /// <param name="output">
+    /// When this method returns, contains the resulting dictionary if
+    /// deserialization succeeded; otherwise, <see langword="null"/>.
+    /// </param>
+    /// <returns>
+    /// <see langword="true"/> if the dictionary was successfully deserialized;
+    /// otherwise, <see langword="false"/>.
+    /// </returns>
+    public override bool TryDeserialize(Bdictionary input, out IDictionary<TKey, TValue>? output)
+    {
+        output = default;
+        if (input is null)
+            return false;
+
+        if (input.Count == 0)
+        {
+            output = new Dictionary<TKey, TValue>();
+            return true;
+        }
+
+        if (!BencodeSerializer.TryGetSerializerForType(typeof(TKey), out var keySerializer))
+            return false;
+
+        if (!BencodeSerializer.TryGetSerializerForType(typeof(TValue), out var valueSerializer))
+            return false;
+
+        var result = new Dictionary<TKey, TValue>();
+        foreach (var (bkey, bvalue) in input)
+        {
+            if (!TryDecodeKey(bkey, out var decodedKey))
+                return false;
+
+            if (!keySerializer!.TryDeserialize(decodedKey!, out var key))
+                return false;
+
+            if (!valueSerializer!.TryDeserialize(bvalue, out var value))
+                return false;
+
+            if (key is null || value is null)
+                return false;
+
+            if (!result.TryAdd((TKey)key, (TValue)value))
+                return false;
+        }
+
+        output = result;
+        return true;
+    }
+
+    /// <summary>
+    /// Decodes a dictionary key back into its original
+    /// <see cref="IBobject"/> representation.
+    /// </summary>
+    /// <remarks>
+    /// Dictionary keys are stored as raw byte strings. This method interprets
+    /// the key contents as a complete Bencode value and decodes it using
+    /// <see cref="Bdecoder"/> so it can be deserialized into
+    /// <typeparamref name="TKey"/>.
+    /// </remarks>
+    private static bool TryDecodeKey(Bstring key, out IBobject value)
+    {
+        value = default!;
+
+        try
+        {
+            var decoder = Bdecoder.FromBytes(key.Value);
+            value = decoder.DecodeAsync().Result;
+            return true;
+        }
+        catch
+        {
+            value = default!;
+            return false;
+        }
+    }
+}
