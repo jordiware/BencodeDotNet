@@ -167,12 +167,6 @@ public sealed class Bdecoder<TStream> where TStream : Stream
 
         await reader.CompleteAsync();
 
-        if (bobject is null
-            && _stack.TryPop(out var builder)
-            && builder is BstringBuilder bstringBuilder
-            && bstringBuilder.IsCompleted)
-            bobject = bstringBuilder.ToBobject();
-
         if (bobject is null)
             throw new FormatException("Incomplete or invalid bencode object");
 
