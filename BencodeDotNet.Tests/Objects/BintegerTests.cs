@@ -103,4 +103,22 @@ public class BintegerTests
 
         Assert.True(a.CompareTo(null) > 0);
     }
+
+    [Theory]
+    [InlineData(0)]
+    [InlineData(1)]
+    [InlineData(-1)]
+    [InlineData(42)]
+    [InlineData(-42)]
+    [InlineData(int.MaxValue)]
+    [InlineData(int.MinValue)]
+    public void EncodedLengthMatchesBinaryEncodingLength(int value)
+    {
+        var binteger = new Binteger(value);
+
+        var encoded = binteger.ToBinaryEncoding();
+        var length = binteger.GetEncodedLength();
+
+        Assert.Equal(encoded.Length, length);
+    }
 }

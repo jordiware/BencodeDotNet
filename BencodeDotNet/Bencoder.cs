@@ -30,7 +30,7 @@ public sealed class Bencoder
 
         var encodedLength = result.GetEncodedLength();
         if (encodedLength > _options.MaxPayloadLength)
-            throw new InvalidOperationException($"Encoded length ({encodedLength}) exceeds the configured maximum ({_options.MaxPayloadLength}).");
+            throw new InvalidOperationException($"Encoded payload length ({encodedLength}) exceeds the configured maximum ({_options.MaxPayloadLength}).");
 
         return result;
     }
