@@ -28,6 +28,10 @@ public sealed class Bencoder
         if (result is null)
             throw new InvalidOperationException($"The serializer '{serializer.GetType()}' produced a null Bencode object.");
 
+        var encodedLength = result.GetEncodedLength();
+        if (encodedLength > _options.MaxPayloadLength)
+            throw new InvalidOperationException($"Encoded length ({encodedLength}) exceeds the configured maximum ({_options.MaxPayloadLength}).");
+
         return result;
     }
 }

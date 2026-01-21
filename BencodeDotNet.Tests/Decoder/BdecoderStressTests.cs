@@ -20,7 +20,7 @@ public class BdecoderStressTests
     {
         var bencode = $"{size}:{new string('a', size)}";
 
-        if (size > options.MaxStringLength)
+        if (bencode.Length > options.MaxPayloadLength)
         {
             Assert.Throws<InvalidOperationException>(() => decoder.Decode(bencode, Encoding.ASCII));
         }
