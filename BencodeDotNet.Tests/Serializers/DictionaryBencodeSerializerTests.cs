@@ -88,8 +88,8 @@ public class DictionaryBencodeSerializerTests
     {
         var serializer = new DictionaryBencodeSerializer<Guid, string>();
 
-        serializer.TrySerialize(input, out var encoded);
-        serializer.TryDeserialize(encoded!, out var decoded);
+        Assert.True(serializer.TrySerialize(input, out var encoded));
+        Assert.True(serializer.TryDeserialize(encoded!, out var decoded));
 
         Assert.Equal(input.Count, decoded!.Count);
 

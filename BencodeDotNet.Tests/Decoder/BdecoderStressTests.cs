@@ -6,6 +6,7 @@ namespace Jordiware.BencodeDotNet.Tests.Decoder;
 public class BdecoderStressTests
 {
     private static readonly BencodeOptions options = new();
+    private static readonly Bdecoder decoder = new(options);
 
     [Theory]
     [InlineData(1_000_000)]
@@ -19,15 +20,13 @@ public class BdecoderStressTests
     {
         var bencode = $"{size}:{new string('a', size)}";
 
-        using var decoder = Bdecoder.FromString(bencode, Encoding.ASCII, options);
-
         if (size > options.MaxStringLength)
         {
-            await Assert.ThrowsAsync<InvalidOperationException>(() => decoder.DecodeAsync());
+            Assert.Throws<InvalidOperationException>(() => decoder.Decode(bencode, Encoding.ASCII));
         }
         else
         {
-            var result = await decoder.DecodeAsync();
+            var result = decoder.Decode(bencode, Encoding.ASCII);
 
             var str = Assert.IsType<Bstring>(result);
             Assert.Equal(size, str.Value.Length);
@@ -51,15 +50,13 @@ public class BdecoderStressTests
             sb.Append("i1e");
         sb.Append('e');
 
-        using var decoder = Bdecoder.FromString(sb.ToString(), Encoding.ASCII, options);
-
         if (count > options.MaxContainerItems)
         {
-            await Assert.ThrowsAsync<InvalidOperationException>(() => decoder.DecodeAsync());
+            Assert.Throws<InvalidOperationException>(() => decoder.Decode(sb.ToString(), Encoding.ASCII));
         }
         else
         {
-            var result = await decoder.DecodeAsync();
+            var result = decoder.Decode(sb.ToString(), Encoding.ASCII);
 
             var list = Assert.IsType<Blist>(result);
             Assert.Equal(count, list.Count);
@@ -83,15 +80,13 @@ public class BdecoderStressTests
         for (int i = 0; i <= depth; i++)
             sb.Append('e');
 
-        using var decoder = Bdecoder.FromString(sb.ToString(), Encoding.ASCII, options);
-
         if (depth >= options.MaxDepth)
         {
-            await Assert.ThrowsAsync<InvalidOperationException>(() => decoder.DecodeAsync());
+            Assert.Throws<InvalidOperationException>(() => decoder.Decode(sb.ToString(), Encoding.ASCII));
         }
         else
         {
-            var result = await decoder.DecodeAsync();
+            var result = decoder.Decode(sb.ToString(), Encoding.ASCII);
 
             IBobject current = result;
             for (int i = 0; i < depth; i++)
@@ -122,15 +117,13 @@ public class BdecoderStressTests
         for (int i = 0; i < depth; i++)
             sb.Append('e');
 
-        using var decoder = Bdecoder.FromString(sb.ToString(), Encoding.ASCII, options);
-
         if (depth >= options.MaxDepth)
         {
-            await Assert.ThrowsAsync<InvalidOperationException>(() => decoder.DecodeAsync());
+            Assert.Throws<InvalidOperationException>(() => decoder.Decode(sb.ToString(), Encoding.ASCII));
         }
         else
         {
-            var result = await decoder.DecodeAsync();
+            var result = decoder.Decode(sb.ToString(), Encoding.ASCII);
 
             IBobject current = result;
             for (int i = 0; i < depth; i++)
@@ -156,10 +149,9 @@ public class BdecoderStressTests
     {
         var data = Encoding.ASCII.GetBytes(input);
 
-        var stream = new ChunkedStream(data, 1);
-        using var decoder = new Bdecoder<ChunkedStream>(ref stream, options);
+        using var stream = new ChunkedStream(data, 1);
 
-        var result = await decoder.DecodeAsync();
+        var result = await decoder.DecodeAsync(stream);
 
         var bobject = Assert.IsType<IBobject>(result, exactMatch: false);
         Assert.Equal(input, bobject.ToString());
@@ -172,9 +164,7 @@ public class BdecoderStressTests
         {
             var input = BencodeFuzzer.Generate();
 
-            using var decoder = Bdecoder.FromString(input, Encoding.ASCII, options);
-
-            var result = await decoder.DecodeAsync();
+            var result = decoder.Decode(input, Encoding.ASCII);
 
             Assert.NotNull(result);
         }

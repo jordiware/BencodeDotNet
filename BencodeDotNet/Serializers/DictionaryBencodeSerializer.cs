@@ -150,8 +150,8 @@ public sealed class DictionaryBencodeSerializer<TKey, TValue> : ReferenceTypeBen
 
         try
         {
-            var decoder = Bdecoder.FromBytes(key.Value);
-            value = decoder.DecodeAsync().Result;
+            var decoder = new Bdecoder();
+            value = decoder.Decode(key.Value);
             return true;
         }
         catch
