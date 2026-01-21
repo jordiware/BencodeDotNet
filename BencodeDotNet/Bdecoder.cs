@@ -125,6 +125,8 @@ public sealed class Bdecoder
         if (reader.Remaining > 0)
             throw new FormatException("Trailing data after top-level object");
 
+        _options.Validate(value!);
+
         return value!;
     }
 
@@ -367,6 +369,8 @@ public sealed class Bdecoder
 
         if (bobject is null)
             throw new FormatException("Incomplete or invalid bencode object");
+
+        _options.Validate(bobject);
 
         return bobject;
     }
