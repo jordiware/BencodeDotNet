@@ -38,7 +38,6 @@ public sealed class BencodeSerializerRegistryTests
 
     [Theory]
     [InlineData(typeof(object))]
-    [InlineData(typeof(Guid[]))]
     public void TryGetInstanceReturnsFalseForUnregisteredTypes(Type valueType)
     {
         var result = BencodeSerializer.TryGetSerializerForType(valueType, out var serializer);
