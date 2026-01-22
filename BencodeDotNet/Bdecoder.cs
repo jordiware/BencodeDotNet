@@ -750,19 +750,19 @@ public sealed class Bdecoder
 
             return true;
         }
+        if (bstringBuilder.IsLengthFinished && !bstringBuilder.IsCompleted)
+        {
+            bstringBuilder.PushByte(b);
+
+            TryCloseStringBuilder(ref bstringBuilder, ref stack, out value);
+            return true;
+        }
         if (b == Bencode.StringPaddingCharacter)
         {
             if (bstringBuilder.IsLengthFinished)
                 throw new FormatException($"Unexpected character {(char)b}");
 
             bstringBuilder.FinishLength();
-
-            TryCloseStringBuilder(ref bstringBuilder, ref stack, out value);
-            return true;
-        }
-        if (bstringBuilder.IsLengthFinished && !bstringBuilder.IsCompleted)
-        {
-            bstringBuilder.PushByte(b);
 
             TryCloseStringBuilder(ref bstringBuilder, ref stack, out value);
             return true;
