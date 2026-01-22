@@ -3,51 +3,61 @@
 namespace Jordiware.BencodeDotNet.Serializers;
 
 /// <summary>
-/// Provides serialization and deserialization support for <see cref="T[]"/>
-/// using the Bencode list representation.
+/// Provides Bencode serialization and deserialization support for CLR arrays
+/// of type <typeparamref name="TType"/>.
 /// </summary>
-/// <typeparam name="TType">
-/// The element type contained in the array.
-/// </typeparam>
 /// <remarks>
 /// <para>
-/// Each element in the array is serialized individually using a serializer
-/// resolved for <typeparamref name="TType"/>. Serializer resolution is delegated to
-/// <see cref="BencodeSerializer.TryGetSerializerForType(Type, out IBencodeSerializer?)"/>,
-/// which applies attribute-based resolution first (via <c>BencodeSerializerAttribute</c>)
-/// and falls back to the global serializer registry for non-extensible or primitive types.
+/// <see cref="ArrayBencodeSerializer{TType}"/> encodes arrays as Bencode lists
+/// (<see cref="Blist"/>), where each array element is serialized using the
+/// resolved Bencode serializer for <typeparamref name="TType"/>.
 /// </para>
 /// <para>
-/// Serialization produces a <see cref="Blist"/> containing the serialized representation
-/// of each element in enumeration order. Deserialization materializes the result eagerly
-/// into a concrete collection to avoid deferred execution and lifetime issues.
+/// Serializer resolution for the array element type is performed once per
+/// operation via <see cref="BencodeSerializer.TryGetSerializerForType(Type, out BencodeSerializer?)"/>.
+/// If no compatible serializer is available for <typeparamref name="TType"/>,
+/// both serialization and deserialization fail.
 /// </para>
 /// <para>
-/// This serializer is strict: serialization or deserialization fails if the enumerable
-/// is <c>null</c>, if no compatible serializer for <typeparamref name="TType"/> can be
-/// resolved, or if any individual element fails to serialize or deserialize.
+/// This serializer is reference-type based and therefore rejects
+/// <see langword="null"/> input values. A <see langword="null"/> array or
+/// <see langword="null"/> Bencode input results in a failed operation rather
+/// than an exception.
+/// </para>
+/// <para>
+/// All elements are processed sequentially, and the operation fails immediately
+/// if any individual element cannot be serialized or deserialized.
 /// </para>
 /// </remarks>
 public sealed class ArrayBencodeSerializer<TType> : ReferenceTypeBencodeSerializer<TType[], Blist>
 {
     /// <summary>
-    /// Attempts to serialize an <see cref="T[]"/> into a <see cref="Blist"/>.
+    /// Attempts to serialize a CLR array into a Bencode list.
     /// </summary>
     /// <param name="input">
-    /// The enumerable to serialize.
+    /// The array to serialize.
     /// </param>
     /// <param name="output">
-    /// When this method returns <c>true</c>, contains the resulting <see cref="Blist"/>
-    /// representation of the enumerable; otherwise, <c>null</c>.
+    /// When this method returns <see langword="true"/>, contains a
+    /// <see cref="Blist"/> representing the serialized form of
+    /// <paramref name="input"/>. When this method returns
+    /// <see langword="false"/>, this parameter is set to <see langword="null"/>.
     /// </param>
     /// <returns>
-    /// <c>true</c> if the array and all of its elements were successfully serialized;
-    /// otherwise, <c>false</c>.
+    /// <see langword="true"/> if the array was successfully serialized;
+    /// otherwise, <see langword="false"/>.
     /// </returns>
     /// <remarks>
-    /// Serialization fails if <paramref name="input"/> is <c>null</c>, if no compatible
-    /// serializer for <typeparamref name="TType"/> can be resolved, or if serialization
-    /// of any individual element fails.
+    /// <para>
+    /// Serialization fails if <paramref name="input"/> is <see langword="null"/>,
+    /// if no Bencode serializer is available for <typeparamref name="TType"/>,
+    /// or if serialization of any array element fails.
+    /// </para>
+    /// <para>
+    /// Each element is serialized using the resolved serializer for
+    /// <typeparamref name="TType"/> and added to the resulting
+    /// <see cref="Blist"/> in the same order as in the source array.
+    /// </para>
     /// </remarks>
     public override bool TrySerialize(TType[] input, out Blist? output)
     {
@@ -71,29 +81,31 @@ public sealed class ArrayBencodeSerializer<TType> : ReferenceTypeBencodeSerializ
     }
 
     /// <summary>
-    /// Attempts to deserialize a <see cref="Blist"/> into an <see cref="T[]"/>.
+    /// Attempts to deserialize a Bencode list into a CLR array.
     /// </summary>
     /// <param name="input">
     /// The <see cref="Blist"/> to deserialize.
     /// </param>
     /// <param name="output">
-    /// When this method returns <c>true</c>, contains a materialized array of
-    /// <typeparamref name="TType"/> instances; otherwise, <c>null</c>.
+    /// When this method returns <see langword="true"/>, contains an array of
+    /// <typeparamref name="TType"/> representing the deserialized form of
+    /// <paramref name="input"/>. When this method returns
+    /// <see langword="false"/>, this parameter is set to <see langword="null"/>.
     /// </param>
     /// <returns>
-    /// <c>true</c> if the list and all of its elements were successfully deserialized;
-    /// otherwise, <c>false</c>.
+    /// <see langword="true"/> if the list was successfully deserialized;
+    /// otherwise, <see langword="false"/>.
     /// </returns>
     /// <remarks>
     /// <para>
-    /// Deserialization resolves a serializer for <typeparamref name="TType"/> using the same
-    /// attribute-first, registry-fallback strategy as serialization. Each element in the
-    /// <see cref="Blist"/> must be compatible with the resolved serializer.
+    /// Deserialization fails if <paramref name="input"/> is <see langword="null"/>,
+    /// if no Bencode serializer is available for <typeparamref name="TType"/>,
+    /// or if deserialization of any list element fails.
     /// </para>
     /// <para>
-    /// The resulting array is eagerly materialized into a concrete collection to ensure
-    /// deterministic behavior and to decouple the result from the lifetime of the underlying
-    /// <see cref="Blist"/>.
+    /// Each element of the <see cref="Blist"/> is deserialized using the resolved
+    /// serializer for <typeparamref name="TType"/> and placed into the resulting
+    /// array in the same order.
     /// </para>
     /// </remarks>
     public override bool TryDeserialize(Blist input, out TType[]? output)
