@@ -65,6 +65,13 @@ public struct BencodeOptions
     /// </remarks>
     public readonly int MaxContainerItems;
 
+    public BencodeOptions()
+    {
+        MaxDepth = DefaultMaxDepth;
+        MaxPayloadLength = DefaultMaxPayloadLength;
+        MaxContainerItems = DefaultMaxContainerItems;
+    }
+
     /// <summary>
     /// Initializes a new <see cref="BencodeOptions"/> instance with the specified constraints.
     /// </summary>
