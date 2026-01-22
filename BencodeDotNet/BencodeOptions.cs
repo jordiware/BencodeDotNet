@@ -3,60 +3,92 @@
 namespace Jordiware.BencodeDotNet;
 
 /// <summary>
-/// Specifies limits and safety constraints applied during Bencode decoding.
+/// Defines structural and size constraints applied during Bencode encoding and validation.
 /// </summary>
 /// <remarks>
 /// <para>
-/// These options are used to protect the decoder from malformed or
-/// malicious input by enforcing upper bounds on nesting depth, string
-/// sizes, and container cardinality.
+/// <see cref="BencodeOptions"/> represents a validation policy that limits resource usage
+/// and protects against malformed or malicious Bencode payloads.
 /// </para>
 /// <para>
-/// All limits are enforced during decoding and violations result in
-/// runtime exceptions.
+/// These options are enforced by decoders, serializers, and explicit calls to
+/// <see cref="Validate(IBobject)"/>.
 /// </para>
 /// </remarks>
-public struct BencodeOptions()
+public struct BencodeOptions
 {
     /// <summary>
-    /// Gets the maximum allowed nesting depth for lists and dictionaries.
+    /// The default maximum allowed nesting depth for Bencode containers.
     /// </summary>
     /// <remarks>
-    /// This limit applies to the combined depth of nested containers
-    /// (lists and dictionaries). Exceeding this value results in an
-    /// <see cref="InvalidOperationException"/>.
+    /// The root object has a depth of <c>1</c>.
     /// </remarks>
-    public readonly int MaxDepth = 1024;
+    public const int DefaultMaxDepth = 1024;
 
     /// <summary>
-    /// Gets the maximum allowed length, in bytes, of a Bencode object.
+    /// The default maximum encoded payload size, in bytes.
     /// </summary>
     /// <remarks>
-    /// This limit applies to the declared byte length of the object, not
-    /// its decoded character count.
+    /// This value represents the total number of bytes required to encode the
+    /// complete Bencode object graph.
     /// </remarks>
-    public readonly int MaxPayloadLength = 64 * 1024 * 1024;
+    public const int DefaultMaxPayloadLength = 64 * 1024 * 1024;
 
     /// <summary>
-    /// Gets the maximum number of items allowed in a list or dictionary.
+    /// The default maximum number of items allowed in a single list or dictionary.
+    /// </summary>
+    public const int DefaultMaxContainerItems = 1024;
+
+    /// <summary>
+    /// Gets the maximum allowed nesting depth for Bencode containers.
     /// </summary>
     /// <remarks>
-    /// This limit applies to:
-    /// <list type="bullet">
-    /// <item><description>List elements</description></item>
-    /// <item><description>Dictionary key/value pairs</description></item>
-    /// </list>
-    /// Exceeding this value results in an <see cref="InvalidOperationException"/>.
+    /// Lists and dictionaries contribute to nesting depth.
+    /// Primitive values do not.
     /// </remarks>
-    public readonly int MaxContainerItems = 1024;
+    public readonly int MaxDepth;
 
     /// <summary>
-    /// Initializes a new <see cref="BencodeOptions"/> instance with custom limits.
+    /// Gets the maximum allowed encoded payload size, in bytes.
     /// </summary>
-    /// <param name="maxDepth">The maximum allowed nesting depth.</param>
-    /// <param name="maxPayloadLength">The maximum allowed string length in bytes.</param>
-    /// <param name="maxContainerItems">The maximum number of elements allowed in a container.</param>
-    public BencodeOptions(int maxDepth, int maxPayloadLength, int maxContainerItems) : this()
+    /// <remarks>
+    /// This limit applies to the fully encoded representation of the Bencode object,
+    /// including container delimiters and length prefixes.
+    /// </remarks>
+    public readonly int MaxPayloadLength;
+
+    /// <summary>
+    /// Gets the maximum number of items allowed in any single list or dictionary.
+    /// </summary>
+    /// <remarks>
+    /// For dictionaries, this value applies to the number of key/value pairs.
+    /// </remarks>
+    public readonly int MaxContainerItems;
+
+    /// <summary>
+    /// Initializes a new <see cref="BencodeOptions"/> instance with the specified constraints.
+    /// </summary>
+    /// <param name="maxDepth">
+    /// The maximum allowed nesting depth for lists and dictionaries.
+    /// </param>
+    /// <param name="maxPayloadLength">
+    /// The maximum allowed encoded payload size, in bytes.
+    /// </param>
+    /// <param name="maxContainerItems">
+    /// The maximum number of items allowed in any list or dictionary.
+    /// </param>
+    /// <remarks>
+    /// <para>
+    /// All parameters are optional and default to conservative, safe limits.
+    /// </para>
+    /// <para>
+    /// No validation is performed at construction time; invalid configurations
+    /// will be enforced when validation occurs.
+    /// </para>
+    /// </remarks>
+    public BencodeOptions(int maxDepth = DefaultMaxDepth,
+                          int maxPayloadLength = DefaultMaxPayloadLength,
+                          int maxContainerItems = DefaultMaxContainerItems)
     {
         MaxDepth = maxDepth;
         MaxPayloadLength = maxPayloadLength;
@@ -103,8 +135,7 @@ public struct BencodeOptions()
     /// Thrown if <paramref name="root"/> is <see langword="null"/>.
     /// </exception>
     /// <exception cref="InvalidOperationException">
-    /// Thrown when any configured validation constraint is violated, including payload
-    /// length, nesting depth, or container size limits.
+    /// Thrown when any configured validation constraint is violated.
     /// </exception>
     public void Validate(IBobject root)
     {
