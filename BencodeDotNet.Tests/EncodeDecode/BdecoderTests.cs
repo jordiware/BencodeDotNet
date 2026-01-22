@@ -1,7 +1,7 @@
 ﻿using Jordiware.BencodeDotNet.Objects;
 using System.Text;
 
-namespace Jordiware.BencodeDotNet.Tests.Decoder;
+namespace Jordiware.BencodeDotNet.Tests.EncodeDecode;
 
 public class BdecoderTests
 {

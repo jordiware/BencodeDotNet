@@ -2,7 +2,7 @@
 using Jordiware.BencodeDotNet.Serializers;
 using System.Text;
 
-namespace Jordiware.BencodeDotNet.Tests.Decoder;
+namespace Jordiware.BencodeDotNet.Tests.EncodeDecode;
 
 public class BdecoderWithSerializerTests
 {
