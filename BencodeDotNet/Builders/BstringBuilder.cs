@@ -81,7 +81,7 @@ internal sealed class BstringBuilder : BobjectBuilder
     /// <list type="bullet">
     /// <item><description>Digits must be ASCII <c>0</c>–<c>9</c></description></item>
     /// <item><description>No leading zero padding</description></item>
-    /// <item><description>Length must not exceed <see cref="BencodeOptions.MaxStringLength"/></description></item>
+    /// <item><description>Length must not exceed <see cref="BencodeOptions.MaxPayloadLength"/></description></item>
     /// </list>
     /// </remarks>
     public void PushLengthDigit(byte digit)
@@ -102,7 +102,7 @@ internal sealed class BstringBuilder : BobjectBuilder
         else
             _length = (digit - Bencode.MinNumberCharacter);
 
-        if (_length > Options.MaxStringLength)
+        if (_length > Options.MaxPayloadLength)
             throw new InvalidOperationException("Max capacity reached");
     }
 

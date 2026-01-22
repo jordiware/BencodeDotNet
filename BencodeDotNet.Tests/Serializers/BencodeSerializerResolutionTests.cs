@@ -57,9 +57,7 @@ public class BencodeSerializerResolutionTests
     [Fact]
     public void TryGetSerializerForTypePrefersAttributedSerializer()
     {
-        var result = BencodeSerializer.TryGetSerializerForType(
-            typeof(AttributedType),
-            out var serializer);
+        var result = BencodeSerializer.TryGetSerializerForType(typeof(AttributedType), out var serializer);
 
         Assert.True(result);
         Assert.NotNull(serializer);
@@ -69,9 +67,7 @@ public class BencodeSerializerResolutionTests
     [Fact]
     public void TryGetSerializerForTypeResolvesDictionaryBeforeEnumerable()
     {
-        var result = BencodeSerializer.TryGetSerializerForType(
-            typeof(IDictionary<string, int>),
-            out var serializer);
+        var result = BencodeSerializer.TryGetSerializerForType(typeof(IDictionary<string, int>), out var serializer);
 
         Assert.True(result);
         Assert.NotNull(serializer);
@@ -81,9 +77,7 @@ public class BencodeSerializerResolutionTests
     [Fact]
     public void TryGetSerializerForTypeResolvesEnumerableSerializer()
     {
-        var result = BencodeSerializer.TryGetSerializerForType(
-            typeof(IEnumerable<int>),
-            out var serializer);
+        var result = BencodeSerializer.TryGetSerializerForType(typeof(IEnumerable<int>), out var serializer);
 
         Assert.True(result);
         Assert.NotNull(serializer);
@@ -93,9 +87,7 @@ public class BencodeSerializerResolutionTests
     [Fact]
     public void TryGetSerializerForTypeDoesNotResolveNonGenericEnumerable()
     {
-        var result = BencodeSerializer.TryGetSerializerForType(
-            typeof(System.Collections.IEnumerable),
-            out var serializer);
+        var result = BencodeSerializer.TryGetSerializerForType(typeof(IEnumerable), out var serializer);
 
         Assert.False(result);
         Assert.Null(serializer);
@@ -104,9 +96,7 @@ public class BencodeSerializerResolutionTests
     [Fact]
     public void TryGetSerializerForTypeAttributeOverridesEnumerable()
     {
-        var result = BencodeSerializer.TryGetSerializerForType(
-            typeof(AttributedEnumerableType),
-            out var serializer);
+        var result = BencodeSerializer.TryGetSerializerForType(typeof(AttributedEnumerableType), out var serializer);
 
         Assert.True(result);
         Assert.NotNull(serializer);

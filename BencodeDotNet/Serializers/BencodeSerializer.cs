@@ -169,16 +169,21 @@ public static class BencodeSerializer
     {
         instance = default;
 
-        if (!type.IsGenericType)
+        if (type == typeof(string))
             return false;
 
-        var genericDefinition = type.GetGenericTypeDefinition();
-        var genericArguments = type.GetGenericArguments();
+        var typeInterfaces = type.IsInterface ? (new Type[] { type }).Concat(type.GetInterfaces()).ToArray() : type.GetInterfaces();
+        if (typeInterfaces is null || typeInterfaces.Length == 0)
+            return false;
 
         // IDictionary<TKey, TValue>
-        if (genericDefinition == typeof(IDictionary<,>))
+        var dictionaryType = typeInterfaces.FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
+        if (dictionaryType is not null)
         {
-            var serializerType = typeof(DictionaryBencodeSerializer<,>).MakeGenericType(genericArguments);
+            var dictionaryDefinition = dictionaryType.GetGenericTypeDefinition();
+            var dictionaryArguments = dictionaryType.GetGenericArguments();
+
+            var serializerType = typeof(DictionaryBencodeSerializer<,>).MakeGenericType(dictionaryArguments);
 
             try
             {
@@ -191,10 +196,16 @@ public static class BencodeSerializer
             }
         }
 
-        // IEnumerable<T>
-        if (genericDefinition == typeof(IEnumerable<>))
+        var enumerableType = typeInterfaces.FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>));
+        if (enumerableType is not null)
         {
-            var serializerType = typeof(EnumerableBencodeSerializer<>).MakeGenericType(genericArguments);
+            var isArray = type.BaseType == typeof(Array);
+            var enumerableDefinition = enumerableType.GetGenericTypeDefinition();
+            var enumerableArguments = enumerableType.GetGenericArguments();
+
+            // IEnumerable<T>
+            var serializerType = isArray ? typeof(ArrayBencodeSerializer<>).MakeGenericType(enumerableArguments)
+                                         : typeof(EnumerableBencodeSerializer<>).MakeGenericType(enumerableArguments);
 
             try
             {

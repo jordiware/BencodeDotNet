@@ -1,4 +1,5 @@
 ﻿using Jordiware.BencodeDotNet.Objects;
+using System.Collections.Immutable;
 using System.Text;
 
 namespace Jordiware.BencodeDotNet.Tests.Objects;
@@ -227,5 +228,36 @@ public class BdictionaryTests
                 [new Bstring([0x61])] = new Binteger(1)
             })
         ));
+    }
+
+    [Fact]
+    public void EncodedLengthMatchesBinaryEncodingLengthForEmptyDictionary()
+    {
+        var bdict = new Bdictionary(ImmutableDictionary<Bstring, IBobject>.Empty);
+
+        var encoded = bdict.ToBinaryEncoding();
+        var length = bdict.GetEncodedLength();
+
+        Assert.Equal(encoded.Length, length);
+    }
+
+    [Fact]
+    public void EncodedLengthMatchesBinaryEncodingLengthForDictionaryWithValues()
+    {
+        var bdict = new Bdictionary(new Dictionary<Bstring, IBobject>
+        {
+            [new Bstring("key", Encoding.UTF8)] = new Binteger(123),
+            [new Bstring("value", Encoding.UTF8)] = new Bstring("hello", Encoding.UTF8),
+            [new Bstring("nested", Encoding.UTF8)] = new Blist(
+            [
+                new Binteger(1),
+                new Binteger(2)
+            ])
+        });
+
+        var encoded = bdict.ToBinaryEncoding();
+        var length = bdict.GetEncodedLength();
+
+        Assert.Equal(encoded.Length, length);
     }
 }
