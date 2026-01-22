@@ -95,10 +95,10 @@ public sealed class Bencoder
     /// Encodes a CLR object into its corresponding Bencode representation using a
     /// explicitly provided serializer.
     /// </summary>
-    /// <typeparam name="TType">
+    /// <typeparam name="TValue">
     /// The CLR type of the value being encoded.
     /// </typeparam>
-    /// <typeparam name="TTarget">
+    /// <typeparam name="TResult">
     /// The concrete <see cref="IBobject"/> type produced by the serializer.
     /// </typeparam>
     /// <param name="value">
@@ -120,8 +120,8 @@ public sealed class Bencoder
     /// <see langword="null"/> Bencode object, or when the resulting payload violates
     /// the configured <see cref="BencodeOptions"/> constraints.
     /// </exception>
-    public IBobject Encode<TType, TTarget>(TType value, BencodeSerializer<TType, TTarget> serializer)
-        where TTarget : IBobject
+    public IBobject Encode<TValue, TResult>(TValue value, BencodeSerializer<TValue, TResult> serializer)
+        where TResult : IBobject
     {
         if (value is null)
             throw new ArgumentNullException(nameof(value));
@@ -130,7 +130,7 @@ public sealed class Bencoder
             throw new ArgumentNullException(nameof(serializer));
 
         if (!serializer.TrySerialize(value, out var result))
-            throw new InvalidOperationException($"The serializer '{serializer.GetType()}' failed to serialize an instance of '{typeof(TType)}'.");
+            throw new InvalidOperationException($"The serializer '{serializer.GetType()}' failed to serialize an instance of '{typeof(TValue)}'.");
 
         if (result is null)
             throw new InvalidOperationException($"The serializer '{serializer.GetType()}' produced a null Bencode object.");

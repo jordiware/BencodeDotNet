@@ -1,4 +1,4 @@
-﻿using Jordiware.BencodeDotNet.Builders;
+using Jordiware.BencodeDotNet.Builders;
 using Jordiware.BencodeDotNet.Objects;
 using Jordiware.BencodeDotNet.Serializers;
 using System.Buffers;
@@ -225,6 +225,143 @@ public sealed class Bdecoder
     }
 
     /// <summary>
+    /// Decodes a Bencode-encoded byte array into a CLR value using the specified serializer.
+    /// </summary>
+    /// <typeparam name="TResult">
+    /// The CLR type to deserialize the decoded Bencode value into.
+    /// </typeparam>
+    /// <typeparam name="TBobject">
+    /// The expected Bencode object type produced by the decoder.
+    /// </typeparam>
+    /// <param name="bytes">
+    /// The byte array containing the Bencode-encoded data.
+    /// </param>
+    /// <param name="serializer">
+    /// The serializer responsible for deserializing the decoded Bencode object into
+    /// a <typeparamref name="TResult"/> instance.
+    /// </param>
+    /// <returns>
+    /// The deserialized <typeparamref name="TResult"/> value.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="bytes"/> or <paramref name="serializer"/> is <see langword="null"/>.
+    /// </exception>
+    /// <exception cref="InvalidOperationException">
+    /// The decoded Bencode value cannot be deserialized into <typeparamref name="TResult"/>,
+    /// or the serializer produced a <see langword="null"/> result.
+    /// </exception>
+    public TResult Decode<TResult, TBobject>(byte[] bytes, BencodeSerializer<TResult, TBobject> serializer)
+        where TBobject : IBobject
+    {
+        if (bytes is null)
+            throw new ArgumentNullException(nameof(bytes));
+
+        if (serializer is null)
+            throw new ArgumentNullException(nameof(serializer));
+
+        var rom = new ReadOnlyMemory<byte>(bytes);
+        return Decode(rom, serializer);
+    }
+
+    /// <summary>
+    /// Decodes a Bencode-encoded string into a CLR value using the specified serializer
+    /// and character encoding.
+    /// </summary>
+    /// <typeparam name="TResult">
+    /// The CLR type to deserialize the decoded Bencode value into.
+    /// </typeparam>
+    /// <typeparam name="TBobject">
+    /// The expected Bencode object type produced by the decoder.
+    /// </typeparam>
+    /// <param name="s">
+    /// The string containing the Bencode-encoded data.
+    /// </param>
+    /// <param name="encoding">
+    /// The character encoding used to convert the string into bytes.
+    /// </param>
+    /// <param name="serializer">
+    /// The serializer responsible for deserializing the decoded Bencode object into
+    /// a <typeparamref name="TResult"/> instance.
+    /// </param>
+    /// <returns>
+    /// The deserialized <typeparamref name="TResult"/> value.
+    /// </returns>
+    /// <exception cref="ArgumentException">
+    /// <paramref name="s"/> is <see langword="null"/>, empty, or consists only of whitespace.
+    /// </exception>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="encoding"/> or <paramref name="serializer"/> is <see langword="null"/>.
+    /// </exception>
+    /// <exception cref="InvalidOperationException">
+    /// The decoded Bencode value cannot be deserialized into <typeparamref name="TResult"/>,
+    /// or the serializer produced a <see langword="null"/> result.
+    /// </exception>
+    public TResult Decode<TResult, TBobject>(string s, Encoding encoding, BencodeSerializer<TResult, TBobject> serializer)
+        where TBobject : IBobject
+    {
+        if (string.IsNullOrWhiteSpace(s))
+            throw new ArgumentException("Input string cannot be null, empty, or whitespace.", nameof(s));
+        if (encoding is null)
+            throw new ArgumentNullException(nameof(encoding));
+
+        if (serializer is null)
+            throw new ArgumentNullException(nameof(serializer));
+
+        var bytes = encoding.GetBytes(s);
+        var rom = new ReadOnlyMemory<byte>(bytes);
+        return Decode(rom, serializer);
+    }
+
+    /// <summary>
+    /// Decodes a Bencode-encoded byte span into a CLR value using the specified serializer.
+    /// </summary>
+    /// <typeparam name="TResult">
+    /// The CLR type to deserialize the decoded Bencode value into.
+    /// </typeparam>
+    /// <typeparam name="TBobject">
+    /// The expected Bencode object type produced by the decoder.
+    /// </typeparam>
+    /// <param name="data">
+    /// A read-only span containing the Bencode-encoded data.
+    /// </param>
+    /// <param name="serializer">
+    /// The serializer responsible for deserializing the decoded Bencode object into
+    /// a <typeparamref name="TResult"/> instance.
+    /// </param>
+    /// <returns>
+    /// The deserialized <typeparamref name="TResult"/> value.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="serializer"/> is <see langword="null"/>.
+    /// </exception>
+    /// <exception cref="InvalidOperationException">
+    /// The decoded Bencode value cannot be deserialized into <typeparamref name="TResult"/>,
+    /// or the serializer produced a <see langword="null"/> result.
+    /// </exception>
+    public TResult Decode<TResult, TBobject>(ReadOnlySpan<byte> data, BencodeSerializer<TResult, TBobject> serializer)
+        where TBobject : IBobject
+    {
+        if (serializer is null)
+            throw new ArgumentNullException(nameof(serializer));
+
+        var rom = new ReadOnlyMemory<byte>(data.ToArray());
+        return Decode(rom, serializer);
+    }
+
+    private TResult Decode<TResult, TBobject>(ReadOnlyMemory<byte> rom, BencodeSerializer<TResult, TBobject> serializer)
+        where TBobject : IBobject
+    {
+        var decoded = Decode(rom);
+        if (decoded is not TBobject bobject || !serializer.TryDeserialize(bobject, out var result))
+            throw new InvalidOperationException($"Decoded Bencode value cannot be deserialized into '{typeof(TResult)}'.");
+
+        if (result is null)
+            throw new InvalidOperationException($"The serializer '{serializer.GetType()}' produced a null {typeof(TResult)} object.");
+
+        return result;
+    }
+
+    /// <summary>
     /// Asynchronously decodes a complete Bencode object from a file.
     /// </summary>
     /// <param name="filePath">
@@ -289,6 +426,56 @@ public sealed class Bdecoder
             throw new InvalidOperationException($"Decoded Bencode value cannot be deserialized into '{typeof(TResult)}'.");
 
         return (TResult)result!;
+    }
+
+    /// <summary>
+    /// Asynchronously decodes a Bencode-encoded file into a CLR value using the specified serializer.
+    /// </summary>
+    /// <typeparam name="TResult">
+    /// The CLR type to deserialize the decoded Bencode value into.
+    /// </typeparam>
+    /// <typeparam name="TBobject">
+    /// The expected Bencode object type produced by the decoder.
+    /// </typeparam>
+    /// <param name="filePath">
+    /// The path to the file containing the Bencode-encoded data.
+    /// </param>
+    /// <param name="serializer">
+    /// The serializer responsible for deserializing the decoded Bencode object into
+    /// a <typeparamref name="TResult"/> instance.
+    /// </param>
+    /// <param name="ct">
+    /// A cancellation token that can be used to cancel the asynchronous decode operation.
+    /// </param>
+    /// <returns>
+    /// A task that represents the asynchronous decode operation. The task result contains
+    /// the deserialized <typeparamref name="TResult"/> value.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="serializer"/> is <see langword="null"/>.
+    /// </exception>
+    /// <exception cref="InvalidOperationException">
+    /// The decoded Bencode value cannot be deserialized into <typeparamref name="TResult"/>,
+    /// or the serializer produced a <see langword="null"/> result.
+    /// </exception>
+    /// <exception cref="OperationCanceledException">
+    /// The operation was canceled via <paramref name="ct"/>.
+    /// </exception>
+    public async Task<TResult> DecodeAsync<TResult, TBobject>(string filePath, BencodeSerializer<TResult, TBobject> serializer, CancellationToken ct = default)
+        where TBobject : IBobject
+    {
+        if (serializer is null)
+            throw new ArgumentNullException(nameof(serializer));
+
+        using var stream = File.OpenRead(filePath);
+        var decoded = await DecodeAsync(stream, ct);
+        if (decoded is not TBobject bobject || !serializer.TryDeserialize(bobject, out var result))
+            throw new InvalidOperationException($"Decoded Bencode value cannot be deserialized into '{typeof(TResult)}'.");
+
+        if (result is null)
+            throw new InvalidOperationException($"The serializer '{serializer.GetType()}' produced a null {typeof(TResult)} object.");
+
+        return result;
     }
 
     /// <summary>
@@ -413,6 +600,55 @@ public sealed class Bdecoder
             throw new InvalidOperationException($"Decoded Bencode value cannot be deserialized into '{typeof(TResult)}'.");
 
         return (TResult)result!;
+    }
+
+    /// <summary>
+    /// Asynchronously decodes a Bencode-encoded stream into a CLR value using the specified serializer.
+    /// </summary>
+    /// <typeparam name="TResult">
+    /// The CLR type to deserialize the decoded Bencode value into.
+    /// </typeparam>
+    /// <typeparam name="TBobject">
+    /// The expected Bencode object type produced by the decoder.
+    /// </typeparam>
+    /// <param name="stream">
+    /// The stream containing the Bencode-encoded data.
+    /// </param>
+    /// <param name="serializer">
+    /// The serializer responsible for deserializing the decoded Bencode object into
+    /// a <typeparamref name="TResult"/> instance.
+    /// </param>
+    /// <param name="ct">
+    /// A cancellation token that can be used to cancel the asynchronous decode operation.
+    /// </param>
+    /// <returns>
+    /// A task that represents the asynchronous decode operation. The task result contains
+    /// the deserialized <typeparamref name="TResult"/> value.
+    /// </returns>
+    /// <exception cref="ArgumentNullException">
+    /// <paramref name="serializer"/> is <see langword="null"/>.
+    /// </exception>
+    /// <exception cref="InvalidOperationException">
+    /// The decoded Bencode value cannot be deserialized into <typeparamref name="TResult"/>,
+    /// or the serializer produced a <see langword="null"/> result.
+    /// </exception>
+    /// <exception cref="OperationCanceledException">
+    /// The operation was canceled via <paramref name="ct"/>.
+    /// </exception>
+    public async Task<TResult> DecodeAsync<TResult, TBobject>(Stream stream, BencodeSerializer<TResult, TBobject> serializer, CancellationToken ct = default)
+        where TBobject : IBobject
+    {
+        if (serializer is null)
+            throw new ArgumentNullException(nameof(serializer));
+
+        var decoded = await DecodeAsync(stream, ct);
+        if (decoded is not TBobject bobject || !serializer.TryDeserialize(bobject, out var result))
+            throw new InvalidOperationException($"Decoded Bencode value cannot be deserialized into '{typeof(TResult)}'.");
+
+        if (result is null)
+            throw new InvalidOperationException($"The serializer '{serializer.GetType()}' produced a null {typeof(TResult)} object.");
+
+        return result;
     }
 
     private bool TryParseBencode(ref SequenceReader<byte> reader, ref Stack<BobjectBuilder> stack, out IBobject? value)
