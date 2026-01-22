@@ -1,8 +1,10 @@
 ﻿# BencodeDotNet
 
-BencodeDotNet is a modern, high-performance **Bencode** decoding library for .NET.
+BencodeDotNet is a modern, high‑performance **Bencode** decoding library for .NET.
 
-It provides a correct, strict, and memory-efficient implementation of the Bencode specification, designed for production use with large or streaming inputs such as BitTorrent metadata and network payloads.
+It provides a **correct, strict, and memory‑efficient** implementation of the Bencode specification, designed for production‑grade parsing of large or streaming inputs such as BitTorrent metadata and network payloads.
+
+> **Project status**: BencodeDotNet is currently in **v0.2** development. The core architecture and decoding model are stable, but the public API is still considered provisional and may evolve before a final release.
 
 ---
 
@@ -13,8 +15,8 @@ It provides a correct, strict, and memory-efficient implementation of the Bencod
 * 📈 **Linear‑time parsing** with predictable memory usage
 * 🧱 **Strongly typed Bencode object model**
 * 🔒 **Strict validation** of malformed or non‑conformant input
-* 🛡️ **Configurable maximum nesting depth** for safety
-* ❌ **No full buffering** – suitable for arbitrarily large inputs
+* 🛡️ **Configurable safety limits** (nesting depth, sizes)
+* ❌ **No full buffering** — suitable for arbitrarily large inputs
 * 🧪 **Extensively tested**, including deep‑nesting stress cases
 
 ---
@@ -30,13 +32,7 @@ BencodeDotNet implements the four canonical Bencode data types:
 | List         | `Blist`       |
 | Dictionary   | `Bdictionary` |
 
-All values implement the common interface:
-
-```csharp
-public interface IBobject { }
-```
-
-This allows uniform handling of decoded values while preserving strong typing.
+This allows uniform handling of decoded values while preserving strong typing and explicit type semantics.
 
 ---
 
@@ -76,58 +72,11 @@ Alternatively, you may include the project in your solution file and reference i
 
 ## Basic Usage
 
-BencodeDotNet provides multiple ways to create a decoder, depending on how you want to integrate it into your application.
+BencodeDotNet exposes explicit **encoder** and **decoder** types, both configured via constructors and optional `BencodeOptions`. If no options are provided, sensible defaults are used.
 
-### Using Decoder Factory Helpers
+To keep this README concise, detailed examples for encoding and decoding are documented separately.
 
-BencodeDotNet exposes several factory helpers for common input sources. These are the recommended entry points for most scenarios.
-
-#### From a byte array
-
-```csharp
-byte[] data = File.ReadAllBytes("data.bencode");
-
-var decoder = Bdecoder.FromBytes(data);
-IBobject value = await decoder.DecodeAsync();
-```
-
-#### From a string
-
-```csharp
-string text = "d3:foo3:bare";
-
-var decoder = Bdecoder.FromString(text, Encoding.UTF8);
-IBobject value = await decoder.DecodeAsync();
-```
-
-#### From a file
-
-```csharp
-var decoder = Bdecoder.FromFile("data.bencode");
-IBobject value = await decoder.DecodeAsync();
-```
-
-Each factory method accepts optional decoding options and returns a ready-to-use decoder instance.
-
-### Using the `Bdecoder<TStream>` Constructor
-
-If you need full control over decoder configuration or lifetime, you can instantiate the decoder directly:
-
-```csharp
-using var stream = File.OpenRead("data.bencode");
-
-var options = new BdecodingOptions
-{
-    MaxDepth = 1024
-};
-
-var decoder = new Bdecoder<Stream>(ref stream, options);
-IBobject value = await decoder.DecodeAsync();
-```
-
-In both cases, the decoder reads from the stream incrementally and blocks only until enough data is available to complete a valid Bencode value.
-
-Multiple values may be decoded sequentially from the same stream.
+👉 See **`docs/encoding_and_decoding.md`** for in‑depth usage examples, advanced scenarios, and API details.
 
 ---
 
@@ -143,48 +92,6 @@ It is **not** a permissive or best‑effort parser: invalid input is rejected de
 
 ---
 
-## Validation and Safety
-
-BencodeDotNet enforces strict validation and applies explicit safety limits during decoding. Invalid or non-conformant input is rejected deterministically.
-
-### BencodeOptions
-
-Decoding limits are configured via `BencodeOptions`, which specifies upper bounds to protect against malformed or malicious input. All limits are enforced during decoding; violations result in runtime exceptions.
-
-**Available limits**
-
-| Option              | Description                                              | Default |
-| ------------------- | -------------------------------------------------------- | ------- |
-| `MaxDepth`          | Maximum combined nesting depth of lists and dictionaries | `1024`  |
-| `MaxStringLength`   | Maximum declared byte length of a Bencode string         | `64 MB` |
-| `MaxContainerItems` | Maximum number of items in a list or dictionary          | `1024`  |
-
-These limits apply to the *declared* structure and sizes in the input (for example, string byte length, not decoded character count).
-
-### Using BencodeOptions
-
-```csharp
-var options = new BencodeOptions(
-    maxDepth: 1024,
-    maxStringLength: 64 * 1024 * 1024,
-    maxContainerItems: 1024
-);
-
-var decoder = Bdecoder.FromFile("data.bencode", options);
-IBobject value = await decoder.DecodeAsync();
-```
-
-### Enforced Rules
-
-In addition to the configured limits, the decoder enforces the Bencode specification:
-
-* Invalid tokens or malformed structure are rejected
-* Integers must be well-formed
-* Dictionaries must contain **sorted keys**, as required by the specification
-* Unexpected end-of-stream conditions are detected and reported
-
----
-
 ## Performance Characteristics
 
 BencodeDotNet is designed with performance and scalability in mind:
@@ -196,6 +103,18 @@ BencodeDotNet is designed with performance and scalability in mind:
 
 ---
 
+## Project Status and Roadmap
+
+BencodeDotNet is currently released as **v0.2**.
+
+At this stage:
+
+* The core decoding architecture is considered stable
+* Strict validation semantics are intentional and non‑negotiable
+* Public APIs may still change before v1.0
+
+---
+
 ## Contributing
 
 Contributions and reviews are welcome.
@@ -204,6 +123,7 @@ Please ensure that any changes:
 
 * Preserve strict validation semantics
 * Maintain predictable memory behavior
+* Do not weaken safety guarantees
 * Are covered by appropriate tests
 
 ---
