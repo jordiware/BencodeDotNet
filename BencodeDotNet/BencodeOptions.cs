@@ -65,6 +65,35 @@ public struct BencodeOptions
     /// </remarks>
     public readonly int MaxContainerItems;
 
+    /// <summary>
+    /// Initializes a new <see cref="BencodeOptions"/> instance using the default constraint values.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This constructor configures the instance with the following defaults:
+    /// </para>
+    /// <list type="bullet">
+    ///   <item>
+    ///     <description>
+    ///       <see cref="MaxDepth"/> is set to <see cref="DefaultMaxDepth"/>.
+    ///     </description>
+    ///   </item>
+    ///   <item>
+    ///     <description>
+    ///       <see cref="MaxPayloadLength"/> is set to <see cref="DefaultMaxPayloadLength"/>.
+    ///     </description>
+    ///   </item>
+    ///   <item>
+    ///     <description>
+    ///       <see cref="MaxContainerItems"/> is set to <see cref="DefaultMaxContainerItems"/>.
+    ///     </description>
+    ///   </item>
+    /// </list>
+    /// <para>
+    /// This represents the recommended baseline configuration for general-purpose
+    /// Bencode encoding and decoding.
+    /// </para>
+    /// </remarks>
     public BencodeOptions()
     {
         MaxDepth = DefaultMaxDepth;

@@ -33,7 +33,7 @@ public sealed class Bencoder
     /// The <see cref="BencodeOptions"/> instance that defines validation limits for encoded payloads.
     /// If <see langword="null"/>, a new instance with default values is used.
     /// </param>
-    public Bencoder(BencodeOptions? options = default)
+    public Bencoder(BencodeOptions? options = null)
     {
         _options = options ?? new();
     }

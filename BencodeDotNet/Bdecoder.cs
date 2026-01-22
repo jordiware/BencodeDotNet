@@ -46,7 +46,7 @@ public sealed class Bdecoder
     /// such as maximum nesting depth.
     /// If <c>null</c>, default options are used.
     /// </param>
-    public Bdecoder(BencodeOptions? options = default)
+    public Bdecoder(BencodeOptions? options = null)
     {
         _options = options ?? new();
     }
