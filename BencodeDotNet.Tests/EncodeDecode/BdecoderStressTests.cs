@@ -5,7 +5,7 @@ namespace Jordiware.BencodeDotNet.Tests.EncodeDecode;
 
 public class BdecoderStressTests
 {
-    private static readonly BencodeOptions options = new();
+    private static readonly BencodeOptions options = new(textEncoding: Encoding.ASCII);
     private static readonly Bdecoder decoder = new(options);
 
     [Theory]
@@ -22,11 +22,11 @@ public class BdecoderStressTests
 
         if (bencode.Length > options.MaxPayloadLength)
         {
-            Assert.Throws<InvalidOperationException>(() => decoder.Decode(bencode, Encoding.ASCII));
+            Assert.Throws<InvalidOperationException>(() => decoder.Decode(bencode));
         }
         else
         {
-            var result = decoder.Decode(bencode, Encoding.ASCII);
+            var result = decoder.Decode(bencode);
 
             var str = Assert.IsType<Bstring>(result);
             Assert.Equal(size, str.Value.Length);
@@ -52,11 +52,11 @@ public class BdecoderStressTests
 
         if (count > options.MaxContainerItems)
         {
-            Assert.Throws<InvalidOperationException>(() => decoder.Decode(sb.ToString(), Encoding.ASCII));
+            Assert.Throws<InvalidOperationException>(() => decoder.Decode(sb.ToString()));
         }
         else
         {
-            var result = decoder.Decode(sb.ToString(), Encoding.ASCII);
+            var result = decoder.Decode(sb.ToString());
 
             var list = Assert.IsType<Blist>(result);
             Assert.Equal(count, list.Count);
@@ -82,11 +82,11 @@ public class BdecoderStressTests
 
         if (depth >= options.MaxDepth)
         {
-            Assert.Throws<InvalidOperationException>(() => decoder.Decode(sb.ToString(), Encoding.ASCII));
+            Assert.Throws<InvalidOperationException>(() => decoder.Decode(sb.ToString()));
         }
         else
         {
-            var result = decoder.Decode(sb.ToString(), Encoding.ASCII);
+            var result = decoder.Decode(sb.ToString());
 
             IBobject current = result;
             for (int i = 0; i < depth; i++)
@@ -119,11 +119,11 @@ public class BdecoderStressTests
 
         if (depth >= options.MaxDepth)
         {
-            Assert.Throws<InvalidOperationException>(() => decoder.Decode(sb.ToString(), Encoding.ASCII));
+            Assert.Throws<InvalidOperationException>(() => decoder.Decode(sb.ToString()));
         }
         else
         {
-            var result = decoder.Decode(sb.ToString(), Encoding.ASCII);
+            var result = decoder.Decode(sb.ToString());
 
             IBobject current = result;
             for (int i = 0; i < depth; i++)
@@ -164,7 +164,7 @@ public class BdecoderStressTests
         {
             var input = BencodeFuzzer.Generate();
 
-            var result = decoder.Decode(input, Encoding.ASCII);
+            var result = decoder.Decode(input);
 
             Assert.NotNull(result);
         }
