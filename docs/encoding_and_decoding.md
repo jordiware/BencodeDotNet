@@ -2,7 +2,7 @@
 
 This document describes how to encode and decode Bencode data using **BencodeDotNet**.
 
-It focuses on *usage semantics*, *validation guarantees*, and *design intent*, rather than exhaustive API listings. All examples assume familiarity with the Bencode data model and the `IBobject` hierarchy.
+It focuses on _usage semantics_, _validation guarantees_, and _design intent_, rather than exhaustive API listings. All examples assume familiarity with the Bencode data model and the `IBobject` hierarchy.
 
 ---
 
@@ -21,6 +21,42 @@ Both components:
 - Do **not** perform permissive or best-effort parsing
 
 There are no static factory helpers. All data to be processed is supplied directly to encoding or decoding methods.
+
+---
+
+## Text Encoding
+
+BencodeDotNet does not assume a fixed text encoding for Bencode string values.
+
+All conversion between CLR `string` values and their underlying byte
+representations is governed by the `TextEncoding` property of
+`BencodeOptions`.
+
+By default, `BencodeOptions` uses UTF-8 encoding:
+
+- `BencodeOptions.DefaultTextEncoding` is set to `Encoding.UTF8`
+- This default is applied whenever no explicit encoding is provided
+
+The selected text encoding affects:
+
+- How CLR `string` values are encoded into Bencode byte strings
+- How byte strings are decoded back into CLR `string` values
+- How string byte lengths are calculated for validation and size limits
+
+Custom encodings may be supplied by constructing `BencodeOptions` explicitly:
+
+```csharp
+var options = new BencodeOptions(
+    textEncoding: Encoding.Unicode);
+```
+
+The specified encoding is treated as a policy decision and is applied
+consistently across all encoding and decoding operations that use the
+associated BencodeOptions instance.
+
+No validation of encoded text is performed at construction time; invalid or
+non-decodable byte sequences are handled according to the behavior of the
+configured Encoding during decoding.
 
 ---
 
@@ -56,7 +92,7 @@ IBobject value = decoder.Decode(bytes);
 #### From a string
 
 ```csharp
-IBobject value = decoder.Decode(text, Encoding.UTF8);
+IBobject value = decoder.Decode(text);
 ```
 
 #### From a stream (asynchronous)
@@ -213,6 +249,7 @@ Custom serializers resolved via attributes or the central registry are validated
 Async decoding operations honor `CancellationToken` parameters, allowing long-running or stalled operations to be cancelled deterministically. In all failure cases—whether due to invalid data, validation limits, or cancellation—the library guarantees a well-defined and predictable outcome without leaving partially constructed objects behind.
 
 Together, these measures make BencodeDotNet suitable for processing both trusted and untrusted Bencode data while maintaining safety, clarity, and performance.
+
 ## Error Handling
 
 BencodeDotNet uses exceptions to report invalid input or misuse:
@@ -249,4 +286,3 @@ All data is provided directly to encoding and decoding methods to:
 BencodeDotNet is intentionally strict.
 
 It does not attempt to recover from malformed input, tolerate specification violations, or guess intent. This behavior is fundamental to the library and will not change in future versions.
-
