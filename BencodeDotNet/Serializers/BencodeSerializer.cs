@@ -80,6 +80,10 @@ public static class BencodeSerializer
     /// <param name="type">
     /// The CLR type for which a serializer is requested.
     /// </param>
+    /// <param name="options">
+    /// The <see cref="BencodeOptions"/> instance providing configuration and policy
+    /// information required for serializer resolution.
+    /// </param>
     /// <param name="instance">
     /// When this method returns <see langword="true"/>, contains an instance of
     /// <see cref="IBencodeSerializer"/> capable of handling the specified
@@ -89,32 +93,54 @@ public static class BencodeSerializer
     /// Optional constructor arguments forwarded to the serializer's constructor.
     /// </param>
     /// <returns>
-    /// <see langword="true"/> if a serializer was found and successfully
+    /// <see langword="true"/> if a serializer was successfully resolved and
     /// instantiated; otherwise, <see langword="false"/>.
     /// </returns>
     /// <remarks>
     /// <para>
-    /// This method performs the following steps:
+    /// This method attempts serializer resolution using the following strategy,
+    /// in order:
     /// </para>
     /// <list type="number">
-    /// <item>Looks up the requested <paramref name="type"/> in <see cref="TypeSerializers"/>.</item>
-    /// <item>Verifies that the mapped serializer type implements <see cref="IBencodeSerializer"/>.</item>
-    /// <item>Attempts to construct an instance using the provided <paramref name="args"/>.</item>
+    ///   <item>
+    ///     <description>
+    ///       Attempts to resolve a serializer explicitly declared on the target
+    ///       <paramref name="type"/> via a serializer attribute.
+    ///     </description>
+    ///   </item>
+    ///   <item>
+    ///     <description>
+    ///       Attempts to resolve a composite serializer for enumerable or dictionary
+    ///       types using the provided <paramref name="options"/>.
+    ///     </description>
+    ///   </item>
+    ///   <item>
+    ///     <description>
+    ///       Looks up a registered serializer type in the internal
+    ///       <see cref="TypeSerializers"/> registry and attempts to instantiate it.
+    ///     </description>
+    ///   </item>
     /// </list>
     /// <para>
-    /// Any failure during lookup, type validation, or construction results in a
+    /// If the resolved serializer type requires configuration from
+    /// <paramref name="options"/>, such as text encoding, the appropriate constructor
+    /// arguments are supplied automatically.
+    /// </para>
+    /// <para>
+    /// This method follows a non-throwing pattern: any failure during resolution,
+    /// type compatibility checks, or instantiation results in a
     /// <see langword="false"/> return value. No exceptions are propagated to the
     /// caller.
     /// </para>
     /// </remarks>
-    public static bool TryGetSerializerForType(Type type, out IBencodeSerializer? instance, params object?[]? args)
+    public static bool TryGetSerializerForType(Type type, BencodeOptions options, out IBencodeSerializer? instance, params object?[]? args)
     {
         instance = default;
 
         if (TryResolveFromAttribute(type, out instance))
             return true;
 
-        if (TryResolveEnumerableSerializer(type, out instance))
+        if (TryResolveEnumerableSerializer(type, options, out instance))
             return true;
 
         if (TypeSerializers.TryGetValue(type, out var serializer))
@@ -124,6 +150,9 @@ public static class BencodeSerializer
 
             try
             {
+                if (typeof(StringBencodeSerializer).IsAssignableFrom(serializer))
+                    args = [options.TextEncoding];
+
                 instance = Activator.CreateInstance(serializer, args) as IBencodeSerializer;
                 return instance is not null;
             }
@@ -165,7 +194,7 @@ public static class BencodeSerializer
         return true;
     }
 
-    private static bool TryResolveEnumerableSerializer(Type type, out IBencodeSerializer? instance)
+    private static bool TryResolveEnumerableSerializer(Type type, BencodeOptions options, out IBencodeSerializer? instance)
     {
         instance = default;
 
@@ -175,6 +204,8 @@ public static class BencodeSerializer
         var typeInterfaces = type.IsInterface ? (new Type[] { type }).Concat(type.GetInterfaces()).ToArray() : type.GetInterfaces();
         if (typeInterfaces is null || typeInterfaces.Length == 0)
             return false;
+
+        object?[]? args = [options];
 
         // IDictionary<TKey, TValue>
         var dictionaryType = typeInterfaces.FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
@@ -187,7 +218,7 @@ public static class BencodeSerializer
 
             try
             {
-                instance = Activator.CreateInstance(serializerType) as IBencodeSerializer;
+                instance = Activator.CreateInstance(serializerType, args) as IBencodeSerializer;
                 return instance is not null;
             }
             catch
@@ -209,7 +240,7 @@ public static class BencodeSerializer
 
             try
             {
-                instance = Activator.CreateInstance(serializerType) as IBencodeSerializer;
+                instance = Activator.CreateInstance(serializerType, args) as IBencodeSerializer;
                 return instance is not null;
             }
             catch

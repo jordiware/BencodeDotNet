@@ -2,7 +2,7 @@
 
 namespace Jordiware.BencodeDotNet.Utils;
 
-public static class FloatingPointNumberFormatter
+internal static class FloatingPointNumberFormatter
 {
     public static bool TryFormat(float value, out string result)
     {
@@ -12,9 +12,7 @@ public static class FloatingPointNumberFormatter
             return false;
         }
 
-        return TryNormalize(
-            value.ToString("R", CultureInfo.InvariantCulture),
-            out result);
+        return TryNormalize(value.ToString("R", CultureInfo.InvariantCulture), out result);
     }
 
     public static bool TryFormat(double value, out string result)
@@ -25,16 +23,12 @@ public static class FloatingPointNumberFormatter
             return false;
         }
 
-        return TryNormalize(
-            value.ToString("R", CultureInfo.InvariantCulture),
-            out result);
+        return TryNormalize(value.ToString("R", CultureInfo.InvariantCulture), out result);
     }
 
     public static bool TryFormat(decimal value, out string result)
     {
-        return TryNormalize(
-            value.ToString("G29", CultureInfo.InvariantCulture),
-            out result);
+        return TryNormalize(value.ToString("G29", CultureInfo.InvariantCulture), out result);
     }
 
     private static bool TryNormalize(string input, out string result)

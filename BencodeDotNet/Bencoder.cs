@@ -33,7 +33,7 @@ public sealed class Bencoder
     /// The <see cref="BencodeOptions"/> instance that defines validation limits for encoded payloads.
     /// If <see langword="null"/>, a new instance with default values is used.
     /// </param>
-    public Bencoder(BencodeOptions? options = default)
+    public Bencoder(BencodeOptions? options = null)
     {
         _options = options ?? new();
     }
@@ -77,7 +77,7 @@ public sealed class Bencoder
 
         var type = value.GetType();
 
-        if (!BencodeSerializer.TryGetSerializerForType(type, out var serializer) || serializer is null)
+        if (!BencodeSerializer.TryGetSerializerForType(type, _options, out var serializer) || serializer is null)
             throw new NotSupportedException($"No Bencode serializer is registered or declared for type '{type}'.");
 
         if (!serializer.TrySerialize(value, out var result))

@@ -44,9 +44,9 @@ public sealed class Bdecoder
     /// <param name="options">
     /// Optional decoding options controlling validation behavior,
     /// such as maximum nesting depth.
-    /// If <c>null</c>, default options are used.
+    /// If <see langword="null"/>, default options are used.
     /// </param>
-    public Bdecoder(BencodeOptions? options = default)
+    public Bdecoder(BencodeOptions? options = null)
     {
         _options = options ?? new();
     }
@@ -76,9 +76,6 @@ public sealed class Bdecoder
     /// <param name="s">
     /// The string containing Bencode-encoded data.
     /// </param>
-    /// <param name="encoding">
-    /// The text encoding used to convert the string into bytes.
-    /// </param>
     /// <returns>
     /// The decoded <see cref="IBobject"/> instance.
     /// </returns>
@@ -86,9 +83,9 @@ public sealed class Bdecoder
     /// Thrown if the encoded data does not represent a valid Bencode object
     /// or contains trailing data.
     /// </exception>
-    public IBobject Decode(string s, Encoding encoding)
+    public IBobject Decode(string s)
     {
-        var bytes = encoding.GetBytes(s);
+        var bytes = _options.TextEncoding.GetBytes(s);
         var rom = new ReadOnlyMemory<byte>(bytes);
         return Decode(rom);
     }
@@ -166,14 +163,11 @@ public sealed class Bdecoder
     /// <param name="s">
     /// A string containing a complete Bencode-encoded value.
     /// </param>
-    /// <param name="encoding">
-    /// The character encoding used to convert the string into its byte representation.
-    /// </param>
     /// <returns>
     /// The deserialized CLR value of type <typeparamref name="TResult" />.
     /// </returns>
     /// <exception cref="ArgumentNullException">
-    /// <paramref name="s"/> or <paramref name="encoding"/> is <c>null</c>.
+    /// <paramref name="s"/> is <c>null</c>.
     /// </exception>
     /// <exception cref="NotSupportedException">
     /// No Bencode serializer is registered or declared for <typeparamref name="TResult" />.
@@ -181,9 +175,9 @@ public sealed class Bdecoder
     /// <exception cref="InvalidOperationException">
     /// The decoded Bencode value cannot be deserialized into <typeparamref name="TResult" />.
     /// </exception>
-    public TResult Decode<TResult>(string s, Encoding encoding)
+    public TResult Decode<TResult>(string s)
     {
-        var bytes = encoding.GetBytes(s);
+        var bytes = _options.TextEncoding.GetBytes(s);
         var rom = new ReadOnlyMemory<byte>(bytes);
         return Decode<TResult>(rom);
     }
@@ -214,7 +208,7 @@ public sealed class Bdecoder
 
     private TResult Decode<TResult>(ReadOnlyMemory<byte> rom)
     {
-        if (!BencodeSerializer.TryGetSerializerForType(typeof(TResult), out var serializer) || serializer is null)
+        if (!BencodeSerializer.TryGetSerializerForType(typeof(TResult), _options, out var serializer) || serializer is null)
             throw new NotSupportedException($"No Bencode serializer is registered or declared for type '{typeof(TResult)}'.");
 
         var decoded = Decode(rom);
@@ -264,8 +258,7 @@ public sealed class Bdecoder
     }
 
     /// <summary>
-    /// Decodes a Bencode-encoded string into a CLR value using the specified serializer
-    /// and character encoding.
+    /// Decodes a Bencode-encoded string into a CLR value using the specified serializer.
     /// </summary>
     /// <typeparam name="TResult">
     /// The CLR type to deserialize the decoded Bencode value into.
@@ -275,9 +268,6 @@ public sealed class Bdecoder
     /// </typeparam>
     /// <param name="s">
     /// The string containing the Bencode-encoded data.
-    /// </param>
-    /// <param name="encoding">
-    /// The character encoding used to convert the string into bytes.
     /// </param>
     /// <param name="serializer">
     /// The serializer responsible for deserializing the decoded Bencode object into
@@ -290,24 +280,21 @@ public sealed class Bdecoder
     /// <paramref name="s"/> is <see langword="null"/>, empty, or consists only of whitespace.
     /// </exception>
     /// <exception cref="ArgumentNullException">
-    /// <paramref name="encoding"/> or <paramref name="serializer"/> is <see langword="null"/>.
+    /// <paramref name="serializer"/> is <see langword="null"/>.
     /// </exception>
     /// <exception cref="InvalidOperationException">
     /// The decoded Bencode value cannot be deserialized into <typeparamref name="TResult"/>,
     /// or the serializer produced a <see langword="null"/> result.
     /// </exception>
-    public TResult Decode<TResult, TBobject>(string s, Encoding encoding, BencodeSerializer<TResult, TBobject> serializer)
+    public TResult Decode<TResult, TBobject>(string s, BencodeSerializer<TResult, TBobject> serializer)
         where TBobject : IBobject
     {
         if (string.IsNullOrWhiteSpace(s))
             throw new ArgumentException("Input string cannot be null, empty, or whitespace.", nameof(s));
-        if (encoding is null)
-            throw new ArgumentNullException(nameof(encoding));
-
         if (serializer is null)
             throw new ArgumentNullException(nameof(serializer));
 
-        var bytes = encoding.GetBytes(s);
+        var bytes = _options.TextEncoding.GetBytes(s);
         var rom = new ReadOnlyMemory<byte>(bytes);
         return Decode(rom, serializer);
     }
@@ -417,7 +404,7 @@ public sealed class Bdecoder
     /// </exception>
     public async Task<TResult> DecodeAsync<TResult>(string filePath, CancellationToken ct = default)
     {
-        if (!BencodeSerializer.TryGetSerializerForType(typeof(TResult), out var serializer) || serializer is null)
+        if (!BencodeSerializer.TryGetSerializerForType(typeof(TResult), _options, out var serializer) || serializer is null)
             throw new NotSupportedException($"No Bencode serializer is registered or declared for type '{typeof(TResult)}'.");
 
         using var stream = File.OpenRead(filePath);
@@ -592,7 +579,7 @@ public sealed class Bdecoder
     /// </exception>
     public async Task<TResult> DecodeAsync<TResult>(Stream stream, CancellationToken ct = default)
     {
-        if (!BencodeSerializer.TryGetSerializerForType(typeof(TResult), out var serializer) || serializer is null)
+        if (!BencodeSerializer.TryGetSerializerForType(typeof(TResult), _options, out var serializer) || serializer is null)
             throw new NotSupportedException($"No Bencode serializer is registered or declared for type '{typeof(TResult)}'.");
 
         var decoded = await DecodeAsync(stream, ct);
