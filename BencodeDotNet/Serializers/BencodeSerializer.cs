@@ -164,6 +164,9 @@ public static class BencodeSerializer
 
         try
         {
+            if (type == typeof(object))
+                return false;
+
             if (type.IsAbstract ||
                 type.IsInterface ||
                 type.IsPrimitive ||
