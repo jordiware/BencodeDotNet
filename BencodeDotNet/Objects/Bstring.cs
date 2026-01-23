@@ -108,7 +108,7 @@ public sealed class Bstring : IBobject, IReadOnlyList<byte>, IEquatable<Bstring>
         for (int i = 0; i < minLength; i++)
         {
             var comparison = _bytes[i].CompareTo(other._bytes[i]);
-            if (comparison != 0) 
+            if (comparison != 0)
                 return comparison;
         }
         return _bytes.Length.CompareTo(other._bytes.Length);
@@ -157,6 +157,37 @@ public sealed class Bstring : IBobject, IReadOnlyList<byte>, IEquatable<Bstring>
         length.CopyTo(bytes, 0);
         _bytes.CopyTo(bytes, length.Length);
         return bytes;
+    }
+
+    /// <summary>
+    /// Computes the encoded length of this string in Bencode format.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Strings are encoded as <c>&lt;length&gt;:&lt;data&gt;</c>, where
+    /// &lt;length&gt; is the decimal byte length of the string data.
+    /// </para>
+    /// <para>
+    /// The encoded length is therefore equal to:
+    /// </para>
+    /// <list type="bullet">
+    ///   <item>The number of digits required to encode the byte length</item>
+    ///   <item>1 byte for the <c>':'</c> separator</item>
+    ///   <item>The number of bytes in the string data</item>
+    /// </list>
+    /// </remarks>
+    /// <returns>
+    /// The number of bytes required to encode this string.
+    /// </returns>
+    public int GetEncodedLength()
+    {
+        if (_bytes.Length == 0)
+            return 2;
+
+        var length = _bytes.Length;
+        length += (int)Math.Floor(Math.Log10(length));
+        length += 2;
+        return length;
     }
 
     IEnumerator IEnumerable.GetEnumerator()

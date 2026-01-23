@@ -104,6 +104,36 @@ public sealed class Blist : IBobject, IReadOnlyList<IBobject>, IEquatable<Blist>
         return encoded.ToArray();
     }
 
+    /// <summary>
+    /// Computes the encoded length of this list in Bencode format.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Lists are encoded as <c>l&lt;items&gt;e</c>, where each item is encoded
+    /// sequentially.
+    /// </para>
+    /// <para>
+    /// The encoded length is therefore equal to:
+    /// </para>
+    /// <list type="bullet">
+    ///   <item>1 byte for the leading <c>'l'</c></item>
+    ///   <item>The sum of the encoded lengths of all contained items</item>
+    ///   <item>1 byte for the trailing <c>'e'</c></item>
+    /// </list>
+    /// </remarks>
+    /// <returns>
+    /// The number of bytes required to encode this list.
+    /// </returns>
+    public int GetEncodedLength()
+    {
+        var length = 2;
+        
+        foreach (var o in _objects)
+            length += o.GetEncodedLength();
+
+        return length;
+    }
+
     IEnumerator IEnumerable.GetEnumerator()
     {
         return GetEnumerator();

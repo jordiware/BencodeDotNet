@@ -166,6 +166,40 @@ public sealed class Bdictionary : IBobject, IReadOnlyDictionary<Bstring, IBobjec
         return encoded.ToArray();
     }
 
+    /// <summary>
+    /// Computes the encoded length of this dictionary in Bencode format.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Dictionaries are encoded as <c>d&lt;key&gt;&lt;value&gt;...e</c>, where keys
+    /// are Bencode strings and entries are encoded sequentially in lexicographical
+    /// key order.
+    /// </para>
+    /// <para>
+    /// The encoded length is therefore equal to:
+    /// </para>
+    /// <list type="bullet">
+    ///   <item>1 byte for the leading <c>'d'</c></item>
+    ///   <item>The sum of the encoded lengths of all keys and values</item>
+    ///   <item>1 byte for the trailing <c>'e'</c></item>
+    /// </list>
+    /// </remarks>
+    /// <returns>
+    /// The number of bytes required to encode this dictionary.
+    /// </returns>
+    public int GetEncodedLength()
+    {
+        var length = 2;
+
+        foreach ((var key, var value) in _keyValuePairs)
+        {
+            length += key.GetEncodedLength();
+            length += value.GetEncodedLength();
+        }
+
+        return length;
+    }
+
     IEnumerator IEnumerable.GetEnumerator()
     {
         return GetEnumerator();

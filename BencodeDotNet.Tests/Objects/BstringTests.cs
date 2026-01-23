@@ -169,4 +169,32 @@ public class BstringTests
 
         Assert.True(a.CompareTo(null) > 0);
     }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("a")]
+    [InlineData("hello")]
+    [InlineData("hello world")]
+    [InlineData("áéíóú")]
+    public void EncodedLengthMatchesBinaryEncodingLength(string value)
+    {
+        var bstring = new Bstring(value, Encoding.UTF8);
+
+        var encoded = bstring.ToBinaryEncoding();
+        var length = bstring.GetEncodedLength();
+
+        Assert.Equal(encoded.Length, length);
+    }
+
+    [Fact]
+    public void EncodedLengthMatchesBinaryEncodingLengthForBinaryData()
+    {
+        var bytes = new byte[] { 0, 1, 2, 3, 255 };
+        var bstring = new Bstring(bytes);
+
+        var encoded = bstring.ToBinaryEncoding();
+        var length = bstring.GetEncodedLength();
+
+        Assert.Equal(encoded.Length, length);
+    }
 }

@@ -195,4 +195,33 @@ public class BlistTests
 
         Assert.Equal(expected, bytes);
     }
+
+    [Fact]
+    public void EncodedLengthMatchesBinaryEncodingLengthForEmptyList()
+    {
+        var blist = new Blist([]);
+
+        var encoded = blist.ToBinaryEncoding();
+        var length = blist.GetEncodedLength();
+
+        Assert.Equal(encoded.Length, length);
+    }
+
+    [Fact]
+    public void EncodedLengthMatchesBinaryEncodingLengthForNestedList()
+    {
+        var blist = new Blist([
+            new Binteger(1),
+            new Bstring("test", Encoding.UTF8),
+            new Blist([
+                new Binteger(2),
+                new Bstring("nested", Encoding.UTF8)
+            ])
+        ]);
+
+        var encoded = blist.ToBinaryEncoding();
+        var length = blist.GetEncodedLength();
+
+        Assert.Equal(encoded.Length, length);
+    }
 }

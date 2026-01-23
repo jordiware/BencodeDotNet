@@ -1,4 +1,5 @@
 ﻿using System.Text;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Jordiware.BencodeDotNet.Objects;
 
@@ -54,7 +55,7 @@ public sealed class Binteger : IBobject, IEquatable<Binteger>, IComparable<Binte
     public int CompareTo(Binteger? other)
     {
         if (other == null) return 1;
-        
+
         return _value.CompareTo(other._value);
     }
 
@@ -87,6 +88,38 @@ public sealed class Binteger : IBobject, IEquatable<Binteger>, IComparable<Binte
     public byte[] ToBinaryEncoding()
     {
         return Encoding.ASCII.GetBytes(ToString());
+    }
+
+    /// <summary>
+    /// Computes the encoded length of this integer in Bencode format.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Integers are encoded as <c>i&lt;value&gt;e</c>, where &lt;value&gt; is the
+    /// base-10 string representation of the integer.
+    /// </para>
+    /// <para>
+    /// The encoded length is therefore equal to:
+    /// </para>
+    /// <list type="bullet">
+    ///   <item>1 byte for the leading <c>'i'</c></item>
+    ///   <item>The number of digits in the integer value (including a leading '-' if negative)</item>
+    ///   <item>1 byte for the trailing <c>'e'</c></item>
+    /// </list>
+    /// </remarks>
+    /// <returns>
+    /// The number of bytes required to encode this integer.
+    /// </returns>
+    public int GetEncodedLength()
+    {
+        if (_value == 0)
+            return 3;
+
+        var length = 3 + (int)Math.Floor(Math.Log10(Math.Abs(_value)));
+        if (_value < 0)
+            length++;
+
+        return length;
     }
     #endregion
 

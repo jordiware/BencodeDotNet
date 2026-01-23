@@ -18,4 +18,20 @@ public interface IBobject
     /// of the object.
     /// </returns>
     byte[] ToBinaryEncoding();
+
+    /// <summary>
+    /// Computes the exact number of bytes required to encode this Bencode object
+    /// using the canonical Bencode binary format.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// <see cref="GetEncodedLength"/> returns the size, in bytes, of the Bencode
+    /// representation that would be produced by <see cref="ToBinaryEncoding"/>,
+    /// without allocating any buffers or performing any serialization.
+    /// </para>
+    /// </remarks>
+    /// <returns>
+    /// The exact number of bytes required to encode this Bencode object.
+    /// </returns>
+    int GetEncodedLength();
 }
