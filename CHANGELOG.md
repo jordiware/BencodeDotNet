@@ -1,4 +1,9 @@
-﻿# v0.2.0
+﻿# v0.3.0
+
+## Added
+- Reflection-based serializer
+
+# v0.2.0
 
 ## Added
 - Synchronous Bencode encoding
