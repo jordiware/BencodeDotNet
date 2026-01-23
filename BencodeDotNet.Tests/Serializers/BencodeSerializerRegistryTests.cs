@@ -4,6 +4,8 @@ namespace Jordiware.BencodeDotNet.Tests.Serializers;
 
 public sealed class BencodeSerializerRegistryTests
 {
+    private static readonly BencodeOptions options = new();
+
     public static TheoryData<Type> AllRegisteredSerializerTypes =>
         [.. BencodeSerializer.TypeSerializers.Values];
 
@@ -29,7 +31,7 @@ public sealed class BencodeSerializerRegistryTests
     [InlineData(typeof(string), typeof(StringBencodeSerializer))]
     public void TryGetInstanceResolvesExpectedSerializer(Type valueType, Type expectedSerializerType)
     {
-        var result = BencodeSerializer.TryGetSerializerForType(valueType, out var serializer);
+        var result = BencodeSerializer.TryGetSerializerForType(valueType, options, out var serializer);
 
         Assert.True(result);
         Assert.NotNull(serializer);
@@ -40,7 +42,7 @@ public sealed class BencodeSerializerRegistryTests
     [InlineData(typeof(object))]
     public void TryGetInstanceReturnsFalseForUnregisteredTypes(Type valueType)
     {
-        var result = BencodeSerializer.TryGetSerializerForType(valueType, out var serializer);
+        var result = BencodeSerializer.TryGetSerializerForType(valueType, options, out var serializer);
 
         Assert.False(result);
         Assert.Null(serializer);

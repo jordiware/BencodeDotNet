@@ -208,7 +208,7 @@ public sealed class Bdecoder
 
     private TResult Decode<TResult>(ReadOnlyMemory<byte> rom)
     {
-        if (!BencodeSerializer.TryGetSerializerForType(typeof(TResult), out var serializer) || serializer is null)
+        if (!BencodeSerializer.TryGetSerializerForType(typeof(TResult), _options, out var serializer) || serializer is null)
             throw new NotSupportedException($"No Bencode serializer is registered or declared for type '{typeof(TResult)}'.");
 
         var decoded = Decode(rom);
@@ -404,7 +404,7 @@ public sealed class Bdecoder
     /// </exception>
     public async Task<TResult> DecodeAsync<TResult>(string filePath, CancellationToken ct = default)
     {
-        if (!BencodeSerializer.TryGetSerializerForType(typeof(TResult), out var serializer) || serializer is null)
+        if (!BencodeSerializer.TryGetSerializerForType(typeof(TResult), _options, out var serializer) || serializer is null)
             throw new NotSupportedException($"No Bencode serializer is registered or declared for type '{typeof(TResult)}'.");
 
         using var stream = File.OpenRead(filePath);
@@ -579,7 +579,7 @@ public sealed class Bdecoder
     /// </exception>
     public async Task<TResult> DecodeAsync<TResult>(Stream stream, CancellationToken ct = default)
     {
-        if (!BencodeSerializer.TryGetSerializerForType(typeof(TResult), out var serializer) || serializer is null)
+        if (!BencodeSerializer.TryGetSerializerForType(typeof(TResult), _options, out var serializer) || serializer is null)
             throw new NotSupportedException($"No Bencode serializer is registered or declared for type '{typeof(TResult)}'.");
 
         var decoded = await DecodeAsync(stream, ct);

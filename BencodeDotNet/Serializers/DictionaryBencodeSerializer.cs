@@ -15,6 +15,18 @@ namespace Jordiware.BencodeDotNet.Serializers;
 /// </remarks>
 public sealed class DictionaryBencodeSerializer<TKey, TValue> : ReferenceTypeBencodeSerializer<IDictionary<TKey, TValue>, Bdictionary>
 {
+    private readonly BencodeOptions _options;
+
+    public DictionaryBencodeSerializer()
+    {
+        _options = new();
+    }
+
+    public DictionaryBencodeSerializer(BencodeOptions options)
+    {
+        _options = options;
+    }
+
     /// <summary>
     /// Attempts to serialize an <see cref="IDictionary{TKey, TValue}"/> into a
     /// <see cref="Bdictionary"/>.
@@ -46,10 +58,10 @@ public sealed class DictionaryBencodeSerializer<TKey, TValue> : ReferenceTypeBen
             return true;
         }
 
-        if (!BencodeSerializer.TryGetSerializerForType(typeof(TKey), out var keySerializer))
+        if (!BencodeSerializer.TryGetSerializerForType(typeof(TKey), _options, out var keySerializer))
             return false;
 
-        if (!BencodeSerializer.TryGetSerializerForType(typeof(TValue), out var valueSerializer))
+        if (!BencodeSerializer.TryGetSerializerForType(typeof(TValue), _options, out var valueSerializer))
             return false;
 
         var result = new Dictionary<Bstring, IBobject>();
@@ -105,16 +117,16 @@ public sealed class DictionaryBencodeSerializer<TKey, TValue> : ReferenceTypeBen
             return true;
         }
 
-        if (!BencodeSerializer.TryGetSerializerForType(typeof(TKey), out var keySerializer))
+        if (!BencodeSerializer.TryGetSerializerForType(typeof(TKey), _options, out var keySerializer))
             return false;
 
-        if (!BencodeSerializer.TryGetSerializerForType(typeof(TValue), out var valueSerializer))
+        if (!BencodeSerializer.TryGetSerializerForType(typeof(TValue), _options, out var valueSerializer))
             return false;
 
         var result = new Dictionary<TKey, TValue>();
         foreach (var (bkey, bvalue) in input)
         {
-            if (!TryDecodeKey(bkey, out var decodedKey))
+            if (!TryDecodeKey(bkey, _options, out var decodedKey))
                 return false;
 
             if (!keySerializer!.TryDeserialize(decodedKey!, out var key))
@@ -144,13 +156,13 @@ public sealed class DictionaryBencodeSerializer<TKey, TValue> : ReferenceTypeBen
     /// <see cref="Bdecoder"/> so it can be deserialized into
     /// <typeparamref name="TKey"/>.
     /// </remarks>
-    private static bool TryDecodeKey(Bstring key, out IBobject value)
+    private static bool TryDecodeKey(Bstring key, BencodeOptions options, out IBobject value)
     {
         value = default!;
 
         try
         {
-            var decoder = new Bdecoder();
+            var decoder = new Bdecoder(options);
             value = decoder.Decode(key.Value);
             return true;
         }

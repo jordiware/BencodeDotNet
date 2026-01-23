@@ -95,6 +95,8 @@ public class StringBencodeSerializerTests
 
 public class BencodeSerializerRegistryStringTests
 {
+    private static readonly BencodeOptions options = new();
+
     public static IEnumerable<object?[]> RegistryConstructionCases()
     {
         yield return new object?[] { null };
@@ -108,8 +110,8 @@ public class BencodeSerializerRegistryStringTests
     {
         var serializer = default(IBencodeSerializer);
         var result = argument is null
-            ? BencodeSerializer.TryGetSerializerForType(typeof(string), out serializer)
-            : BencodeSerializer.TryGetSerializerForType(typeof(string), out serializer, argument);
+            ? BencodeSerializer.TryGetSerializerForType(typeof(string), options, out serializer)
+            : BencodeSerializer.TryGetSerializerForType(typeof(string), options, out serializer, argument);
 
         Assert.True(result);
         Assert.NotNull(serializer);
@@ -126,7 +128,7 @@ public class BencodeSerializerRegistryStringTests
     [MemberData(nameof(RegistryRoundTripCases))]
     public void TryGetSerializerInstanceForStringRoundTripsCorrectly(Encoding encoding, string value)
     {
-        var result = BencodeSerializer.TryGetSerializerForType(typeof(string), out var serializer, encoding);
+        var result = BencodeSerializer.TryGetSerializerForType(typeof(string), options, out var serializer, encoding);
 
         Assert.True(result);
         Assert.NotNull(serializer);
@@ -144,9 +146,12 @@ public class BencodeSerializerRegistryStringTests
     [Fact]
     public void TryGetSerializerInstanceForStringCreatesDistinctInstancesPerCall()
     {
-        BencodeSerializer.TryGetSerializerForType(typeof(string), out var first, Encoding.UTF8);
+        var utf8Options = new BencodeOptions(textEncoding: Encoding.UTF8);
+        var asciiOptions = new BencodeOptions(textEncoding: Encoding.ASCII);
 
-        BencodeSerializer.TryGetSerializerForType(typeof(string), out var second, Encoding.ASCII);
+        BencodeSerializer.TryGetSerializerForType(typeof(string), utf8Options, out var first);
+
+        BencodeSerializer.TryGetSerializerForType(typeof(string), asciiOptions, out var second);
 
         Assert.NotNull(first);
         Assert.NotNull(second);

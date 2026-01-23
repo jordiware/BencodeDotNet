@@ -77,7 +77,7 @@ public sealed class Bencoder
 
         var type = value.GetType();
 
-        if (!BencodeSerializer.TryGetSerializerForType(type, out var serializer) || serializer is null)
+        if (!BencodeSerializer.TryGetSerializerForType(type, _options, out var serializer) || serializer is null)
             throw new NotSupportedException($"No Bencode serializer is registered or declared for type '{type}'.");
 
         if (!serializer.TrySerialize(value, out var result))

@@ -30,6 +30,18 @@ namespace Jordiware.BencodeDotNet.Serializers;
 /// </remarks>
 public sealed class EnumerableBencodeSerializer<TType> : ReferenceTypeBencodeSerializer<IEnumerable<TType>, Blist>
 {
+    private readonly BencodeOptions _options;
+
+    public EnumerableBencodeSerializer()
+    {
+        _options = new();
+    }
+
+    public EnumerableBencodeSerializer(BencodeOptions options)
+    {
+        _options = options;
+    }
+
     /// <summary>
     /// Attempts to serialize an <see cref="IEnumerable{T}"/> into a <see cref="Blist"/>.
     /// </summary>
@@ -55,7 +67,7 @@ public sealed class EnumerableBencodeSerializer<TType> : ReferenceTypeBencodeSer
         if (input is null)
             return false;
 
-        if (!BencodeSerializer.TryGetSerializerForType(typeof(TType), out var serializer))
+        if (!BencodeSerializer.TryGetSerializerForType(typeof(TType), _options, out var serializer))
             return false;
 
         var objects = new List<IBobject>();
@@ -102,7 +114,7 @@ public sealed class EnumerableBencodeSerializer<TType> : ReferenceTypeBencodeSer
         if (input is null)
             return false;
 
-        if (!BencodeSerializer.TryGetSerializerForType(typeof(TType), out var serializer))
+        if (!BencodeSerializer.TryGetSerializerForType(typeof(TType), _options, out var serializer))
             return false;
 
         var objects = new List<TType>();

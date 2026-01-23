@@ -107,14 +107,14 @@ public static class BencodeSerializer
     /// caller.
     /// </para>
     /// </remarks>
-    public static bool TryGetSerializerForType(Type type, out IBencodeSerializer? instance, params object?[]? args)
+    public static bool TryGetSerializerForType(Type type, BencodeOptions options, out IBencodeSerializer? instance, params object?[]? args)
     {
         instance = default;
 
         if (TryResolveFromAttribute(type, out instance))
             return true;
 
-        if (TryResolveEnumerableSerializer(type, out instance))
+        if (TryResolveEnumerableSerializer(type, options, out instance))
             return true;
 
         if (TypeSerializers.TryGetValue(type, out var serializer))
@@ -124,6 +124,9 @@ public static class BencodeSerializer
 
             try
             {
+                if (typeof(StringBencodeSerializer).IsAssignableFrom(serializer))
+                    args = [options.TextEncoding];
+
                 instance = Activator.CreateInstance(serializer, args) as IBencodeSerializer;
                 return instance is not null;
             }
@@ -165,7 +168,7 @@ public static class BencodeSerializer
         return true;
     }
 
-    private static bool TryResolveEnumerableSerializer(Type type, out IBencodeSerializer? instance)
+    private static bool TryResolveEnumerableSerializer(Type type, BencodeOptions options, out IBencodeSerializer? instance)
     {
         instance = default;
 
@@ -175,6 +178,8 @@ public static class BencodeSerializer
         var typeInterfaces = type.IsInterface ? (new Type[] { type }).Concat(type.GetInterfaces()).ToArray() : type.GetInterfaces();
         if (typeInterfaces is null || typeInterfaces.Length == 0)
             return false;
+
+        object?[]? args = [options];
 
         // IDictionary<TKey, TValue>
         var dictionaryType = typeInterfaces.FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
@@ -187,7 +192,7 @@ public static class BencodeSerializer
 
             try
             {
-                instance = Activator.CreateInstance(serializerType) as IBencodeSerializer;
+                instance = Activator.CreateInstance(serializerType, args) as IBencodeSerializer;
                 return instance is not null;
             }
             catch
@@ -209,7 +214,7 @@ public static class BencodeSerializer
 
             try
             {
-                instance = Activator.CreateInstance(serializerType) as IBencodeSerializer;
+                instance = Activator.CreateInstance(serializerType, args) as IBencodeSerializer;
                 return instance is not null;
             }
             catch

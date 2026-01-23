@@ -31,6 +31,18 @@ namespace Jordiware.BencodeDotNet.Serializers;
 /// </remarks>
 public sealed class ArrayBencodeSerializer<TType> : ReferenceTypeBencodeSerializer<TType[], Blist>
 {
+    private readonly BencodeOptions _options;
+
+    public ArrayBencodeSerializer()
+    {
+        _options = new();
+    }
+
+    public ArrayBencodeSerializer(BencodeOptions options)
+    {
+        _options = options;
+    }
+
     /// <summary>
     /// Attempts to serialize a CLR array into a Bencode list.
     /// </summary>
@@ -65,7 +77,7 @@ public sealed class ArrayBencodeSerializer<TType> : ReferenceTypeBencodeSerializ
         if (input is null)
             return false;
 
-        if (!BencodeSerializer.TryGetSerializerForType(typeof(TType), out var serializer))
+        if (!BencodeSerializer.TryGetSerializerForType(typeof(TType), _options, out var serializer))
             return false;
 
         var objects = new List<IBobject>();
@@ -114,7 +126,7 @@ public sealed class ArrayBencodeSerializer<TType> : ReferenceTypeBencodeSerializ
         if (input is null)
             return false;
 
-        if (!BencodeSerializer.TryGetSerializerForType(typeof(TType), out var serializer))
+        if (!BencodeSerializer.TryGetSerializerForType(typeof(TType), _options, out var serializer))
             return false;
 
         var objects = new List<TType>();
