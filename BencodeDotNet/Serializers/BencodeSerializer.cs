@@ -161,7 +161,29 @@ public static class BencodeSerializer
                 return false;
             }
         }
-        return false;
+
+        try
+        {
+            if (type.IsAbstract ||
+                type.IsInterface ||
+                type.IsPrimitive ||
+                type.IsEnum ||
+                type.IsPointer ||
+                type.IsByRef ||
+                type.IsGenericTypeDefinition)
+                return false;
+
+            if (type.GetConstructor(Type.EmptyTypes) is null)
+                return false;
+
+            var serializerType = typeof(ReflectionBencodeSerializer<>).MakeGenericType(type);
+            instance = Activator.CreateInstance(serializerType) as IBencodeSerializer;
+            return instance is not null;
+        }
+        catch
+        {
+            return false;
+        }
     }
 
     private static bool TryResolveFromAttribute(Type type, out IBencodeSerializer? serializer)
