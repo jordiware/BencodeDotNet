@@ -8,7 +8,7 @@ The serializer system is intentionally explicit, non-reflective, and non-throwin
 
 ## Overview
 
-A *serializer* in BencodeDotNet is responsible for converting between:
+A _serializer_ in BencodeDotNet is responsible for converting between:
 
 - A CLR type (the **origin** type)
 - A concrete Bencode object type implementing `IBobject` (the **target** type)
@@ -240,4 +240,3 @@ The serializer system is designed to be:
 All serializer resolution logic is centralized, and all failure modes are explicit.
 
 This design favors correctness and clarity over convenience or magic.
-

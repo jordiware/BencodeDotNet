@@ -2,7 +2,7 @@
 
 This document defines the validation rules, limits, and behavioral guarantees enforced by **BencodeDotNet** during encoding and decoding operations.
 
-It is intended as a *contractual reference*: if an operation succeeds, all guarantees described here hold. If any rule or limit is violated, the operation fails deterministically.
+It is intended as a _contractual reference_: if an operation succeeds, all guarantees described here hold. If any rule or limit is violated, the operation fails deterministically.
 
 This document applies equally to synchronous and asynchronous decoding APIs.
 
