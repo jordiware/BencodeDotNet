@@ -150,6 +150,7 @@ public sealed class ReflectionBencodeSerializer<TType> : BencodeSerializer<TType
                                                     !p.IsDefined(typeof(BencodeIgnoreAttribute), inherit: false));
 
         var members = new List<MemberMetadata>();
+        var keyset = new HashSet<Bstring>();
         foreach (var info in fields)
         {
             var effectiveType = Nullable.GetUnderlyingType(info.FieldType) ?? info.FieldType;
@@ -171,9 +172,10 @@ public sealed class ReflectionBencodeSerializer<TType> : BencodeSerializer<TType
                 Serializer = serializer
             };
 
-            if (members.Any(m => m.Key == metadata.Key))
+            if (keyset.Contains(metadata.Key))
                 throw new InvalidOperationException($"Duplicate Bencode key '{metadata.Key}' in type '{typeof(TType)}'.");
 
+            keyset.Add(metadata.Key);
             members.Add(metadata);
         }
         foreach (var info in properties)
@@ -197,9 +199,10 @@ public sealed class ReflectionBencodeSerializer<TType> : BencodeSerializer<TType
                 Serializer = serializer
             };
 
-            if (members.Any(m => m.Key == metadata.Key))
+            if (keyset.Contains(metadata.Key))
                 throw new InvalidOperationException($"Duplicate Bencode key '{metadata.Key}' in type '{typeof(TType)}'.");
 
+            keyset.Add(metadata.Key);
             members.Add(metadata);
         }
 
