@@ -172,21 +172,79 @@ public abstract class BencodeSerializer<TOrigin, TTarget> : IBencodeSerializer
     public abstract bool TryDeserialize(TTarget input, out TOrigin? output);
 
     /// <summary>
-    /// Asynchronously serializes a <typeparamref name="TOrigin"/> value directly to a <see cref="Stream"/> in Bencode format.
+    /// Asynchronously serializes the specified <typeparamref name="TOrigin"/> value
+    /// directly to the provided <see cref="Stream"/> using Bencode format, as a fallback
+    /// implementation.
     /// </summary>
     /// <param name="input">
-    /// The CLR value to serialize.
+    /// The CLR value to serialize. Cannot be <see langword="null"/>.
     /// </param>
     /// <param name="stream">
     /// The target <see cref="Stream"/> to which the Bencoded bytes will be written.
-    /// Must be writable. This method does not close or dispose the stream.
+    /// Must be writable and cannot be <see langword="null"/>. This method does not
+    /// close or dispose the stream.
     /// </param>
     /// <param name="cancellationToken">
     /// A <see cref="CancellationToken"/> that can be used to abort the operation.
-    /// If cancellation is requested, the method should throw <see cref="OperationCanceledException"/>
-    /// as soon as possible. The stream may be partially written when cancellation occurs.
+    /// If cancellation is requested, an <see cref="OperationCanceledException"/> may
+    /// be thrown, and partial writes may have occurred.
     /// </param>
-    public abstract Task WriteToStreamAsync(TOrigin input, Stream stream, CancellationToken cancellationToken = default);
+    /// <returns>
+    /// A <see cref="Task"/> that represents the asynchronous serialization operation.
+    /// </returns>
+    /// <remarks>
+    /// <para>
+    /// This method provides a **fallback streaming implementation** that first
+    /// serializes the <paramref name="input"/> to a <typeparamref name="TTarget"/>
+    /// (via <see cref="TrySerialize(TOrigin,out TTarget)"/>) and then writes the
+    /// resulting binary encoding to the <paramref name="stream"/> in one operation.
+    /// </para>
+    /// <para>
+    /// Because this approach allocates an intermediate <see cref="byte"/> array
+    /// containing the entire object, it is **less memory-efficient** for large or
+    /// deeply nested values. High-performance serializers should override this method
+    /// to write directly to the stream without creating a full intermediate buffer.
+    /// </para>
+    /// <para>
+    /// Exceptions thrown by this method:
+    /// <list type="bullet">
+    ///   <item>
+    ///     <description><see cref="ArgumentNullException"/> if <paramref name="input"/> or <paramref name="stream"/> is <see langword="null"/>.</description>
+    ///   </item>
+    ///   <item>
+    ///     <description><see cref="InvalidOperationException"/> if <paramref name="stream"/> is not writable.</description>
+    ///   </item>
+    ///   <item>
+    ///     <description><see cref="InvalidOperationException"/> if <paramref name="input"/> could not be serialized to a <typeparamref name="TTarget"/>.</description>
+    ///   </item>
+    ///   <item>
+    ///     <description><see cref="OperationCanceledException"/> if <paramref name="cancellationToken"/> requests cancellation during the write operation.</description>
+    ///   </item>
+    /// </list>
+    /// </para>
+    /// <para>
+    /// Exceptions are thrown only for programming errors or cancellation requests.  
+    /// Normal serialization failures should remain non-throwing wherever possible.
+    /// </para>
+    /// </remarks>
+    public async virtual Task WriteToStreamAsync(TOrigin input, Stream stream, CancellationToken cancellationToken = default)
+    {
+        if (input is null)
+            throw new ArgumentNullException(nameof(input));
+
+        if (stream is null)
+            throw new ArgumentNullException(nameof(stream));
+
+        if (!stream.CanWrite)
+            throw new InvalidOperationException("The provided stream is not writable.");
+
+        if (!TrySerialize(input, out var bobject) || bobject is null)
+            throw new InvalidOperationException($"Serialization of {typeof(TOrigin)} failed; no Bencode object was produced.");
+
+        var rom = new ReadOnlyMemory<byte>(bobject.ToBinaryEncoding());
+
+        await stream.WriteAsync(rom, cancellationToken);
+    }
 
     /// <inheritdoc />
     bool IBencodeSerializer.TrySerialize(object input, out IBobject? output)
