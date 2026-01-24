@@ -1,5 +1,8 @@
-﻿using Jordiware.BencodeDotNet.Objects;
+﻿using Jordiware.BencodeDotNet.Builders;
+using Jordiware.BencodeDotNet.Objects;
 using Jordiware.BencodeDotNet.Serializers;
+using System.Buffers;
+using System.IO.Pipelines;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 
@@ -48,34 +51,37 @@ public sealed class BencodeReader
     }
 
     /// <summary>
-    /// Asynchronously reads a sequence of top-level Bencoded objects from the
-    /// specified stream.
+    /// Asynchronously reads and decodes Bencode objects from the specified stream.
     /// </summary>
     /// <param name="stream">
-    /// The input <see cref="Stream"/> containing one or more consecutively encoded
-    /// Bencode objects.
+    /// A readable stream containing one or more Bencode-encoded objects.
     /// </param>
     /// <param name="ct">
-    /// A <see cref="CancellationToken"/> that can be used to cancel the read operation.
+    /// A cancellation token used to cancel the asynchronous enumeration.
     /// </param>
     /// <returns>
-    /// An asynchronous sequence of <see cref="IBobject"/> instances, each representing
-    /// a fully parsed top-level Bencode object.
+    /// An asynchronous sequence of decoded <see cref="IBobject"/> instances, yielded
+    /// as soon as each top-level object is fully parsed and validated.
     /// </returns>
     /// <exception cref="ArgumentNullException">
-    /// Thrown if <paramref name="stream"/> is <see langword="null"/>.
+    /// Thrown when <paramref name="stream"/> is <c>null</c>.
     /// </exception>
-    /// <exception cref="OperationCanceledException">
-    /// Thrown if the operation is canceled via <paramref name="ct"/>.
+    /// <exception cref="ArgumentException">
+    /// Thrown when <paramref name="stream"/> does not support reading.
+    /// </exception>
+    /// <exception cref="FormatException">
+    /// Thrown when the input stream contains malformed Bencode data, when validation
+    /// fails, or when the stream ends unexpectedly while an object is being parsed.
     /// </exception>
     /// <remarks>
     /// <para>
-    /// The returned sequence is forward-only and must be consumed sequentially.
-    /// Enumeration stops when the end of the stream is reached.
+    /// This method incrementally reads from the stream and may yield multiple Bencode
+    /// objects during a single enumeration. Objects are only yielded once fully parsed
+    /// and validated according to the configured <see cref="BencodeOptions"/>.
     /// </para>
     /// <para>
-    /// Each object is yielded as soon as it is fully parsed; the reader does not
-    /// buffer the entire stream or require all objects to be present in memory.
+    /// Enumeration completes when the end of the stream is reached. If the stream ends
+    /// while a Bencode object is only partially read, a <see cref="FormatException"/> is thrown.
     /// </para>
     /// </remarks>
     public async IAsyncEnumerable<IBobject> ReadAsync(Stream stream,
@@ -84,63 +90,83 @@ public sealed class BencodeReader
         if (stream is null) 
             throw new ArgumentNullException(nameof(stream));
 
-        throw new NotImplementedException();
+        if (!stream.CanRead)
+            throw new ArgumentException("Stream can not be read");
+
+        var stack = new Stack<BobjectBuilder>();
+
+        var reader = PipeReader.Create(stream, new StreamPipeReaderOptions(leaveOpen: true));
+        ReadResult result = default!;
+
+        try
+        {
+            while (!result.IsCompleted)
+            {
+                result = await reader.ReadAsync(ct);
+
+                var seqReader = new SequenceReader<byte>(result.Buffer);
+                if (TryParseBencode(ref seqReader, ref stack, out var element))
+                {
+                    try
+                    {
+                        _options.Validate(element!);
+                    }
+                    catch
+                    {
+                        throw new FormatException("Validation failed for decoded object.");
+                    }
+                    yield return element!;
+                }
+
+                reader.AdvanceTo(seqReader.Position, result.Buffer.End);
+            }
+        }
+        finally
+        {
+            await reader.CompleteAsync();
+        }
+
+        if (stack.Count != 0)
+            throw new FormatException("Unexpected end of stream while parsing Bencode object.");
     }
 
     /// <summary>
-    /// Asynchronously reads a sequence of top-level Bencoded objects from the
-    /// specified stream and deserializes each object to the specified target type.
+    /// Asynchronously reads and decodes Bencode objects from the specified stream and
+    /// deserializes them into values of type <typeparamref name="TType"/>.
     /// </summary>
     /// <typeparam name="TType">
-    /// The target type to deserialize each Bencode object into.
+    /// The target type to deserialize each decoded Bencode object into.
     /// </typeparam>
     /// <param name="stream">
-    /// The input <see cref="Stream"/> containing one or more consecutively encoded
-    /// Bencode objects.
+    /// A readable stream containing one or more Bencode-encoded objects.
     /// </param>
     /// <param name="serializer">
-    /// An optional <see cref="BencodeSerializer{TOrigin, TTarget}"/> used to
-    /// deserialize each parsed <see cref="IBobject"/> into <typeparamref name="TType"/>.
-    /// If <see langword="null"/>, a compatible serializer is resolved automatically
-    /// using the configured <see cref="BencodeOptions"/>.
+    /// An optional serializer used to convert decoded <see cref="IBobject"/> instances
+    /// into values of type <typeparamref name="TType"/>. If <c>null</c>, a serializer is
+    /// resolved using the configured serializer discovery mechanism.
     /// </param>
     /// <param name="ct">
-    /// A <see cref="CancellationToken"/> that can be used to cancel the read operation.
+    /// A cancellation token used to cancel the asynchronous enumeration.
     /// </param>
     /// <returns>
-    /// An asynchronous sequence of values of type <typeparamref name="TType"/>,
-    /// each corresponding to a successfully deserialized top-level Bencode object.
+    /// An asynchronous sequence of deserialized values of type <typeparamref name="TType"/>.
     /// </returns>
-    /// <exception cref="ArgumentNullException">
-    /// Thrown if <paramref name="stream"/> is <see langword="null"/>.
-    /// </exception>
     /// <exception cref="NotSupportedException">
-    /// Thrown if no compatible Bencode serializer is registered or declared for
-    /// <typeparamref name="TType"/>.
+    /// Thrown when no compatible serializer can be resolved for <typeparamref name="TType"/>.
     /// </exception>
     /// <exception cref="SerializationException">
-    /// Thrown if a parsed Bencode object cannot be deserialized to
-    /// <typeparamref name="TType"/> using the resolved serializer.
+    /// Thrown when a decoded Bencode object cannot be deserialized into
+    /// <typeparamref name="TType"/>.
     /// </exception>
-    /// <exception cref="OperationCanceledException">
-    /// Thrown if the operation is canceled via <paramref name="ct"/>.
-    /// </exception>
-    /// <remarks>
-    /// <para>
-    /// This method is a projection over <see cref="ReadAsync(Stream, CancellationToken)"/>.
-    /// Parsing and validation are performed once, and each resulting
-    /// <see cref="IBobject"/> is deserialized sequentially.
-    /// </para>
-    /// <para>
-    /// Enumeration stops when the end of the stream is reached.
-    /// </para>
-    /// </remarks>
     public async IAsyncEnumerable<TType> ReadAsync<TType>(Stream stream, 
                                                           BencodeSerializer<TType, IBobject>? serializer = default,
                                                           [EnumeratorCancellation] CancellationToken ct = default)
     {
         if (stream is null)
             throw new ArgumentNullException(nameof(stream));
+
+        if (!stream.CanRead)
+            throw new ArgumentException("Stream can not be read");
 
         if (serializer is null)
         {
@@ -158,6 +184,183 @@ public sealed class BencodeReader
                 throw new SerializationException($"Failed to deserialize Bencode object to type '{typeof(TType)}'.");
 
             yield return value!;
+        }
+    }
+
+    private bool TryParseBencode(ref SequenceReader<byte> reader, ref Stack<BobjectBuilder> stack, out IBobject? value)
+    {
+        value = null;
+
+        while (reader.TryRead(out byte b))
+        {
+            if (stack.TryPeek(out var builder))
+            {
+                if (builder is BintegerBuilder ib)
+                {
+                    if (TryReadBintegerByte(ref ib, b, ref stack, out value))
+                    {
+                        if (value is not null)
+                            return true;
+                        continue;
+                    }
+                }
+
+                if (builder is BstringBuilder sb)
+                {
+                    if (TryReadBstringByte(ref sb, b, ref stack, out value))
+                    {
+                        if (value is not null)
+                            return true;
+                        continue;
+                    }
+                    throw new FormatException($"Unexpected character {(char)b}");
+                }
+            }
+
+            switch (b)
+            {
+                case Bencode.TerminationCharacter:
+                    if (stack.Count == 0)
+                        throw new FormatException("Unexpected 'e'");
+
+                    builder = stack.Pop();
+                    var completed = builder.ToBobject();
+
+                    if (AttachOrReturn(completed, ref stack, out value))
+                        return true;
+                    break;
+                case Bencode.IntegerBeginCharacter:
+                    stack.Push(new BintegerBuilder());
+                    break;
+                case Bencode.ListBeginCharacter:
+                    if (stack.Count >= _options.MaxDepth)
+                        throw new InvalidOperationException("Maximum nesting depth exceeded");
+
+                    stack.Push(new BlistBuilder());
+                    break;
+                case Bencode.DictionaryBeginCharacter:
+                    if (stack.Count >= _options.MaxDepth)
+                        throw new InvalidOperationException("Maximum nesting depth exceeded");
+
+                    stack.Push(new BdictionaryBuilder());
+                    break;
+                case >= Bencode.MinNumberCharacter and <= Bencode.MaxNumberCharacter:
+                    var strBuilder = new BstringBuilder();
+                    strBuilder.PushLengthDigit(b);
+                    stack.Push(strBuilder);
+                    break;
+                default:
+                    throw new FormatException($"Unexpected character {(char)b}");
+            }
+        }
+
+        return false;
+    }
+
+    private bool TryReadBintegerByte(ref BintegerBuilder bintegerBuilder, byte b, ref Stack<BobjectBuilder> stack, out IBobject? value)
+    {
+        value = null;
+        switch (b)
+        {
+            case (byte)'-':
+                bintegerBuilder.IsPositive = false;
+                return true;
+            case Bencode.TerminationCharacter:
+                var builder = stack.Pop();
+                var completed = builder.ToBobject();
+                AttachOrReturn(completed, ref stack, out value);
+                return true;
+            case >= Bencode.MinNumberCharacter and <= Bencode.MaxNumberCharacter:
+                bintegerBuilder.PushDigit(b);
+                return true;
+        }
+        return false;
+    }
+
+    private bool TryReadBstringByte(ref BstringBuilder bstringBuilder, byte b, ref Stack<BobjectBuilder> stack, out IBobject? value)
+    {
+        value = null;
+        if (b is >= Bencode.MinNumberCharacter and <= Bencode.MaxNumberCharacter && !bstringBuilder.IsLengthFinished)
+        {
+            bstringBuilder.PushLengthDigit(b);
+
+            return true;
+        }
+        if (bstringBuilder.IsLengthFinished && !bstringBuilder.IsCompleted)
+        {
+            bstringBuilder.PushByte(b);
+
+            TryCloseStringBuilder(ref bstringBuilder, ref stack, out value);
+            return true;
+        }
+        if (b == Bencode.StringPaddingCharacter)
+        {
+            if (bstringBuilder.IsLengthFinished)
+                throw new FormatException($"Unexpected character {(char)b}");
+
+            bstringBuilder.FinishLength();
+
+            TryCloseStringBuilder(ref bstringBuilder, ref stack, out value);
+            return true;
+        }
+        return false;
+    }
+
+    private bool TryCloseStringBuilder(ref BstringBuilder bstringBuilder, ref Stack<BobjectBuilder> stack, out IBobject? value)
+    {
+        value = null;
+        if (bstringBuilder.IsCompleted)
+        {
+            var sb = (BstringBuilder)stack.Pop();
+            var bstring = (Bstring)sb.ToBobject();
+
+            if (AttachOrReturn(bstring, ref stack, out value))
+                return true;
+        }
+        return false;
+    }
+
+    private bool AttachOrReturn(IBobject obj, ref Stack<BobjectBuilder> stack, out IBobject? value)
+    {
+        value = null;
+
+        if (stack.Count == 0)
+        {
+            value = obj;
+            return true;
+        }
+
+        AttachToParent(stack.Peek(), obj);
+        return false;
+    }
+
+    private void AttachToParent(BobjectBuilder parent, IBobject obj)
+    {
+        switch (parent)
+        {
+            case BlistBuilder lb:
+                lb.PushObject(obj);
+                break;
+            case BdictionaryBuilder db:
+                if (db.IsExpectingKey)
+                {
+                    if (obj is Bstring bstring)
+                        db.PushKey(bstring);
+                    else
+                        throw new InvalidOperationException("String key expected");
+
+                    break;
+                }
+
+                if (db.IsExpectingValue)
+                {
+                    db.PushValue(obj);
+                    break;
+                }
+
+                throw new InvalidOperationException("Unexpected builder state");
+            default:
+                throw new InvalidOperationException("Unexpected object");
         }
     }
 }
