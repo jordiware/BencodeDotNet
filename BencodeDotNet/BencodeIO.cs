@@ -4,15 +4,71 @@ using System.Buffers;
 
 namespace Jordiware.BencodeDotNet;
 
+/// <summary>
+/// Provides the core Bencode parsing logic used by derived types.
+/// </summary>
+/// <remarks>
+/// <para>
+/// <see cref="BencodeIO"/> is an abstract base class that encapsulates the parsing logic
+/// for Bencoded data. It exposes a <see cref="TryParseBencode"/> method for derived classes
+/// to incrementally parse bytes from a <see cref="SequenceReader{Byte}"/> and construct
+/// <see cref="IBobject"/> instances using builder types.
+/// </para>
+/// <para>
+/// Derived types are responsible for managing the input source (e.g., stream) and for
+/// consuming the parsed objects. <see cref="BencodeIO"/> does not handle asynchronous
+/// enumeration or top-level object emission.
+/// </para>
+/// </remarks>
 public abstract class BencodeIO
 {
     protected readonly BencodeOptions _options;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="BencodeIO"/> base class with the specified options.
+    /// </summary>
+    /// <param name="options">
+    /// Optional <see cref="BencodeOptions"/> instance that defines maximum depth,
+    /// validation limits, and other parsing constraints. If <c>null</c>, a default
+    /// instance is created.
+    /// </param>
     protected BencodeIO(BencodeOptions? options = default)
     {
         _options = options ?? new();
     }
 
+    /// <summary>
+    /// Attempts to parse Bencoded data from a <see cref="SequenceReader{Byte}"/> and constructs
+    /// <see cref="IBobject"/> instances as they are completed.
+    /// </summary>
+    /// <param name="reader">The sequence reader supplying the bytes to parse.</param>
+    /// <param name="stack">A stack of <see cref="BobjectBuilder"/> instances used for nested structures.</param>
+    /// <param name="value">
+    /// When this method returns <c>true</c>, contains the top-level <see cref="IBobject"/>
+    /// that was fully parsed; otherwise, <c>null</c>.
+    /// </param>
+    /// <returns>
+    /// <c>true</c> if a top-level object was successfully parsed and is ready to be yielded;
+    /// otherwise, <c>false</c>. Partial parsing may have occurred, in which case
+    /// the stack reflects the current state.
+    /// </returns>
+    /// <remarks>
+    /// <para>
+    /// This method is intended to be called repeatedly as more bytes are available.
+    /// It handles integers, strings, lists, and dictionaries according to the Bencode
+    /// specification.
+    /// </para>
+    /// <para>
+    /// If a top-level object is completed, <paramref name="value"/> will be set and the
+    /// caller can yield it. Nested objects are attached to their parents automatically
+    /// via the builder stack.
+    /// </para>
+    /// <para>
+    /// Parsing respects the maximum nesting depth defined by <see cref="_options.MaxDepth"/>.
+    /// Unexpected characters or malformed input result in <see cref="FormatException"/>
+    /// or <see cref="InvalidOperationException"/> being thrown.
+    /// </para>
+    /// </remarks>
     private protected bool TryParseBencode(ref SequenceReader<byte> reader, ref Stack<BobjectBuilder> stack, out IBobject? value)
     {
         value = null;
