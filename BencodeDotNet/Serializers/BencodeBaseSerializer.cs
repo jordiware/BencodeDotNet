@@ -59,11 +59,53 @@ public interface IBencodeSerializer
     /// <see langword="false"/>.
     /// </returns>
     bool TryDeserialize(IBobject input, out object? output);
+
+    /// <summary>
+    /// Serializes a CLR value directly to a <see cref="Stream"/> in Bencode format asynchronously.
+    /// </summary>
+    /// <param name="input">
+    /// The CLR value to serialize. Implementations should handle type validation internally.
+    /// </param>
+    /// <param name="stream">
+    /// The target <see cref="Stream"/> to which the Bencoded bytes will be written.
+    /// Must be writable. The method does not close or dispose the stream.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// A <see cref="CancellationToken"/> that can be used to abort the operation.  
+    /// If cancellation is requested, the method should throw <see cref="OperationCanceledException"/>
+    /// as soon as possible. The stream may be partially written when cancellation occurs.
+    /// </param>
+    /// <returns>
+    /// A <see cref="Task"/> that represents the asynchronous serialization operation.
+    /// </returns>
+    /// <remarks>
+    /// <para>
+    /// This method provides a streaming serialization path that avoids creating
+    /// intermediate <see cref="IBobject"/> representations. It is intended to
+    /// improve performance and reduce memory allocations when writing large or
+    /// complex objects or collections.
+    /// </para>
+    /// <para>
+    /// Implementations are expected to fully handle internal errors and should
+    /// not throw exceptions for expected serialization failures.  
+    /// Any failure to serialize the <paramref name="input"/> value must be handled gracefully;
+    /// implementers may choose to write nothing or perform partial writes, depending
+    /// on their design. Exceptions should only be thrown for truly unexpected conditions
+    /// (e.g., invalid stream state) or cancellation.
+    /// </para>
+    /// <para>
+    /// This method is compatible with streams that support asynchronous I/O, and
+    /// callers are responsible for ensuring the stream remains valid for the
+    /// duration of the operation.
+    /// </para>
+    /// </remarks>
+    Task WriteToStreamAsync(object input, Stream stream, CancellationToken cancellationToken = default);
 }
 
 /// <summary>
 /// Defines the base contract for serializing and deserializing CLR values
-/// to and from Bencode objects.
+/// to and from Bencode objects, including support for direct asynchronous
+/// streaming of serialized data.
 /// </summary>
 /// <typeparam name="TOrigin">
 /// The CLR type being serialized or deserialized.
@@ -72,12 +114,29 @@ public interface IBencodeSerializer
 /// The Bencode object type used as the serialized representation.
 /// </typeparam>
 /// <remarks>
+/// <para>
 /// Implementations are expected to provide symmetrical serialization and
 /// deserialization semantics whenever possible, allowing round-trip conversion
 /// between <typeparamref name="TOrigin"/> and <typeparamref name="TTarget"/>.
-/// 
+/// </para>
+/// <para>
 /// All methods must be non-throwing and signal failure exclusively via the
-/// returned <see langword="bool"/> value.
+/// returned <see langword="bool"/> value, except for runtime type mismatches
+/// in interface-level streaming operations, which may throw <see cref="InvalidOperationException"/>.
+/// </para>
+/// <para>
+/// The <see cref="WriteToStreamAsync(TOrigin, Stream, CancellationToken)"/> method
+/// enables high-performance serialization directly to a <see cref="Stream"/>,
+/// avoiding intermediate <typeparamref name="TTarget"/> allocations whenever
+/// possible. Implementers may fall back to <see cref="TrySerialize(TOrigin,out TTarget)"/>
+/// if a direct streaming path is not feasible. Cancellation requests must
+/// be respected, and partial writes may occur if the operation is aborted.
+/// </para>
+/// <para>
+/// Consumers of this class should rely on the strongly typed generic methods
+/// when possible. The non-generic <see cref="IBencodeSerializer"/> interface
+/// implementations exist to support runtime type resolution and dynamic dispatch.
+/// </para>
 /// </remarks>
 public abstract class BencodeSerializer<TOrigin, TTarget> : IBencodeSerializer
     where TTarget : IBobject
@@ -112,6 +171,23 @@ public abstract class BencodeSerializer<TOrigin, TTarget> : IBencodeSerializer
     /// </returns>
     public abstract bool TryDeserialize(TTarget input, out TOrigin? output);
 
+    /// <summary>
+    /// Asynchronously serializes a <typeparamref name="TOrigin"/> value directly to a <see cref="Stream"/> in Bencode format.
+    /// </summary>
+    /// <param name="input">
+    /// The CLR value to serialize.
+    /// </param>
+    /// <param name="stream">
+    /// The target <see cref="Stream"/> to which the Bencoded bytes will be written.
+    /// Must be writable. This method does not close or dispose the stream.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// A <see cref="CancellationToken"/> that can be used to abort the operation.
+    /// If cancellation is requested, the method should throw <see cref="OperationCanceledException"/>
+    /// as soon as possible. The stream may be partially written when cancellation occurs.
+    /// </param>
+    public abstract Task WriteToStreamAsync(TOrigin input, Stream stream, CancellationToken cancellationToken = default);
+
     /// <inheritdoc />
     bool IBencodeSerializer.TrySerialize(object input, out IBobject? output)
     {
@@ -141,6 +217,15 @@ public abstract class BencodeSerializer<TOrigin, TTarget> : IBencodeSerializer
         output = typedOutput;
         return true;
     }
+
+    /// <inheritdoc />
+    async Task IBencodeSerializer.WriteToStreamAsync(object input, Stream stream, CancellationToken cancellationToken)
+    {
+        if (input is not TOrigin typedInput)
+            throw new InvalidOperationException();
+
+        await WriteToStreamAsync(typedInput, stream, cancellationToken);
+    }
 }
 
 /// <summary>
@@ -167,6 +252,9 @@ public abstract class ReferenceTypeBencodeSerializer<TOrigin, TTarget>
 
     /// <inheritdoc />
     public abstract override bool TryDeserialize(TTarget input, out TOrigin? output);
+
+    /// <inheritdoc />
+    public abstract override Task WriteToStreamAsync(TOrigin input, Stream stream, CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -191,17 +279,9 @@ public abstract class UnmanagedTypeBencodeSerializer<TOrigin, TTarget>
     /// <inheritdoc />
     public abstract override bool TrySerialize(TOrigin input, out TTarget? output);
 
-    /// <summary>
-    /// Attempts to deserialize a Bencode object into an unmanaged CLR value.
-    /// </summary>
-    /// <param name="input">
-    /// The Bencode object to deserialize.
-    /// </param>
-    /// <param name="output">
-    /// When this method returns <see langword="true"/>, contains the deserialized value.
-    /// </param>
-    /// <returns>
-    /// <see langword="true"/> if deserialization succeeded; otherwise, <see langword="false"/>.
-    /// </returns>
+    /// <inheritdoc />
     public abstract override bool TryDeserialize(TTarget input, out TOrigin output);
+
+    /// <inheritdoc />
+    public abstract override Task WriteToStreamAsync(TOrigin input, Stream stream, CancellationToken cancellationToken = default);
 }
