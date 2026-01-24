@@ -1,4 +1,7 @@
 ﻿using Jordiware.BencodeDotNet.Objects;
+using Jordiware.BencodeDotNet.Utils;
+using System.IO.Pipelines;
+using System.Text;
 
 namespace Jordiware.BencodeDotNet.Serializers;
 
@@ -86,5 +89,32 @@ public sealed class GuidBencodeSerializer : UnmanagedTypeBencodeSerializer<Guid,
 
         output = new Guid(input.Value);
         return true;
+    }
+
+    /// <summary>
+    /// Asynchronously serializes a <see cref="Guid"/> value into the provided
+    /// <see cref="PipeWriter"/> as a Bencode byte string (<c>16:&lt;raw-bytes&gt;</c>).
+    /// </summary>
+    /// <param name="input">
+    /// The <see cref="Guid"/> value to serialize.
+    /// </param>
+    /// <param name="writer">
+    /// The <see cref="PipeWriter"/> to which the encoded bytes will be written.
+    /// The writer is owned by the caller and must not be completed, flushed, or disposed
+    /// by this method.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// A <see cref="CancellationToken"/> used to cancel the operation.
+    /// </param>
+    /// <remarks>
+    /// This implementation writes the fixed-length byte string prefix (<c>16:</c>)
+    /// followed by the 16-byte binary representation of the <see cref="Guid"/>.
+    /// The operation is allocation-free and does not perform any intermediate buffering.
+    /// </remarks>
+    public override async Task WriteToPipeAsync(Guid input, PipeWriter writer, CancellationToken cancellationToken = default)
+    {
+        Span<byte> bytes = stackalloc byte[16];
+        input.TryWriteBytes(bytes);
+        await BencodePipeWriter.WriteBytesAsync(bytes.ToArray(), writer, cancellationToken);
     }
 }

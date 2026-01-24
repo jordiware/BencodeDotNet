@@ -1,4 +1,6 @@
 ﻿using Jordiware.BencodeDotNet.Objects;
+using Jordiware.BencodeDotNet.Utils;
+using System.IO.Pipelines;
 
 namespace Jordiware.BencodeDotNet.Serializers;
 
@@ -52,6 +54,26 @@ public sealed class LongBencodeSerializer : UnmanagedTypeBencodeSerializer<long,
     {
         output = input.Value;
         return true;
+    }
+
+    /// <summary>
+    /// Asynchronously serializes a <see cref="long"/> value into the provided
+    /// <see cref="PipeWriter"/> using the Bencode integer format (<c>'i' ... 'e'</c>).
+    /// </summary>
+    /// <param name="input">
+    /// The <see cref="long"/> value to serialize.
+    /// </param>
+    /// <param name="writer">
+    /// The <see cref="PipeWriter"/> to which the Bencoded bytes will be written.
+    /// The writer is owned by the caller and must not be completed, flushed, or disposed
+    /// by this method.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// A <see cref="CancellationToken"/> used to cancel the operation.
+    /// </param>
+    public override async Task WriteToPipeAsync(long input, PipeWriter writer, CancellationToken cancellationToken = default)
+    {
+        await BencodePipeWriter.WriteIntegerAsync(input, writer, cancellationToken);
     }
 }
 
@@ -115,5 +137,25 @@ public sealed class UlongBencodeSerializer : UnmanagedTypeBencodeSerializer<ulon
 
         output = (ulong)input.Value;
         return true;
+    }
+
+    /// <summary>
+    /// Asynchronously serializes a <see cref="ulong"/> value into the provided
+    /// <see cref="PipeWriter"/> using the Bencode integer format (<c>'i' ... 'e'</c>).
+    /// </summary>
+    /// <param name="input">
+    /// The <see cref="ulong"/> value to serialize.
+    /// </param>
+    /// <param name="writer">
+    /// The <see cref="PipeWriter"/> to which the Bencoded bytes will be written.
+    /// The writer is owned by the caller and must not be completed, flushed, or disposed
+    /// by this method.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// A <see cref="CancellationToken"/> used to cancel the operation.
+    /// </param>
+    public override async Task WriteToPipeAsync(ulong input, PipeWriter writer, CancellationToken cancellationToken = default)
+    {
+        await BencodePipeWriter.WriteIntegerAsync(input, writer, cancellationToken);
     }
 }

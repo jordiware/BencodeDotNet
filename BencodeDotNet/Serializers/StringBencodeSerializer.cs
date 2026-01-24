@@ -1,4 +1,6 @@
 ﻿using Jordiware.BencodeDotNet.Objects;
+using Jordiware.BencodeDotNet.Utils;
+using System.IO.Pipelines;
 using System.Text;
 
 namespace Jordiware.BencodeDotNet.Serializers;
@@ -155,5 +157,28 @@ public sealed class StringBencodeSerializer : ReferenceTypeBencodeSerializer<str
 
         output = _encoding.GetString(input.Value);
         return true;
+    }
+
+    /// <summary>
+    /// Asynchronously serializes a <see cref="string"/> value into the provided
+    /// <see cref="PipeWriter"/> as a Bencode byte string (<c>&lt;length&gt;:&lt;raw-bytes&gt;</c>),
+    /// using the configured <see cref="Encoding"/>.
+    /// </summary>
+    /// <param name="input">
+    /// The string value to serialize. Must not be <see langword="null"/>.
+    /// </param>
+    /// <param name="writer">
+    /// The <see cref="PipeWriter"/> to which the encoded bytes will be written.
+    /// The writer is owned by the caller and must not be completed, flushed, or disposed.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// A <see cref="CancellationToken"/> used to cancel the operation.
+    /// </param>
+    /// <returns>
+    /// A <see cref="Task"/> representing the asynchronous write operation.
+    /// </returns>
+    public override async Task WriteToPipeAsync(string input, PipeWriter writer, CancellationToken cancellationToken = default)
+    {
+        await BencodePipeWriter.WriteStringAsync(input, _encoding, writer, cancellationToken);
     }
 }
