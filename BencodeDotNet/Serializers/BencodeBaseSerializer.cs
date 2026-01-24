@@ -1,4 +1,5 @@
 ﻿using Jordiware.BencodeDotNet.Objects;
+using System.IO.Pipelines;
 
 namespace Jordiware.BencodeDotNet.Serializers;
 
@@ -61,45 +62,31 @@ public interface IBencodeSerializer
     bool TryDeserialize(IBobject input, out object? output);
 
     /// <summary>
-    /// Serializes a CLR value directly to a <see cref="Stream"/> in Bencode format asynchronously.
+    /// Serializes a CLR value directly into a <see cref="PipeWriter"/> in Bencode format asynchronously.
     /// </summary>
     /// <param name="input">
-    /// The CLR value to serialize. Implementations should handle type validation internally.
+    /// The CLR value to serialize. Implementations are responsible for validating
+    /// that the runtime type of <paramref name="input"/> is supported.
     /// </param>
-    /// <param name="stream">
-    /// The target <see cref="Stream"/> to which the Bencoded bytes will be written.
-    /// Must be writable. The method does not close or dispose the stream.
+    /// <param name="writer">
+    /// The <see cref="PipeWriter"/> to which the Bencoded bytes will be written.
+    /// The writer is owned by the caller and must not be completed, flushed, or disposed
+    /// by the implementation.
     /// </param>
     /// <param name="cancellationToken">
-    /// A <see cref="CancellationToken"/> that can be used to abort the operation.  
-    /// If cancellation is requested, the method should throw <see cref="OperationCanceledException"/>
-    /// as soon as possible. The stream may be partially written when cancellation occurs.
+    /// A <see cref="CancellationToken"/> used to cancel the operation. If cancellation
+    /// is observed, <see cref="OperationCanceledException"/> should be thrown.
     /// </param>
     /// <returns>
     /// A <see cref="Task"/> that represents the asynchronous serialization operation.
     /// </returns>
     /// <remarks>
-    /// <para>
-    /// This method provides a streaming serialization path that avoids creating
-    /// intermediate <see cref="IBobject"/> representations. It is intended to
-    /// improve performance and reduce memory allocations when writing large or
-    /// complex objects or collections.
-    /// </para>
-    /// <para>
-    /// Implementations are expected to fully handle internal errors and should
-    /// not throw exceptions for expected serialization failures.  
-    /// Any failure to serialize the <paramref name="input"/> value must be handled gracefully;
-    /// implementers may choose to write nothing or perform partial writes, depending
-    /// on their design. Exceptions should only be thrown for truly unexpected conditions
-    /// (e.g., invalid stream state) or cancellation.
-    /// </para>
-    /// <para>
-    /// This method is compatible with streams that support asynchronous I/O, and
-    /// callers are responsible for ensuring the stream remains valid for the
-    /// duration of the operation.
-    /// </para>
+    /// This method writes Bencode data directly into the provided buffer without
+    /// creating intermediate <see cref="IBobject"/> instances. It is intended for
+    /// high-performance scenarios and may produce partial output if cancelled or
+    /// if an unexpected failure occurs.
     /// </remarks>
-    Task WriteToStreamAsync(object input, Stream stream, CancellationToken cancellationToken = default);
+    Task WriteToPipeAsync(object input, PipeWriter writer, CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -125,7 +112,7 @@ public interface IBencodeSerializer
 /// in interface-level streaming operations, which may throw <see cref="InvalidOperationException"/>.
 /// </para>
 /// <para>
-/// The <see cref="WriteToStreamAsync(TOrigin, Stream, CancellationToken)"/> method
+/// The <see cref="WriteToPipeAsync(TOrigin, Stream, CancellationToken)"/> method
 /// enables high-performance serialization directly to a <see cref="Stream"/>,
 /// avoiding intermediate <typeparamref name="TTarget"/> allocations whenever
 /// possible. Implementers may fall back to <see cref="TrySerialize(TOrigin,out TTarget)"/>
@@ -173,77 +160,42 @@ public abstract class BencodeSerializer<TOrigin, TTarget> : IBencodeSerializer
 
     /// <summary>
     /// Asynchronously serializes the specified <typeparamref name="TOrigin"/> value
-    /// directly to the provided <see cref="Stream"/> using Bencode format, as a fallback
+    /// into the provided <see cref="PipeWriter"/> using Bencode format, as a fallback
     /// implementation.
     /// </summary>
     /// <param name="input">
     /// The CLR value to serialize. Cannot be <see langword="null"/>.
     /// </param>
-    /// <param name="stream">
-    /// The target <see cref="Stream"/> to which the Bencoded bytes will be written.
-    /// Must be writable and cannot be <see langword="null"/>. This method does not
-    /// close or dispose the stream.
+    /// <param name="writer">
+    /// The <see cref="PipeWriter"/> to which the Bencoded bytes will be written.
+    /// The writer is owned by the caller and must not be completed, flushed, or disposed
+    /// by this method.
     /// </param>
     /// <param name="cancellationToken">
-    /// A <see cref="CancellationToken"/> that can be used to abort the operation.
-    /// If cancellation is requested, an <see cref="OperationCanceledException"/> may
-    /// be thrown, and partial writes may have occurred.
+    /// A <see cref="CancellationToken"/> used to cancel the operation.
     /// </param>
     /// <returns>
     /// A <see cref="Task"/> that represents the asynchronous serialization operation.
     /// </returns>
     /// <remarks>
-    /// <para>
-    /// This method provides a **fallback streaming implementation** that first
-    /// serializes the <paramref name="input"/> to a <typeparamref name="TTarget"/>
-    /// (via <see cref="TrySerialize(TOrigin,out TTarget)"/>) and then writes the
-    /// resulting binary encoding to the <paramref name="stream"/> in one operation.
-    /// </para>
-    /// <para>
-    /// Because this approach allocates an intermediate <see cref="byte"/> array
-    /// containing the entire object, it is **less memory-efficient** for large or
-    /// deeply nested values. High-performance serializers should override this method
-    /// to write directly to the stream without creating a full intermediate buffer.
-    /// </para>
-    /// <para>
-    /// Exceptions thrown by this method:
-    /// <list type="bullet">
-    ///   <item>
-    ///     <description><see cref="ArgumentNullException"/> if <paramref name="input"/> or <paramref name="stream"/> is <see langword="null"/>.</description>
-    ///   </item>
-    ///   <item>
-    ///     <description><see cref="InvalidOperationException"/> if <paramref name="stream"/> is not writable.</description>
-    ///   </item>
-    ///   <item>
-    ///     <description><see cref="InvalidOperationException"/> if <paramref name="input"/> could not be serialized to a <typeparamref name="TTarget"/>.</description>
-    ///   </item>
-    ///   <item>
-    ///     <description><see cref="OperationCanceledException"/> if <paramref name="cancellationToken"/> requests cancellation during the write operation.</description>
-    ///   </item>
-    /// </list>
-    /// </para>
-    /// <para>
-    /// Exceptions are thrown only for programming errors or cancellation requests.  
-    /// Normal serialization failures should remain non-throwing wherever possible.
-    /// </para>
+    /// This fallback implementation serializes <paramref name="input"/> to a
+    /// <typeparamref name="TTarget"/> using <see cref="TrySerialize(TOrigin,out TTarget)"/>,
+    /// then writes the complete binary encoding to the <see cref="PipeWriter"/>.
+    /// It allocates an intermediate buffer and should be overridden by
+    /// high-performance serializers.
     /// </remarks>
-    public async virtual Task WriteToStreamAsync(TOrigin input, Stream stream, CancellationToken cancellationToken = default)
+    public async virtual Task WriteToPipeAsync(TOrigin input, PipeWriter writer, CancellationToken cancellationToken = default)
     {
         if (input is null)
             throw new ArgumentNullException(nameof(input));
 
-        if (stream is null)
-            throw new ArgumentNullException(nameof(stream));
-
-        if (!stream.CanWrite)
-            throw new InvalidOperationException("The provided stream is not writable.");
+        if (writer is null)
+            throw new ArgumentNullException(nameof(writer));
 
         if (!TrySerialize(input, out var bobject) || bobject is null)
             throw new InvalidOperationException($"Serialization of {typeof(TOrigin)} failed; no Bencode object was produced.");
 
-        var rom = new ReadOnlyMemory<byte>(bobject.ToBinaryEncoding());
-
-        await stream.WriteAsync(rom, cancellationToken);
+        await writer.WriteAsync(bobject.ToBinaryEncoding(), cancellationToken);
     }
 
     /// <inheritdoc />
@@ -277,12 +229,12 @@ public abstract class BencodeSerializer<TOrigin, TTarget> : IBencodeSerializer
     }
 
     /// <inheritdoc />
-    async Task IBencodeSerializer.WriteToStreamAsync(object input, Stream stream, CancellationToken cancellationToken)
+    async Task IBencodeSerializer.WriteToPipeAsync(object input, PipeWriter writer, CancellationToken cancellationToken)
     {
         if (input is not TOrigin typedInput)
             throw new InvalidOperationException();
 
-        await WriteToStreamAsync(typedInput, stream, cancellationToken);
+        await WriteToPipeAsync(typedInput, writer, cancellationToken);
     }
 }
 
@@ -312,7 +264,7 @@ public abstract class ReferenceTypeBencodeSerializer<TOrigin, TTarget>
     public abstract override bool TryDeserialize(TTarget input, out TOrigin? output);
 
     /// <inheritdoc />
-    public abstract override Task WriteToStreamAsync(TOrigin input, Stream stream, CancellationToken cancellationToken = default);
+    public abstract override Task WriteToPipeAsync(TOrigin input, PipeWriter writer, CancellationToken cancellationToken = default);
 }
 
 /// <summary>
@@ -341,5 +293,5 @@ public abstract class UnmanagedTypeBencodeSerializer<TOrigin, TTarget>
     public abstract override bool TryDeserialize(TTarget input, out TOrigin output);
 
     /// <inheritdoc />
-    public abstract override Task WriteToStreamAsync(TOrigin input, Stream stream, CancellationToken cancellationToken = default);
+    public abstract override Task WriteToPipeAsync(TOrigin input, PipeWriter writer, CancellationToken cancellationToken = default);
 }
