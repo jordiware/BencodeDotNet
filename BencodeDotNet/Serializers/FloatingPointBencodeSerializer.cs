@@ -1,6 +1,7 @@
 ﻿using Jordiware.BencodeDotNet.Objects;
 using Jordiware.BencodeDotNet.Utils;
 using System.Globalization;
+using System.IO.Pipelines;
 using System.Text;
 
 namespace Jordiware.BencodeDotNet.Serializers;
@@ -76,6 +77,31 @@ public sealed class FloatBencodeSerializer : UnmanagedTypeBencodeSerializer<floa
                               CultureInfo.InvariantCulture,
                               out output);
     }
+
+    /// <summary>
+    /// Asynchronously serializes a <see cref="float"/> value into the provided
+    /// <see cref="PipeWriter"/> in Bencode format by converting it to a string
+    /// using ASCII encoding.
+    /// </summary>
+    /// <param name="input">
+    /// The <see cref="float"/> value to serialize.
+    /// </param>
+    /// <param name="writer">
+    /// The <see cref="PipeWriter"/> to which the serialized value will be written.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// A <see cref="CancellationToken"/> that can be used to cancel the operation.
+    /// </param>
+    /// <returns>
+    /// A <see cref="Task"/> representing the asynchronous write operation.
+    /// </returns>
+    public override async Task WriteToPipeAsync(float input, PipeWriter writer, CancellationToken cancellationToken = default)
+    {
+        if (!FloatingPointNumberFormatter.TryFormat(input, out var s))
+            throw new InvalidOperationException($"Unable to format float value {input}.");
+
+        await BencodePipeWriter.WriteStringAsync(s, Encoding.ASCII, writer, cancellationToken);
+    }
 }
 
 /// <summary>
@@ -148,6 +174,31 @@ public sealed class DoubleBencodeSerializer : UnmanagedTypeBencodeSerializer<dou
                                CultureInfo.InvariantCulture,
                                out output);
     }
+
+    /// <summary>
+    /// Asynchronously serializes a <see cref="double"/> value into the provided
+    /// <see cref="PipeWriter"/> in Bencode format by converting it to a string
+    /// using ASCII encoding.
+    /// </summary>
+    /// <param name="input">
+    /// The <see cref="double"/> value to serialize.
+    /// </param>
+    /// <param name="writer">
+    /// The <see cref="PipeWriter"/> to which the serialized value will be written.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// A <see cref="CancellationToken"/> that can be used to cancel the operation.
+    /// </param>
+    /// <returns>
+    /// A <see cref="Task"/> representing the asynchronous write operation.
+    /// </returns>
+    public override async Task WriteToPipeAsync(double input, PipeWriter writer, CancellationToken cancellationToken = default)
+    {
+        if (!FloatingPointNumberFormatter.TryFormat(input, out var s))
+            throw new InvalidOperationException($"Unable to format double value {input}.");
+
+        await BencodePipeWriter.WriteStringAsync(s, Encoding.ASCII, writer, cancellationToken);
+    }
 }
 
 /// <summary>
@@ -215,5 +266,30 @@ public sealed class DecimalBencodeSerializer : UnmanagedTypeBencodeSerializer<de
                                 NumberStyles.Float,
                                 CultureInfo.InvariantCulture,
                                 out output);
+    }
+
+    /// <summary>
+    /// Asynchronously serializes a <see cref="decimal"/> value into the provided
+    /// <see cref="PipeWriter"/> in Bencode format by converting it to a string
+    /// using ASCII encoding.
+    /// </summary>
+    /// <param name="input">
+    /// The <see cref="decimal"/> value to serialize.
+    /// </param>
+    /// <param name="writer">
+    /// The <see cref="PipeWriter"/> to which the serialized value will be written.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// A <see cref="CancellationToken"/> that can be used to cancel the operation.
+    /// </param>
+    /// <returns>
+    /// A <see cref="Task"/> representing the asynchronous write operation.
+    /// </returns>
+    public override async Task WriteToPipeAsync(decimal input, PipeWriter writer, CancellationToken cancellationToken = default)
+    {
+        if (!FloatingPointNumberFormatter.TryFormat(input, out var s))
+            throw new InvalidOperationException($"Unable to format decimal value {input}.");
+
+        await BencodePipeWriter.WriteStringAsync(s, Encoding.ASCII, writer, cancellationToken);
     }
 }

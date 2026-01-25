@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Immutable;
 using System.Diagnostics.CodeAnalysis;
+using System.IO.Pipelines;
 
 namespace Jordiware.BencodeDotNet.Objects;
 
@@ -198,6 +199,41 @@ public sealed class Bdictionary : IBobject, IReadOnlyDictionary<Bstring, IBobjec
         }
 
         return length;
+    }
+
+    /// <summary>
+    /// Writes the Bencode dictionary representation of this value to the specified <see cref="PipeWriter"/>.
+    /// </summary>
+    /// <param name="writer">
+    /// The <see cref="PipeWriter"/> to which the Bencode data will be written.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// A <see cref="CancellationToken"/> to observe while writing asynchronously.
+    /// </param>
+    /// <returns>
+    /// A <see cref="Task"/> representing the asynchronous write operation.
+    /// </returns>
+    /// <remarks>
+    /// <para>
+    /// The dictionary is encoded using the standard Bencode format:
+    /// <c>d&lt;key&gt;&lt;value&gt;...e</c>.
+    /// </para>
+    /// <para>
+    /// Both keys and values are written using their respective
+    /// <see cref="IBobject.WriteToPipeAsync"/> implementations.
+    /// </para>
+    /// </remarks>
+    public async Task WriteToPipeAsync(PipeWriter writer, CancellationToken cancellationToken = default)
+    {
+        await writer.WriteAsync(new[] { Bencode.DictionaryBeginCharacter }, cancellationToken);
+
+        foreach (var (key, value) in _keyValuePairs)
+        {
+            await key.WriteToPipeAsync(writer, cancellationToken);
+            await value.WriteToPipeAsync(writer, cancellationToken);
+        }
+
+        await writer.WriteAsync(new[] { Bencode.TerminationCharacter }, cancellationToken);
     }
 
     IEnumerator IEnumerable.GetEnumerator()

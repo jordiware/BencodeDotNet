@@ -10,9 +10,9 @@ public class BdecoderWithSerializerTests
 
     [Theory]
     [MemberData(nameof(GetSuccessfulDecodeCases))]
-    public async Task DecodeReturnsDeserializedValue(Func<Bdecoder, BencodeSerializer<int, Binteger>, Task<int>> decode)
+    public async Task DecodeReturnsDeserializedValue(Func<BencodeDecoder, BencodeSerializer<int, Binteger>, Task<int>> decode)
     {
-        var decoder = new Bdecoder();
+        var decoder = new BencodeDecoder();
         var serializer = new IntegerPassthroughSerializer();
 
         var result = await decode(decoder, serializer);
@@ -22,9 +22,9 @@ public class BdecoderWithSerializerTests
 
     [Theory]
     [MemberData(nameof(GetWrongBobjectCases))]
-    public async Task DecodeThrowsIfDecodedBobjectTypeDoesNotMatch(Func<Bdecoder, BencodeSerializer<int, Bstring>, Task<int>> decode)
+    public async Task DecodeThrowsIfDecodedBobjectTypeDoesNotMatch(Func<BencodeDecoder, BencodeSerializer<int, Bstring>, Task<int>> decode)
     {
-        var decoder = new Bdecoder();
+        var decoder = new BencodeDecoder();
         var serializer = new StringExpectingSerializer();
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => decode(decoder, serializer));
@@ -32,9 +32,9 @@ public class BdecoderWithSerializerTests
 
     [Theory]
     [MemberData(nameof(GetTryDeserializeFalseCases))]
-    public async Task DecodeThrowsIfTryDeserializeReturnsFalse(Func<Bdecoder, BencodeSerializer<int, Binteger>, Task<int>> decode)
+    public async Task DecodeThrowsIfTryDeserializeReturnsFalse(Func<BencodeDecoder, BencodeSerializer<int, Binteger>, Task<int>> decode)
     {
-        var decoder = new Bdecoder();
+        var decoder = new BencodeDecoder();
         var serializer = new RejectingIntegerSerializer();
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => decode(decoder, serializer));
@@ -42,15 +42,15 @@ public class BdecoderWithSerializerTests
 
     [Theory]
     [MemberData(nameof(GetNullResultCases))]
-    public async Task DecodeThrowsIfSerializerProducesNull(Func<Bdecoder, BencodeSerializer<int?, Binteger>, Task<int?>> decode)
+    public async Task DecodeThrowsIfSerializerProducesNull(Func<BencodeDecoder, BencodeSerializer<int?, Binteger>, Task<int?>> decode)
     {
-        var decoder = new Bdecoder();
+        var decoder = new BencodeDecoder();
         var serializer = new NullProducingIntegerSerializer();
 
         await Assert.ThrowsAsync<InvalidOperationException>(() => decode(decoder, serializer));
     }
 
-    public static TheoryData<Func<Bdecoder, BencodeSerializer<int, Binteger>, Task<int>>> GetSuccessfulDecodeCases()
+    public static TheoryData<Func<BencodeDecoder, BencodeSerializer<int, Binteger>, Task<int>>> GetSuccessfulDecodeCases()
     {
         return new()
             {
@@ -79,7 +79,7 @@ public class BdecoderWithSerializerTests
             };
     }
 
-    public static TheoryData<Func<Bdecoder, BencodeSerializer<int, Bstring>, Task<int>>> GetWrongBobjectCases()
+    public static TheoryData<Func<BencodeDecoder, BencodeSerializer<int, Bstring>, Task<int>>> GetWrongBobjectCases()
     {
         return new()
             {
@@ -96,7 +96,7 @@ public class BdecoderWithSerializerTests
             };
     }
 
-    public static TheoryData<Func<Bdecoder, BencodeSerializer<int, Binteger>, Task<int>>> GetTryDeserializeFalseCases()
+    public static TheoryData<Func<BencodeDecoder, BencodeSerializer<int, Binteger>, Task<int>>> GetTryDeserializeFalseCases()
     {
         return new()
             {
@@ -113,7 +113,7 @@ public class BdecoderWithSerializerTests
             };
     }
 
-    public static TheoryData<Func<Bdecoder, BencodeSerializer<int?, Binteger>, Task<int?>>> GetNullResultCases()
+    public static TheoryData<Func<BencodeDecoder, BencodeSerializer<int?, Binteger>, Task<int?>>> GetNullResultCases()
     {
         return new()
             {

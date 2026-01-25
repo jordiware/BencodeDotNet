@@ -1,4 +1,6 @@
 ﻿using Jordiware.BencodeDotNet.Objects;
+using Jordiware.BencodeDotNet.Utils;
+using System.IO.Pipelines;
 
 namespace Jordiware.BencodeDotNet.Serializers;
 
@@ -82,6 +84,33 @@ public sealed class EnumBencodeSerializer<TEnum> : BencodeSerializer<TEnum, Bint
 
         output = (TEnum)Enum.ToObject(EnumType, convertedValue);
         return true;
+    }
+
+    /// <summary>
+    /// Asynchronously serializes an enum value to the provided
+    /// <see cref="PipeWriter"/> in Bencode format.
+    /// </summary>
+    /// <param name="input">
+    /// The enum value to serialize.
+    /// </param>
+    /// <param name="writer">
+    /// The <see cref="PipeWriter"/> to which the serialized value will be written.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// A <see cref="CancellationToken"/> that can be used to cancel the operation.
+    /// </param>
+    /// <returns>
+    /// A <see cref="Task"/> representing the asynchronous write operation.
+    /// </returns>
+    /// <remarks>
+    /// The enum value is converted to its underlying integral representation
+    /// using <see cref="Convert.ToInt64(object)"/> and written as a Bencode integer,
+    /// mirroring the behavior of the corresponding <c>TrySerialize</c> implementation.
+    /// </remarks>
+    public override async Task WriteToPipeAsync(TEnum input, PipeWriter writer, CancellationToken cancellationToken = default)
+    {
+        var underlying = Convert.ToInt64(input);
+        await BencodePipeWriter.WriteIntegerAsync(underlying, writer, cancellationToken);
     }
 
     private static bool IsValueInUnderlyingRange(long value)
