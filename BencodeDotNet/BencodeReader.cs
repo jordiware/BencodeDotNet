@@ -182,6 +182,121 @@ public sealed class BencodeReader : BencodeIO
         }
     }
 
+    /// <summary>
+    /// Reads Bencoded data from a file and emits fully parsed top-level <see cref="IBobject"/> instances.
+    /// </summary>
+    /// <param name="filePath">
+    /// The path to the file containing Bencoded data. Must not be <c>null</c>, empty, or whitespace.
+    /// </param>
+    /// <param name="ct">A <see cref="CancellationToken"/> to observe while reading asynchronously.</param>
+    /// <returns>
+    /// An <see cref="IAsyncEnumerable{IBobject}"/> that yields each top-level Bencode object as it is parsed and validated.
+    /// </returns>
+    /// <exception cref="ArgumentException">Thrown if <paramref name="filePath"/> is <c>null</c>, empty, or whitespace.</exception>
+    /// <exception cref="FormatException">
+    /// Thrown if the stream contains invalid Bencode data, if validation fails for any object,
+    /// or if the end of stream is reached unexpectedly.
+    /// </exception>
+    /// <remarks>
+    /// <para>
+    /// Instances of <see cref="BencodeReader"/> are not thread-safe. A single reader instance
+    /// should not be used concurrently by multiple consumers.
+    /// </para>
+    /// </remarks>
+    public async IAsyncEnumerable<IBobject> ReadFromFileAsync(string filePath, [EnumeratorCancellation] CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(filePath))
+            throw new ArgumentException("File path can not be empty.");
+
+        using var stream = File.OpenRead(filePath);
+
+        var stack = new Stack<BobjectBuilder>();
+        var reader = PipeReader.Create(stream, new StreamPipeReaderOptions(leaveOpen: true));
+        ReadResult result = default!;
+
+        try
+        {
+            while (!result.IsCompleted)
+            {
+                result = await reader.ReadAsync(ct);
+
+                foreach (var element in ParseBuffer(result.Buffer, stack))
+                {
+                    try
+                    {
+                        _options.Validate(element);
+                    }
+                    catch
+                    {
+                        throw new FormatException("Validation failed for decoded object.");
+                    }
+
+                    yield return element;
+                }
+
+                reader.AdvanceTo(result.Buffer.End);
+            }
+        }
+        finally
+        {
+            await reader.CompleteAsync();
+        }
+
+        if (stack.Count != 0)
+            throw new FormatException("Unexpected end of stream while parsing Bencode object.");
+    }
+
+    /// <summary>
+    /// Reads Bencoded data from a file and deserializes each top-level object to <typeparamref name="TType"/> using a serializer.
+    /// </summary>
+    /// <typeparam name="TType">The target type to deserialize Bencoded objects into.</typeparam>
+    /// <param name="filePath">
+    /// The path to the file containing Bencoded data. Must not be <c>null</c>, empty, or whitespace.
+    /// </param>
+    /// <param name="serializer">
+    /// Optional serializer to use for deserialization. If <c>null</c>, a serializer is resolved automatically
+    /// via <see cref="BencodeSerializer.TryGetSerializerForType"/>. If no serializer can be found, an exception is thrown.
+    /// </param>
+    /// <param name="ct">A <see cref="CancellationToken"/> to observe while reading asynchronously.</param>
+    /// <returns>
+    /// An <see cref="IAsyncEnumerable{TType}"/> yielding each deserialized object in order.
+    /// </returns>
+    /// <exception cref="ArgumentException">Thrown if <paramref name="filePath"/> is <c>null</c>, empty, or whitespace.</exception>
+    /// <exception cref="NotSupportedException">Thrown if no serializer can be resolved for <typeparamref name="TType"/>.</exception>
+    /// <exception cref="SerializationException">Thrown if deserialization of any Bencode object fails.</exception>
+    /// <remarks>
+    /// <para>
+    /// Instances of <see cref="BencodeReader"/> are not thread-safe. A single reader instance
+    /// should not be used concurrently by multiple consumers.
+    /// </para>
+    /// </remarks>
+    public async IAsyncEnumerable<TType> ReadFromFileAsync<TType>(string filePath,
+                                                                  IBencodeSerializer? serializer = null,
+                                                                  [EnumeratorCancellation] CancellationToken ct = default)
+    {
+        if (string.IsNullOrWhiteSpace(filePath))
+            throw new ArgumentException("File path can not be empty.");
+
+        if (serializer is null)
+        {
+            if (!BencodeSerializer.TryGetSerializerForType(typeof(TType), _options, out var resolvedSerializer)
+                || resolvedSerializer is null)
+                throw new NotSupportedException($"No Bencode serializer is registered or declared for type '{typeof(TType)}'.");
+
+            serializer = resolvedSerializer;
+        }
+
+        using var stream = File.OpenRead(filePath);
+
+        await foreach (var bobject in ReadAsync(stream, ct))
+        {
+            if (!serializer.TryDeserialize(bobject, out var value))
+                throw new SerializationException($"Failed to deserialize Bencode object to type '{typeof(TType)}'.");
+
+            yield return (TType)value!;
+        }
+    }
+
     private IEnumerable<IBobject> ParseBuffer(ReadOnlySequence<byte> buffer, Stack<BobjectBuilder> stack)
     {
         var seqReader = new SequenceReader<byte>(buffer);
