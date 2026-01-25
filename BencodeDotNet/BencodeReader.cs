@@ -155,7 +155,7 @@ public sealed class BencodeReader : BencodeIO
     /// <typeparamref name="TType"/>.
     /// </exception>
     public async IAsyncEnumerable<TType> ReadAsync<TType>(Stream stream, 
-                                                          BencodeSerializer<TType, IBobject>? serializer = default,
+                                                          IBencodeSerializer? serializer = default,
                                                           [EnumeratorCancellation] CancellationToken ct = default)
     {
         if (stream is null)
@@ -167,11 +167,10 @@ public sealed class BencodeReader : BencodeIO
         if (serializer is null)
         {
             if (!BencodeSerializer.TryGetSerializerForType(typeof(TType), _options, out var resolvedSerializer) 
-                || resolvedSerializer is null
-                || resolvedSerializer is not BencodeSerializer<TType, IBobject> typeSerializer)
+                || resolvedSerializer is null)
                 throw new NotSupportedException($"No Bencode serializer is registered or declared for type '{typeof(TType)}'.");
 
-            serializer = typeSerializer;
+            serializer = resolvedSerializer;
         }
 
         await foreach (var bobject in ReadAsync(stream, ct))
@@ -179,7 +178,7 @@ public sealed class BencodeReader : BencodeIO
             if (!serializer.TryDeserialize(bobject, out var value))
                 throw new SerializationException($"Failed to deserialize Bencode object to type '{typeof(TType)}'.");
 
-            yield return value!;
+            yield return (TType)value!;
         }
     }
 
