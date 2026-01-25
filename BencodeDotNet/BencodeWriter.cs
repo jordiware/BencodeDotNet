@@ -33,7 +33,7 @@ public sealed class BencodeWriter : BencodeIO
     /// string encoding, maximum depth, and other validation settings.
     /// If <c>null</c>, default options are applied.
     /// </param>
-    public BencodeWriter(BencodeOptions? options = default) : base(options)
+    public BencodeWriter(BencodeOptions? options = null) : base(options)
     {
     }
 

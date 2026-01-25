@@ -43,7 +43,7 @@ public sealed class BencodeReader : BencodeIO
     /// behavior for all objects read by this instance. If <see langword="null"/>,
     /// a new default options instance is created.
     /// </param>
-    public BencodeReader(BencodeOptions? options = default) : base(options)
+    public BencodeReader(BencodeOptions? options = null) : base(options)
     {
     }
 

@@ -22,10 +22,8 @@ namespace Jordiware.BencodeDotNet;
 ///   </item>
 /// </list>
 /// </remarks>
-public sealed class Bencoder
+public sealed class Bencoder : BencodeIO
 {
-    private readonly BencodeOptions _options;
-
     /// <summary>
     /// Initializes a new instance of the <see cref="Bencoder"/> class using the specified encoding options.
     /// </summary>
@@ -33,9 +31,8 @@ public sealed class Bencoder
     /// The <see cref="BencodeOptions"/> instance that defines validation limits for encoded payloads.
     /// If <see langword="null"/>, a new instance with default values is used.
     /// </param>
-    public Bencoder(BencodeOptions? options = null)
+    public Bencoder(BencodeOptions? options = null) : base(options)
     {
-        _options = options ?? new();
     }
 
     /// <summary>
