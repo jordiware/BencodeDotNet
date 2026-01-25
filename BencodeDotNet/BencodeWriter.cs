@@ -71,7 +71,7 @@ public sealed class BencodeWriter : BencodeIO
     /// Stream lifetime management remains the responsibility of the caller.
     /// </para>
     /// </remarks>
-    public async Task WriteAsync(IBobject value, Stream output, CancellationToken cancellationToken = default)
+    public async Task WriteBencodeAsync(IBobject value, Stream output, CancellationToken cancellationToken = default)
     {
         if (value is null)
             throw new ArgumentNullException(nameof(value));
@@ -161,7 +161,7 @@ public sealed class BencodeWriter : BencodeIO
     /// write operation.
     /// </para>
     /// </remarks>
-    public async Task WriteToFileAsync(IBobject value, string filePath, bool overwrite = false, CancellationToken cancellationToken = default)
+    public async Task WriteBencodeToFileAsync(IBobject value, string filePath, bool overwrite = false, CancellationToken cancellationToken = default)
     {
         if (value is null)
             throw new ArgumentNullException(nameof(value));
@@ -177,7 +177,7 @@ public sealed class BencodeWriter : BencodeIO
                                               bufferSize: 4096,
                                               useAsync: true);
 
-        await WriteAsync(value, fileStream, cancellationToken);
+        await WriteBencodeAsync(value, fileStream, cancellationToken);
     }
 
     /// <summary>
