@@ -1,5 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Immutable;
+using System.Globalization;
+using System.IO.Pipelines;
 using System.Text;
 
 namespace Jordiware.BencodeDotNet.Objects;
@@ -188,6 +190,32 @@ public sealed class Bstring : IBobject, IReadOnlyList<byte>, IEquatable<Bstring>
         length += (int)Math.Floor(Math.Log10(length));
         length += 2;
         return length;
+    }
+
+    /// <summary>
+    /// Writes the Bencode string representation of this value to the specified <see cref="PipeWriter"/>.
+    /// </summary>
+    /// <param name="writer">
+    /// The <see cref="PipeWriter"/> to which the Bencode data will be written.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// A <see cref="CancellationToken"/> to observe while writing asynchronously.
+    /// </param>
+    /// <returns>
+    /// A <see cref="Task"/> representing the asynchronous write operation.
+    /// </returns>
+    /// <remarks>
+    /// <para>
+    /// The string is encoded using the standard Bencode format:
+    /// <c>&lt;length&gt;:&lt;bytes&gt;</c>, where <c>length</c> represents the number
+    /// of bytes written, not characters.
+    /// </para>
+    /// </remarks>
+    public async Task WriteToPipeAsync(PipeWriter writer, CancellationToken cancellationToken = default)
+    {
+        await writer.WriteAsync(Encoding.ASCII.GetBytes(Value.Length.ToString(CultureInfo.InvariantCulture)), cancellationToken);
+        await writer.WriteAsync(new[] { (byte)':' }, cancellationToken);
+        await writer.WriteAsync(Value, cancellationToken);
     }
 
     IEnumerator IEnumerable.GetEnumerator()

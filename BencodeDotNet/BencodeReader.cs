@@ -155,7 +155,7 @@ public sealed class BencodeReader : BencodeIO
     /// <typeparamref name="TType"/>.
     /// </exception>
     public async IAsyncEnumerable<TType> ReadAsync<TType>(Stream stream, 
-                                                          IBencodeSerializer? serializer = default,
+                                                          IBencodeSerializer? serializer = null,
                                                           [EnumeratorCancellation] CancellationToken ct = default)
     {
         if (stream is null)
