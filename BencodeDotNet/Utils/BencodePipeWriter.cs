@@ -203,47 +203,49 @@ internal static class BencodePipeWriter
         writer.Advance(prefixLength);
 
         // Encode in chunks
-        const int bufferSize = 8192;
-        byte[]? rentedBuffer = null;
-        Span<byte> byteBuffer = bufferSize <= 1024 ? stackalloc byte[bufferSize] : (rentedBuffer = ArrayPool<byte>.Shared.Rent(bufferSize));
-
         Encoder encoder = encoding.GetEncoder();
-        int charsProcessed = 0;
-        while (charsProcessed < input.Length)
+        const int bufferSize = 8192;
+        byte[] rentedBuffer = ArrayPool<byte>.Shared.Rent(bufferSize);
+        try
         {
-            cancellationToken.ThrowIfCancellationRequested();
+            int charsProcessed = 0;
 
-            int charsRemaining = input.Length - charsProcessed;
+            while (charsProcessed < input.Length)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
 
-            // Use the remaining byte buffer size
-            int bytesAvailable = byteBuffer.Length;
+                int charsRemaining = input.Length - charsProcessed;
+                int bytesAvailable = rentedBuffer.Length;
 
-            // Encode as many chars as fit in the byte buffer
-            encoder.Convert(input.AsSpan(charsProcessed, charsRemaining),
-                            byteBuffer,
-                            flush: false,
-                            out var charsUsed,
-                            out var bytesUsed,
-                            out var completed);
+                encoder.Convert(input.AsSpan(charsProcessed, charsRemaining),
+                                rentedBuffer,
+                                flush: false,
+                                out var charsUsed,
+                                out var bytesUsed,
+                                out var completed);
 
-            writer.GetSpan(bytesUsed)[..bytesUsed].CopyTo(writer.GetSpan(bytesUsed));
-            writer.Advance(bytesUsed);
+                span = writer.GetSpan(bytesUsed);
+                rentedBuffer.AsSpan(0, bytesUsed).CopyTo(span);
+                writer.Advance(bytesUsed);
 
-            charsProcessed += charsUsed;
+                charsProcessed += charsUsed;
 
-            await writer.FlushAsync(cancellationToken).ConfigureAwait(false);
+                await writer.FlushAsync(cancellationToken).ConfigureAwait(false);
+            }
+
+            // Flush any remaining encoder state
+            int finalBytes = encoder.GetBytes(ReadOnlySpan<char>.Empty, rentedBuffer, flush: true);
+            if (finalBytes > 0)
+            {
+                var finalSpan = writer.GetSpan(finalBytes);
+                rentedBuffer.AsSpan(0, finalBytes).CopyTo(finalSpan);
+                writer.Advance(finalBytes);
+                await writer.FlushAsync(cancellationToken).ConfigureAwait(false);
+            }
         }
-
-        // Flush any remaining encoder state
-        int finalBytes = encoder.GetBytes(ReadOnlySpan<char>.Empty, byteBuffer, flush: true);
-        if (finalBytes > 0)
+        finally
         {
-            byteBuffer.Slice(0, finalBytes).CopyTo(writer.GetSpan(finalBytes));
-            writer.Advance(finalBytes);
-            await writer.FlushAsync(cancellationToken).ConfigureAwait(false);
-        }
-
-        if (rentedBuffer is not null)
             ArrayPool<byte>.Shared.Return(rentedBuffer);
+        }
     }
 }

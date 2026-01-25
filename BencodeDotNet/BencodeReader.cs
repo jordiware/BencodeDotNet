@@ -100,21 +100,21 @@ public sealed class BencodeReader : BencodeIO
             {
                 result = await reader.ReadAsync(ct);
 
-                var seqReader = new SequenceReader<byte>(result.Buffer);
-                if (TryParseBencode(ref seqReader, ref stack, out var element))
+                foreach (var element in ParseBuffer(result.Buffer, stack))
                 {
                     try
                     {
-                        _options.Validate(element!);
+                        _options.Validate(element);
                     }
                     catch
                     {
                         throw new FormatException("Validation failed for decoded object.");
                     }
-                    yield return element!;
+
+                    yield return element;
                 }
 
-                reader.AdvanceTo(seqReader.Position, result.Buffer.End);
+                reader.AdvanceTo(result.Buffer.End);
             }
         }
         finally
@@ -181,5 +181,19 @@ public sealed class BencodeReader : BencodeIO
 
             yield return value!;
         }
+    }
+
+    private IEnumerable<IBobject> ParseBuffer(ReadOnlySequence<byte> buffer, Stack<BobjectBuilder> stack)
+    {
+        var seqReader = new SequenceReader<byte>(buffer);
+        var results = new List<IBobject>();
+
+        while (TryParseBencode(ref seqReader, ref stack, out var element))
+        {
+            if (element is not null)
+                results.Add(element);
+        }
+
+        return results;
     }
 }
