@@ -1,11 +1,14 @@
 ﻿using Jordiware.BencodeDotNet.Objects;
 using Jordiware.BencodeDotNet.Serializers;
+using System;
 using System.Text;
 
 namespace Jordiware.BencodeDotNet.Tests.EncodeDecode;
 
 public class BencodeReaderTests
 {
+    private static readonly Random _random = new();
+
     private static Stream CreateStream(string content) =>
         new MemoryStream(Encoding.ASCII.GetBytes(content));
 
@@ -221,6 +224,243 @@ public class BencodeReaderTests
         Assert.Equal(1000 * 1000, totalCount);
     }
 
+    [Fact]
+    public async Task ReadAsyncRandomizedFuzzingStressTest()
+    {
+        var options = new BencodeOptions(maxDepth: 10, maxPayloadLength: 100);
+
+        var reader = new BencodeReader(options);
+
+        for (int test = 0; test < 50; test++) // 50 fuzz iterations
+        {
+            var bencode = GenerateRandomBencode(_random.Next(1, 500), 0, options.MaxDepth);
+            var stream = CreateStream(bencode);
+
+            try
+            {
+                await foreach (var _ in reader.ReadAsync(stream))
+                {
+                    // Just iterate to trigger parsing and validation
+                }
+            }
+            catch (FormatException)
+            {
+                // Expected for malformed or invalid random streams
+            }
+            catch (InvalidOperationException)
+            {
+                // Expected for malformed or invalid random streams
+            }
+        }
+    }
+
+    [Fact]
+    public async Task ReadAsyncStreamedSuperStressTest()
+    {
+        var options = new BencodeOptions();
+
+        var reader = new BencodeReader(options);
+
+        // Stream that generates ~10M Bencode objects on-the-fly
+        using var stream = new InfiniteBencodeStream(10_000_000, options.MaxDepth);
+
+        using var cts = new CancellationTokenSource();
+        // Cancel after a short delay to simulate mid-enumeration interruption
+        _ = Task.Run(async () =>
+        {
+            await Task.Delay(100);
+            cts.Cancel();
+        });
+
+        int count = 0;
+
+        try
+        {
+            await foreach (var _ in reader.ReadAsync(stream, cts.Token))
+            {
+                count++;
+            }
+        }
+        catch (TaskCanceledException)
+        {
+            // Expected when cancellation occurs
+        }
+        catch (FormatException)
+        {
+            // Possible due to deliberate random truncation
+        }
+        catch (InvalidOperationException)
+        {
+            // Expected for malformed or invalid random streams
+        }
+
+        Assert.True(count > 0, "At least some objects should have been parsed before cancellation or error.");
+    }
+
+    [Fact]
+    public async Task ReadAsyncTortureModeStressTest()
+    {
+        var options = new BencodeOptions(maxDepth: 5);
+
+        var reader = new BencodeReader(options);
+
+        // Streaming generator simulating millions of objects with nesting and random truncation
+        using var stream = new TortureBencodeStream(totalObjects: 1_00_000, maxDepth: options.MaxDepth);
+
+        using var cts = new CancellationTokenSource();
+        // Randomly cancel mid-stream to simulate real-world interruptions
+        _ = Task.Run(async () =>
+        {
+            await Task.Delay(_random.Next(100, 1000) * 1000);
+            cts.Cancel();
+        });
+
+        int parsedObjects = 0;
+
+        try
+        {
+            await foreach (var _ in reader.ReadAsync(stream, cts.Token))
+            {
+                parsedObjects++;
+            }
+        }
+        catch (TaskCanceledException)
+        {
+            // Expected: cancellation mid-enumeration
+        }
+        catch (FormatException)
+        {
+            // Expected: random truncation or malformed segments
+        }
+        catch (InvalidOperationException)
+        {
+            // Expected for malformed or invalid random streams
+        }
+
+        Assert.True(parsedObjects > 0, "At least some objects should have been parsed before cancellation or error.");
+    }
+
+    private static string GenerateRandomBencode(int elements, int depth, int maxDepth)
+    {
+        var sb = new StringBuilder();
+        for (int i = 0; i < elements; i++)
+        {
+            int choice = _random.Next(4);
+
+            switch (choice)
+            {
+                case 0: // integer
+                    sb.Append('i');
+                    sb.Append(_random.Next(-10000, 10000));
+                    sb.Append('e');
+                    break;
+
+                case 1: // string
+                    int len = _random.Next(0, 50);
+                    string str = RandomString(len);
+                    sb.Append(len);
+                    sb.Append(':');
+                    sb.Append(str);
+                    break;
+
+                case 2: // list
+                    if (depth < maxDepth)
+                    {
+                        sb.Append('l');
+                        sb.Append(GenerateRandomBencode(_random.Next(0, 10), depth + 1, maxDepth));
+                        sb.Append('e');
+                    }
+                    break;
+
+                case 3: // dictionary
+                    if (depth < maxDepth)
+                    {
+                        sb.Append('d');
+                        int entries = _random.Next(0, 5);
+                        for (int j = 0; j < entries; j++)
+                        {
+                            string key = RandomString(_random.Next(1, 10));
+                            sb.Append(key.Length).Append(':').Append(key);
+                            sb.Append(GenerateRandomBencode(1, depth + 1, maxDepth));
+                        }
+                        sb.Append('e');
+                    }
+                    break;
+            }
+        }
+
+        // Occasionally truncate to simulate malformed streams
+        if (_random.NextDouble() < 0.1 && sb.Length > 0)
+            sb.Length -= _random.Next(0, Math.Min(5, sb.Length));
+
+        return sb.ToString();
+    }
+
+    private static string GenerateHeavyRandomBencode(int depth, int maxDepth)
+    {
+        var sb = new StringBuilder();
+        int elements = _random.Next(1, 20);
+
+        for (int i = 0; i < elements; i++)
+        {
+            int choice = _random.Next(4);
+
+            switch (choice)
+            {
+                case 0: // integer
+                    sb.Append('i')
+                      .Append(_random.Next(-1000000, 1000000))
+                      .Append('e');
+                    break;
+
+                case 1: // string
+                    int len = _random.Next(0, 150);
+                    string str = RandomString(len);
+                    sb.Append(len).Append(':').Append(str);
+                    break;
+
+                case 2: // list
+                    if (depth < maxDepth)
+                    {
+                        sb.Append('l')
+                          .Append(GenerateHeavyRandomBencode(depth + 1, maxDepth))
+                          .Append('e');
+                    }
+                    break;
+
+                case 3: // dictionary
+                    if (depth < maxDepth)
+                    {
+                        sb.Append('d');
+                        int entries = _random.Next(1, 5);
+                        for (int j = 0; j < entries; j++)
+                        {
+                            string key = RandomString(_random.Next(1, 15));
+                            sb.Append(key.Length).Append(':').Append(key);
+                            sb.Append(GenerateHeavyRandomBencode(depth + 1, maxDepth));
+                        }
+                        sb.Append('e');
+                    }
+                    break;
+            }
+        }
+
+        // Random truncation for malformed streams
+        if (_random.NextDouble() < 0.15 && sb.Length > 0)
+            sb.Length -= _random.Next(0, Math.Min(10, sb.Length));
+
+        return sb.ToString();
+    }
+
+    private static string RandomString(int length)
+    {
+        const string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        var sb = new StringBuilder(length);
+        for (int i = 0; i < length; i++)
+            sb.Append(chars[_random.Next(chars.Length)]);
+        return sb.ToString();
+    }
+
     // Helper classes
     private class UnreadableStream : Stream
     {
@@ -234,5 +474,222 @@ public class BencodeReaderTests
         public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
         public override void SetLength(long value) => throw new NotSupportedException();
         public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+    }
+
+    private class InfiniteBencodeStream : Stream
+    {
+        private readonly int _maxObjects;
+        private int _generated;
+        private readonly int _maxDepth;
+        private byte[] _buffer = Array.Empty<byte>();
+        private int _position = 0;
+        private static readonly Random _random = new();
+
+        public InfiniteBencodeStream(int maxObjects, int maxDepth)
+        {
+            _maxObjects = maxObjects;
+            _maxDepth = maxDepth;
+        }
+
+        public override bool CanRead => true;
+        public override bool CanSeek => false;
+        public override bool CanWrite => false;
+        public override long Length => throw new NotSupportedException();
+        public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
+        public override void Flush() => throw new NotSupportedException();
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+        public override void SetLength(long value) => throw new NotSupportedException();
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            if (_position >= _buffer.Length)
+            {
+                if (_generated >= _maxObjects)
+                    return 0; // EOF
+
+                _buffer = Encoding.ASCII.GetBytes(GenerateRandomBencode(0, _maxDepth));
+                _position = 0;
+                _generated++;
+            }
+
+            int toCopy = Math.Min(count, _buffer.Length - _position);
+            Array.Copy(_buffer, _position, buffer, offset, toCopy);
+            _position += toCopy;
+            return toCopy;
+        }
+
+        private static string GenerateRandomBencode(int depth, int maxDepth)
+        {
+            var sb = new StringBuilder();
+            int elements = _random.Next(1, 5);
+
+            for (int i = 0; i < elements; i++)
+            {
+                int choice = _random.Next(3);
+                switch (choice)
+                {
+                    case 0: // integer
+                        sb.Append('i').Append(_random.Next(-1000, 1000)).Append('e');
+                        break;
+                    case 1: // string
+                        string str = RandomString(_random.Next(1, 20));
+                        sb.Append(str.Length).Append(':').Append(str);
+                        break;
+                    case 2: // list
+                        if (depth < maxDepth)
+                            sb.Append('l').Append(GenerateRandomBencode(depth + 1, maxDepth)).Append('e');
+                        break;
+                }
+            }
+
+            // Occasionally truncate to simulate malformed data
+            if (_random.NextDouble() < 0.05 && sb.Length > 0)
+                sb.Length -= _random.Next(0, Math.Min(5, sb.Length));
+
+            return sb.ToString();
+        }
+
+        private static string RandomString(int length)
+        {
+            const string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            var sb = new StringBuilder(length);
+            for (int i = 0; i < length; i++)
+                sb.Append(chars[_random.Next(chars.Length)]);
+            return sb.ToString();
+        }
+    }
+
+    private class TortureBencodeStream : Stream
+    {
+        private readonly int _totalObjects;
+        private readonly int _maxDepth;
+        private int _generated;
+        private byte[] _buffer = Array.Empty<byte>();
+        private int _position = 0;
+        private static readonly Random _random = new();
+
+        public TortureBencodeStream(int totalObjects, int maxDepth)
+        {
+            _totalObjects = totalObjects;
+            _maxDepth = maxDepth;
+        }
+
+        public override bool CanRead => true;
+        public override bool CanSeek => false;
+        public override bool CanWrite => false;
+        public override long Length => throw new NotSupportedException();
+        public override long Position { get => throw new NotSupportedException(); set => throw new NotSupportedException(); }
+        public override void Flush() => throw new NotSupportedException();
+        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException();
+        public override void SetLength(long value) => throw new NotSupportedException();
+        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException();
+
+        public override int Read(byte[] buffer, int offset, int count)
+        {
+            if (_position >= _buffer.Length)
+            {
+                if (_generated >= _totalObjects)
+                    return 0; // EOF
+
+                var data = GenerateRandomBencode(0, _maxDepth);
+                // Randomly truncate for malformed segments
+                if (_random.NextDouble() < 0.01 && data.Length > 0)
+                    data = data.Substring(0, data.Length - _random.Next(1, Math.Min(10, data.Length)));
+
+                _buffer = Encoding.ASCII.GetBytes(data);
+                _position = 0;
+                _generated++;
+            }
+
+            int toCopy = Math.Min(count, _buffer.Length - _position);
+            Array.Copy(_buffer, _position, buffer, offset, toCopy);
+            _position += toCopy;
+            return toCopy;
+        }
+
+        private static string GenerateRandomBencode(int depth, int maxDepth)
+        {
+            var sb = new StringBuilder();
+            int elements = _random.Next(3, 10);
+
+            for (int i = 0; i < elements; i++)
+            {
+                if (depth == maxDepth)
+                {
+                    int choice = _random.Next(2);
+                    switch (choice)
+                    {
+                        case 0: // integer
+                            sb.Append('i');
+                            sb.Append(_random.Next(-1_000_000, 1_000_000));
+                            sb.Append('e');
+                            break;
+
+                        case 1: // string
+                            string str = RandomString(_random.Next(0, 100));
+                            sb.Append(str.Length);
+                            sb.Append(':');
+                            sb.Append(str);
+                            break;
+                    }
+                }
+                else
+                {
+                    int choice = _random.Next(9);
+                    switch (choice)
+                    {
+                        case 0: // integer
+                        case 1:
+                        case 2:
+                            sb.Append('i');
+                            sb.Append(_random.Next(-1_000_000, 1_000_000));
+                            sb.Append('e');
+                            break;
+
+                        case 3: // string
+                        case 4:
+                        case 5:
+                            string str = RandomString(_random.Next(0, 100));
+                            sb.Append(str.Length);
+                            sb.Append(':');
+                            sb.Append(str);
+                            break;
+
+                        case 6: // list
+                        case 7:
+                        case 8:
+                            sb.Append('l');
+                            sb.Append(GenerateRandomBencode(depth + 1, maxDepth));
+                            sb.Append('e');
+                            break;
+
+                        case 9: // dictionary
+                            sb.Append('d');
+                            string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+                            int dictEntries = _random.Next(1, 5);
+                            for (int j = 0; j < dictEntries; j++)
+                            {
+                                string key = chars.Substring(j, 5);
+                                sb.Append(key.Length).Append(':').Append(key);
+                                sb.Append(GenerateRandomBencode(depth + 1, maxDepth));
+                            }
+                            sb.Append('e');
+                            break;
+                    }
+                }
+            }
+
+            return sb.ToString();
+        }
+
+        private static string RandomString(int length)
+        {
+            const string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+            var sb = new StringBuilder(length);
+            for (int i = 0; i < length; i++)
+                sb.Append(chars[_random.Next(chars.Length)]);
+            return sb.ToString();
+        }
     }
 }
