@@ -108,6 +108,34 @@ public class BencodeReaderTests
     }
 
     [Fact]
+    public async Task ReadAsyncTopLevelDictionaryReturnsCorrectBobject()
+    {
+        var bencode = "d3:onei1e3:twoi2ee";
+        var stream = CreateStream(bencode);
+        var reader = new BencodeReader();
+
+        var dict = (Bdictionary)(await reader.ReadAsync(stream).FirstAsync());
+        Assert.Equal(2, dict.Count);
+        Assert.Equal(1, ((Binteger)dict[new Bstring("one", Encoding.UTF8)]).Value);
+        Assert.Equal(2, ((Binteger)dict[new Bstring("two", Encoding.UTF8)]).Value);
+    }
+
+    [Fact]
+    public async Task ReadAsyncNestedStructuresReturnsCorrectBobjects()
+    {
+        var bencode = "d4:dictd1:ai10ee4:listli1ei2ei3eee";
+        var stream = CreateStream(bencode);
+        var reader = new BencodeReader();
+
+        var dict = (Bdictionary)(await reader.ReadAsync(stream).FirstAsync());
+        var list = (Blist)dict[new Bstring("list", Encoding.UTF8)];
+        var nestedDict = (Bdictionary)dict[new Bstring("dict", Encoding.UTF8)];
+
+        Assert.Equal(new[] { 1, 2, 3 }, list.OfType<Binteger>().Select(b => (int)b.Value));
+        Assert.Equal(10, ((Binteger)nestedDict[new Bstring("a", Encoding.UTF8)]).Value);
+    }
+
+    [Fact]
     public async Task ReadAsyncWithCustomSerializerDeserializesCorrectly()
     {
         var bencode = "i42e";
@@ -147,6 +175,50 @@ public class BencodeReaderTests
 
         int expected = Enumerable.Range(0, 10000).Sum();
         Assert.Equal(expected, sum);
+    }
+
+    [Fact]
+    public async Task ReadAsyncCancellationTokenCancelsEnumeration()
+    {
+        var sb = new StringBuilder();
+        for (int i = 0; i < 10000; i++)
+            sb.Append($"i{i}e");
+
+        var stream = CreateStream(sb.ToString());
+        var reader = new BencodeReader();
+        using var cts = new CancellationTokenSource();
+        cts.Cancel();
+
+        await Assert.ThrowsAsync<TaskCanceledException>(async () =>
+        {
+            await foreach (var _ in reader.ReadAsync(stream, cts.Token)) { }
+        });
+    }
+
+    [Fact]
+    public async Task ReadAsyncHeavyPayloadStressTest()
+    {
+        var sb = new StringBuilder();
+        // 1000 lists each with 1000 integers
+        for (int i = 0; i < 1000; i++)
+        {
+            sb.Append("l");
+            for (int j = 0; j < 1000; j++)
+                sb.Append($"i{j}e");
+            sb.Append("e");
+        }
+
+        var stream = CreateStream(sb.ToString());
+        var reader = new BencodeReader();
+
+        int totalCount = 0;
+        await foreach (var obj in reader.ReadAsync(stream))
+        {
+            var list = (Blist)obj;
+            totalCount += list.Count;
+        }
+
+        Assert.Equal(1000 * 1000, totalCount);
     }
 
     // Helper classes
