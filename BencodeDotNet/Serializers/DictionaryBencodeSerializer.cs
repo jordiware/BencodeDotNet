@@ -1,5 +1,7 @@
 ﻿using Jordiware.BencodeDotNet.Objects;
+using Jordiware.BencodeDotNet.Utils;
 using System.Collections.Immutable;
+using System.IO.Pipelines;
 
 namespace Jordiware.BencodeDotNet.Serializers;
 
@@ -175,6 +177,58 @@ public sealed class DictionaryBencodeSerializer<TKey, TValue> : ReferenceTypeBen
 
         output = result;
         return true;
+    }
+
+    /// <summary>
+    /// Asynchronously serializes a dictionary to the provided <see cref="PipeWriter"/> in Bencode format.
+    /// </summary>
+    /// <param name="input">
+    /// The dictionary to serialize. Cannot be <see langword="null"/>.
+    /// </param>
+    /// <param name="writer">
+    /// The <see cref="PipeWriter"/> to which the serialized dictionary will be written.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// A <see cref="CancellationToken"/> that can be used to cancel the operation.
+    /// </param>
+    /// <returns>
+    /// A <see cref="Task"/> representing the asynchronous write operation.
+    /// </returns>
+    /// <remarks>
+    /// Keys are serialized using the resolved serializer for <typeparamref name="TKey"/> 
+    /// and converted to Bencode strings. The resulting dictionary is sorted lexicographically
+    /// by these Bencode-encoded keys, as required by the Bencode specification.  
+    /// Values are serialized using the resolved serializer for <typeparamref name="TValue"/>.  
+    /// Null keys or values are skipped.  
+    /// </remarks>
+    public override async Task WriteToPipeAsync(IDictionary<TKey, TValue> input, PipeWriter writer, CancellationToken cancellationToken = default)
+    {
+        if (input is null)
+            throw new ArgumentNullException(nameof(input));
+
+        if (!BencodeSerializer.TryGetSerializerForType(typeof(TKey), _options, out var keySerializer) || keySerializer is null)
+            throw new NotSupportedException($"No Bencode serializer is registered for element type '{typeof(TKey)}'.");
+
+        if (!BencodeSerializer.TryGetSerializerForType(typeof(TValue), _options, out var valueSerializer) || valueSerializer is null)
+            throw new NotSupportedException($"No Bencode serializer is registered for element type '{typeof(TValue)}'.");
+
+        var orderedDictionary = input.Where(kvp => kvp.Key is not null && kvp.Value is not null).Select(kvp =>
+        {
+            keySerializer!.TrySerialize(kvp.Key!, out var serializedKey);
+            return (new Bstring(serializedKey!.ToBinaryEncoding()), kvp.Key!);
+        }).ToDictionary().ToImmutableSortedDictionary();
+
+        await writer.WriteAsync(new byte[] { Bencode.DictionaryBeginCharacter }, cancellationToken);
+
+        foreach (var bkey in orderedDictionary.Keys)
+        {
+            var value = input[orderedDictionary[bkey]];
+
+            await BencodePipeWriter.WriteBytesAsync(bkey.ToBinaryEncoding(), writer, cancellationToken);
+            await valueSerializer.WriteToPipeAsync(value!, writer, cancellationToken);
+        }
+
+        await writer.WriteAsync(new byte[] { Bencode.TerminationCharacter }, cancellationToken);
     }
 
     /// <summary>

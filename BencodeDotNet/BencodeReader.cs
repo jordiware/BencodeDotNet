@@ -81,8 +81,7 @@ public sealed class BencodeReader : BencodeIO
     /// while a Bencode object is only partially read, a <see cref="FormatException"/> is thrown.
     /// </para>
     /// </remarks>
-    public async IAsyncEnumerable<IBobject> ReadAsync(Stream stream,
-                                                      [EnumeratorCancellation] CancellationToken ct = default)
+    public async IAsyncEnumerable<IBobject> ReadAsync(Stream stream, [EnumeratorCancellation] CancellationToken ct = default)
     {
         if (stream is null) 
             throw new ArgumentNullException(nameof(stream));

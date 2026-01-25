@@ -1,5 +1,7 @@
 ﻿using Jordiware.BencodeDotNet.Attributes;
 using Jordiware.BencodeDotNet.Objects;
+using Jordiware.BencodeDotNet.Utils;
+using System.IO.Pipelines;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -131,6 +133,50 @@ public sealed class ReflectionBencodeSerializer<TType> : BencodeSerializer<TType
 
         output = instance;
         return true;
+    }
+
+    /// <summary>
+    /// Asynchronously serializes a POCO or complex object to the provided
+    /// <see cref="PipeWriter"/> in Bencode dictionary format.
+    /// </summary>
+    /// <param name="input">
+    /// The object to serialize. Cannot be <see langword="null"/>.
+    /// </param>
+    /// <param name="writer">
+    /// The <see cref="PipeWriter"/> to which the serialized dictionary will be written.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// A <see cref="CancellationToken"/> that can be used to cancel the operation.
+    /// </param>
+    /// <returns>
+    /// A <see cref="Task"/> representing the asynchronous write operation.
+    /// </returns>
+    /// <remarks>
+    /// Each public or attributed member of the object is serialized as a key-value
+    /// pair, using precomputed metadata for efficient access.  
+    /// Member keys are written as Bencode strings, and null values are skipped.  
+    /// This implementation mirrors <c>TrySerialize</c> semantics and may allocate
+    /// small temporary byte arrays for dictionary delimiters and keys.
+    /// </remarks>
+    public override async Task WriteToPipeAsync(TType input, PipeWriter writer, CancellationToken cancellationToken = default)
+    {
+        if (input is null)
+            throw new ArgumentNullException(nameof(input));
+
+        await writer.WriteAsync(new byte[] { Bencode.DictionaryBeginCharacter }, cancellationToken);
+
+        foreach (var member in metadata.Value.Members)
+        {
+            var value = member.Getter(input);
+
+            if (value is null)
+                continue;
+
+            await BencodePipeWriter.WriteBytesAsync(member.Key.ToBinaryEncoding(), writer, cancellationToken);
+            await member.Serializer.WriteToPipeAsync(value, writer, cancellationToken);
+        }
+
+        await writer.WriteAsync(new byte[] { Bencode.TerminationCharacter }, cancellationToken);
     }
 
     private static TypeMetadata GetTypeMetadata()
