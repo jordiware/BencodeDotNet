@@ -6,7 +6,7 @@ namespace Jordiware.BencodeDotNet.Tests.EncodeDecode;
 public class BdecoderStressTests
 {
     private static readonly BencodeOptions options = new(textEncoding: Encoding.ASCII);
-    private static readonly Bdecoder decoder = new(options);
+    private static readonly BencodeDecoder decoder = new(options);
 
     [Theory]
     [InlineData(1_000_000)]

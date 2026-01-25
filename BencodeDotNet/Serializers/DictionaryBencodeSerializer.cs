@@ -238,7 +238,7 @@ public sealed class DictionaryBencodeSerializer<TKey, TValue> : ReferenceTypeBen
     /// <remarks>
     /// Dictionary keys are stored as raw byte strings. This method interprets
     /// the key contents as a complete Bencode value and decodes it using
-    /// <see cref="Bdecoder"/> so it can be deserialized into
+    /// <see cref="BencodeDecoder"/> so it can be deserialized into
     /// <typeparamref name="TKey"/>.
     /// </remarks>
     private static bool TryDecodeKey(Bstring key, BencodeOptions options, out IBobject value)
@@ -247,7 +247,7 @@ public sealed class DictionaryBencodeSerializer<TKey, TValue> : ReferenceTypeBen
 
         try
         {
-            var decoder = new Bdecoder(options);
+            var decoder = new BencodeDecoder(options);
             value = decoder.Decode(key.Value);
             return true;
         }

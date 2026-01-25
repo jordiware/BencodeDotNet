@@ -76,7 +76,7 @@ public class BencoderTests
     [InlineData(null)]
     public void EncodeThrowsArgumentNullExceptionWhenValueIsNull(object? value)
     {
-        var encoder = new Bencoder();
+        var encoder = new BencodeEncoder();
 
         Assert.Throws<ArgumentNullException>(() => encoder.Encode(value));
     }
@@ -85,7 +85,7 @@ public class BencoderTests
     [InlineData(123)]
     public void EncodeThrowsNotSupportedExceptionWhenNoSerializerIsDeclared(object value)
     {
-        var encoder = new Bencoder();
+        var encoder = new BencodeEncoder();
 
         Assert.Throws<ArgumentNullException>(() => encoder.Encode<object, IBobject>(value, null!));
     }
@@ -94,7 +94,7 @@ public class BencoderTests
     [InlineData(42)]
     public void EncodeUsesAttributedSerializerWhenPresent(int value)
     {
-        var encoder = new Bencoder();
+        var encoder = new BencodeEncoder();
         var input = new AttributedType { Value = value };
 
         var result = encoder.Encode(input);
@@ -108,7 +108,7 @@ public class BencoderTests
     public void EncodeValidatesResultAgainstOptions(int value)
     {
         var options = new BencodeOptions(maxDepth: 0, maxPayloadLength: 64 * 1024, maxContainerItems: 1024);
-        var encoder = new Bencoder(options);
+        var encoder = new BencodeEncoder(options);
         var input = new AttributedType { Value = value };
 
         Assert.Throws<InvalidOperationException>(() => encoder.Encode(input));
@@ -118,7 +118,7 @@ public class BencoderTests
     [InlineData(null)]
     public void EncodeGenericThrowsArgumentNullExceptionWhenValueIsNull(AttributedType? value)
     {
-        var encoder = new Bencoder();
+        var encoder = new BencodeEncoder();
         var serializer = new AttributedSerializer();
 
         Assert.Throws<ArgumentNullException>(() =>
@@ -129,7 +129,7 @@ public class BencoderTests
     [InlineData(1)]
     public void EncodeGenericThrowsArgumentNullExceptionWhenSerializerIsNull(int value)
     {
-        var encoder = new Bencoder();
+        var encoder = new BencodeEncoder();
         var input = new AttributedType { Value = value };
 
         Assert.Throws<ArgumentNullException>(() =>
@@ -140,7 +140,7 @@ public class BencoderTests
     [InlineData(1)]
     public void EncodeGenericThrowsInvalidOperationExceptionWhenSerializationFails(int value)
     {
-        var encoder = new Bencoder();
+        var encoder = new BencodeEncoder();
         var serializer = new FailingSerializer();
         var input = new AttributedType { Value = value };
 
@@ -152,7 +152,7 @@ public class BencoderTests
     [InlineData(1)]
     public void EncodeGenericThrowsInvalidOperationExceptionWhenSerializerReturnsNull(int value)
     {
-        var encoder = new Bencoder();
+        var encoder = new BencodeEncoder();
         var serializer = new NullResultSerializer();
         var input = new AttributedType { Value = value };
 
@@ -164,7 +164,7 @@ public class BencoderTests
     [InlineData(1)]
     public void EncodeGenericReturnsBobjectWhenSerializationSucceeds(int value)
     {
-        var encoder = new Bencoder();
+        var encoder = new BencodeEncoder();
         var serializer = new AttributedSerializer();
         var input = new AttributedType { Value = value };
 
@@ -179,7 +179,7 @@ public class BencoderTests
     public void EncodeGenericValidatesResultAgainstOptions(int value)
     {
         var options = new BencodeOptions(maxDepth: 0, maxPayloadLength: 64 * 1024, maxContainerItems: 1024);
-        var encoder = new Bencoder(options);
+        var encoder = new BencodeEncoder(options);
         var serializer = new ListSerializer();
         var input = new AttributedType { Value = value };
 

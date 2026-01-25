@@ -12,7 +12,7 @@ namespace Jordiware.BencodeDotNet;
 /// </summary>
 /// <remarks>
 /// <para>
-/// <see cref="Bdecoder"/> supports decoding from in-memory buffers
+/// <see cref="BencodeDecoder"/> supports decoding from in-memory buffers
 /// (<see cref="byte[]"/>, <see cref="ReadOnlySpan{T}"/>, and strings)
 /// as well as streaming sources via <see cref="Stream"/> using
 /// <see cref="System.IO.Pipelines.PipeReader"/>.
@@ -32,10 +32,10 @@ namespace Jordiware.BencodeDotNet;
 /// </list>
 /// </para>
 /// </remarks>
-public sealed class Bdecoder : BencodeIO
+public sealed class BencodeDecoder : BencodeIO
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="Bdecoder"/> class
+    /// Initializes a new instance of the <see cref="BencodeDecoder"/> class
     /// with the specified decoding options.
     /// </summary>
     /// <param name="options">
@@ -43,7 +43,7 @@ public sealed class Bdecoder : BencodeIO
     /// such as maximum nesting depth.
     /// If <see langword="null"/>, default options are used.
     /// </param>
-    public Bdecoder(BencodeOptions? options = null) : base(options)
+    public BencodeDecoder(BencodeOptions? options = null) : base(options)
     {
     }
 

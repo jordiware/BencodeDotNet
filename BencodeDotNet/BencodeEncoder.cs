@@ -8,7 +8,7 @@ namespace Jordiware.BencodeDotNet;
 /// </summary>
 /// <remarks>
 /// <para>
-/// <see cref="Bencoder"/> is responsible for orchestrating the encoding process by:
+/// <see cref="BencodeEncoder"/> is responsible for orchestrating the encoding process by:
 /// </para>
 /// <list type="bullet">
 ///   <item>
@@ -22,16 +22,16 @@ namespace Jordiware.BencodeDotNet;
 ///   </item>
 /// </list>
 /// </remarks>
-public sealed class Bencoder : BencodeIO
+public sealed class BencodeEncoder : BencodeIO
 {
     /// <summary>
-    /// Initializes a new instance of the <see cref="Bencoder"/> class using the specified encoding options.
+    /// Initializes a new instance of the <see cref="BencodeEncoder"/> class using the specified encoding options.
     /// </summary>
     /// <param name="options">
     /// The <see cref="BencodeOptions"/> instance that defines validation limits for encoded payloads.
     /// If <see langword="null"/>, a new instance with default values is used.
     /// </param>
-    public Bencoder(BencodeOptions? options = null) : base(options)
+    public BencodeEncoder(BencodeOptions? options = null) : base(options)
     {
     }
 
