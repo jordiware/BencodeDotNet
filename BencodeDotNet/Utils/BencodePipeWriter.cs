@@ -67,6 +67,9 @@ internal static class BencodePipeWriter
             case ulong ul:
                 absValue = ul;
                 break;
+            case char c:
+                absValue = c;
+                break;
             default:
                 throw new NotSupportedException($"Type {typeof(T)} is not supported.");
         }

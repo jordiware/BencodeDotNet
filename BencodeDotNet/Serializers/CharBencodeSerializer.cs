@@ -1,4 +1,6 @@
 ﻿using Jordiware.BencodeDotNet.Objects;
+using Jordiware.BencodeDotNet.Utils;
+using System.IO.Pipelines;
 
 namespace Jordiware.BencodeDotNet.Serializers;
 
@@ -69,5 +71,31 @@ public sealed class CharBencodeSerializer : UnmanagedTypeBencodeSerializer<char,
         }
 
         return false;
+    }
+
+    /// <summary>
+    /// Asynchronously serializes a <see cref="char"/> value to the provided
+    /// <see cref="PipeWriter"/> in Bencode format.
+    /// </summary>
+    /// <param name="input">
+    /// The <see cref="char"/> value to serialize.
+    /// </param>
+    /// <param name="writer">
+    /// The <see cref="PipeWriter"/> to which the serialized value will be written.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// A <see cref="CancellationToken"/> that can be used to cancel the operation.
+    /// </param>
+    /// <returns>
+    /// A <see cref="Task"/> representing the asynchronous write operation.
+    /// </returns>
+    /// <remarks>
+    /// The character is serialized as its UTF-16 numeric value and written
+    /// as a Bencode integer, mirroring the behavior of the corresponding
+    /// <c>TrySerialize</c> implementation.
+    /// </remarks>
+    public override async Task WriteToPipeAsync(char input, PipeWriter writer, CancellationToken cancellationToken = default)
+    {
+        await BencodePipeWriter.WriteIntegerAsync(input, writer, cancellationToken);
     }
 }

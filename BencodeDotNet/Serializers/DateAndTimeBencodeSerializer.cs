@@ -1,4 +1,6 @@
 ﻿using Jordiware.BencodeDotNet.Objects;
+using Jordiware.BencodeDotNet.Utils;
+using System.IO.Pipelines;
 
 namespace Jordiware.BencodeDotNet.Serializers;
 
@@ -52,6 +54,32 @@ public sealed class DateTimeBencodeSerializer : UnmanagedTypeBencodeSerializer<D
     {
         output = DateTime.FromBinary(input.Value);
         return true;
+    }
+
+    /// <summary>
+    /// Asynchronously serializes a <see cref="DateTime"/> value to the provided
+    /// <see cref="PipeWriter"/> in Bencode format.
+    /// </summary>
+    /// <param name="input">
+    /// The <see cref="DateTime"/> value to serialize.
+    /// </param>
+    /// <param name="writer">
+    /// The <see cref="PipeWriter"/> to which the serialized value will be written.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// A <see cref="CancellationToken"/> that can be used to cancel the operation.
+    /// </param>
+    /// <returns>
+    /// A <see cref="Task"/> representing the asynchronous write operation.
+    /// </returns>
+    /// <remarks>
+    /// The <see cref="DateTime"/> is serialized using <see cref="DateTime.ToBinary"/>,
+    /// preserving the full value and <see cref="DateTimeKind"/> information, and written
+    /// as a Bencode integer.
+    /// </remarks>
+    public override async Task WriteToPipeAsync(DateTime input, PipeWriter writer, CancellationToken cancellationToken = default)
+    {
+        await BencodePipeWriter.WriteIntegerAsync(input.ToBinary(), writer, cancellationToken);
     }
 }
 
@@ -114,6 +142,32 @@ public sealed class DateOnlyBencodeSerializer : UnmanagedTypeBencodeSerializer<D
         output = DateOnly.FromDayNumber((int)input.Value);
         return true;
     }
+
+    /// <summary>
+    /// Asynchronously serializes a <see cref="DateOnly"/> value to the provided
+    /// <see cref="PipeWriter"/> in Bencode format.
+    /// </summary>
+    /// <param name="input">
+    /// The <see cref="DateOnly"/> value to serialize.
+    /// </param>
+    /// <param name="writer">
+    /// The <see cref="PipeWriter"/> to which the serialized value will be written.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// A <see cref="CancellationToken"/> that can be used to cancel the operation.
+    /// </param>
+    /// <returns>
+    /// A <see cref="Task"/> representing the asynchronous write operation.
+    /// </returns>
+    /// <remarks>
+    /// The value is serialized using <see cref="DateOnly.DayNumber"/> and written
+    /// as a Bencode integer, mirroring the behavior of the corresponding
+    /// <c>TrySerialize</c> implementation.
+    /// </remarks>
+    public override async Task WriteToPipeAsync(DateOnly input, PipeWriter writer, CancellationToken cancellationToken = default)
+    {
+        await BencodePipeWriter.WriteIntegerAsync(input.DayNumber, writer, cancellationToken);
+    }
 }
 
 /// <summary>
@@ -173,6 +227,33 @@ public sealed class TimeOnlyBencodeSerializer : UnmanagedTypeBencodeSerializer<T
 
         output = new TimeOnly(input.Value);
         return true;
+    }
+
+    /// <summary>
+    /// Asynchronously serializes a <see cref="TimeOnly"/> value to the provided
+    /// <see cref="PipeWriter"/> in Bencode format.
+    /// </summary>
+    /// <param name="input">
+    /// The <see cref="TimeOnly"/> value to serialize.
+    /// </param>
+    /// <param name="writer">
+    /// The <see cref="PipeWriter"/> to which the serialized value will be written.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// A <see cref="CancellationToken"/> that can be used to cancel the operation.
+    /// </param>
+    /// <returns>
+    /// A <see cref="Task"/> representing the asynchronous write operation.
+    /// </returns>
+    /// <remarks>
+    /// The value is serialized using <see cref="TimeOnly.Ticks"/> and written
+    /// as a Bencode integer, mirroring the behavior of the corresponding
+    /// <c>TrySerialize</c> implementation.
+    /// </remarks>
+
+    public override async Task WriteToPipeAsync(TimeOnly input, PipeWriter writer, CancellationToken cancellationToken = default)
+    {
+        await BencodePipeWriter.WriteIntegerAsync(input.Ticks, writer, cancellationToken);
     }
 }
 
@@ -234,5 +315,31 @@ public sealed class TimeSpanBencodeSerializer : UnmanagedTypeBencodeSerializer<T
 
         output = TimeSpan.FromTicks(input.Value);
         return true;
+    }
+
+    /// <summary>
+    /// Asynchronously serializes a <see cref="TimeSpan"/> value to the provided
+    /// <see cref="PipeWriter"/> in Bencode format.
+    /// </summary>
+    /// <param name="input">
+    /// The <see cref="TimeSpan"/> value to serialize.
+    /// </param>
+    /// <param name="writer">
+    /// The <see cref="PipeWriter"/> to which the serialized value will be written.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// A <see cref="CancellationToken"/> that can be used to cancel the operation.
+    /// </param>
+    /// <returns>
+    /// A <see cref="Task"/> representing the asynchronous write operation.
+    /// </returns>
+    /// <remarks>
+    /// The value is serialized using <see cref="TimeSpan.Ticks"/> and written
+    /// as a Bencode integer, mirroring the behavior of the corresponding
+    /// <c>TrySerialize</c> implementation.
+    /// </remarks>
+    public override async Task WriteToPipeAsync(TimeSpan input, PipeWriter writer, CancellationToken cancellationToken = default)
+    {
+        await BencodePipeWriter.WriteIntegerAsync(input.Ticks, writer, cancellationToken);
     }
 }
