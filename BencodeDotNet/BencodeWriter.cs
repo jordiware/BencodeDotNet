@@ -112,6 +112,12 @@ public sealed class BencodeWriter : BencodeIO
         if (!output.CanWrite)
             throw new InvalidOperationException("The output stream must be writable.");
 
+        if (value is IBobject b)
+        {
+            await WriteBencodeAsync(b, output, cancellationToken);
+            return;
+        }
+
         // Resolve serializer if not provided
         serializer ??= (BencodeSerializer.TryGetSerializerForType(typeof(T), _options, out var resolved) && resolved is not null)
                        ? resolved
@@ -225,6 +231,12 @@ public sealed class BencodeWriter : BencodeIO
             throw new ArgumentNullException(nameof(value));
         if (string.IsNullOrWhiteSpace(filePath))
             throw new ArgumentNullException(nameof(filePath));
+
+        if (value is IBobject b)
+        {
+            await WriteBencodeToFileAsync(b, filePath, overwrite, cancellationToken);
+            return;
+        }
 
         var mode = overwrite ? FileMode.Create : FileMode.CreateNew;
 
