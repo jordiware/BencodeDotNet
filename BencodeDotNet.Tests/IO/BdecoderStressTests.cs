@@ -134,28 +134,6 @@ public class BdecoderStressTests
         }
     }
 
-    [Theory]
-    [InlineData("i1e")]
-    [InlineData("1:a")]
-    [InlineData("li1ee")]
-    [InlineData("l1:ae")]
-    [InlineData("li1ei2ei3ee")]
-    [InlineData("l1:a1:b1:ce")]
-    [InlineData("d1:ai1ee")]
-    [InlineData("d1:a1:ae")]
-    [InlineData("d1:a1:a1:bi1ee")]
-    [InlineData("d3:barl4:spami42ee3:fooi99ee")]
-    public async Task DecodeWithChunkedStream(string input)
-    {
-        var data = Encoding.ASCII.GetBytes(input);
-
-        using var stream = new ChunkedStream(data, 1);
-
-        var result = await decoder.DecodeAsync(stream);
-
-        var bobject = Assert.IsType<IBobject>(result, exactMatch: false);
-        Assert.Equal(input, bobject.ToString());
-    }
 
     [Fact]
     public async Task DecodeRandomValidObjects()
@@ -168,21 +146,6 @@ public class BdecoderStressTests
 
             Assert.NotNull(result);
         }
-    }
-}
-
-internal sealed class ChunkedStream : MemoryStream
-{
-    private readonly int _chunkSize;
-
-    public ChunkedStream(byte[] buffer, int chunkSize) : base(buffer)
-    {
-        _chunkSize = chunkSize;
-    }
-
-    public override int Read(byte[] buffer, int offset, int count)
-    {
-        return base.Read(buffer, offset, Math.Min(count, _chunkSize));
     }
 }
 

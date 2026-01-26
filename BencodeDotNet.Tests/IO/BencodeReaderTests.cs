@@ -18,7 +18,7 @@ public class BencodeReaderTests
         var reader = new BencodeReader();
         await Assert.ThrowsAsync<ArgumentNullException>(async () =>
         {
-            await foreach (var _ in reader.ReadAsync(null!)) { }
+            await foreach (var _ in reader.ReadMultipleAsync(null!)) { }
         });
     }
 
@@ -29,7 +29,7 @@ public class BencodeReaderTests
         var reader = new BencodeReader();
         await Assert.ThrowsAsync<BencodeIOException>(async () =>
         {
-            await foreach (var _ in reader.ReadAsync(stream)) { }
+            await foreach (var _ in reader.ReadMultipleAsync(stream)) { }
         });
     }
 
@@ -42,7 +42,7 @@ public class BencodeReaderTests
         var reader = new BencodeReader();
         var stream = CreateStream(bencode);
         var results = new List<IBobject>();
-        await foreach (var obj in reader.ReadAsync(stream))
+        await foreach (var obj in reader.ReadMultipleAsync(stream))
             results.Add(obj);
 
         Assert.Single(results);
@@ -58,7 +58,7 @@ public class BencodeReaderTests
         var stream = CreateStream(bencode);
 
         var results = new List<int>();
-        await foreach (var obj in reader.ReadAsync(stream))
+        await foreach (var obj in reader.ReadMultipleAsync(stream))
             results.Add((int)((Binteger)obj).Value);
 
         Assert.Equal(new[] { 1, 2, 3 }, results);
@@ -71,7 +71,7 @@ public class BencodeReaderTests
         var reader = new BencodeReader();
         await Assert.ThrowsAsync<BencodeFormatException>(async () =>
         {
-            await foreach (var _ in reader.ReadAsync(stream)) { }
+            await foreach (var _ in reader.ReadMultipleAsync(stream)) { }
         });
     }
 
@@ -83,7 +83,7 @@ public class BencodeReaderTests
         var stream = CreateStream("5:Hello"); // string length exceeds MaxStringLength
         await Assert.ThrowsAsync<BencodeValidationException>(async () =>
         {
-            await foreach (var _ in reader.ReadAsync(stream)) { }
+            await foreach (var _ in reader.ReadMultipleAsync(stream)) { }
         });
     }
 
@@ -94,7 +94,7 @@ public class BencodeReaderTests
         var reader = new BencodeReader();
         await Assert.ThrowsAsync<BencodeFormatException>(async () =>
         {
-            await foreach (var _ in reader.ReadAsync(stream)) { }
+            await foreach (var _ in reader.ReadMultipleAsync(stream)) { }
         });
     }
 
@@ -105,7 +105,7 @@ public class BencodeReaderTests
         var stream = CreateStream(bencode);
         var reader = new BencodeReader();
 
-        var result = (Blist)(await reader.ReadAsync(stream).FirstAsync());
+        var result = (Blist)(await reader.ReadMultipleAsync(stream).FirstAsync());
         var values = result.OfType<Binteger>().Select(b => (int)b.Value).ToArray();
         Assert.Equal(new[] { 1, 2, 3 }, values);
     }
@@ -117,7 +117,7 @@ public class BencodeReaderTests
         var stream = CreateStream(bencode);
         var reader = new BencodeReader();
 
-        var dict = (Bdictionary)(await reader.ReadAsync(stream).FirstAsync());
+        var dict = (Bdictionary)(await reader.ReadMultipleAsync(stream).FirstAsync());
         Assert.Equal(2, dict.Count);
         Assert.Equal(1, ((Binteger)dict[new Bstring("one", Encoding.UTF8)]).Value);
         Assert.Equal(2, ((Binteger)dict[new Bstring("two", Encoding.UTF8)]).Value);
@@ -130,7 +130,7 @@ public class BencodeReaderTests
         var stream = CreateStream(bencode);
         var reader = new BencodeReader();
 
-        var dict = (Bdictionary)(await reader.ReadAsync(stream).FirstAsync());
+        var dict = (Bdictionary)(await reader.ReadMultipleAsync(stream).FirstAsync());
         var list = (Blist)dict[new Bstring("list", Encoding.UTF8)];
         var nestedDict = (Bdictionary)dict[new Bstring("dict", Encoding.UTF8)];
 
@@ -146,7 +146,7 @@ public class BencodeReaderTests
         var reader = new BencodeReader();
 
         var serializer = new IntBencodeSerializer();
-        var result = await reader.ReadAsync<int>(stream, serializer: serializer).FirstAsync();
+        var result = await reader.ReadMultipleAsync<int>(stream, serializer: serializer).FirstAsync();
 
         Assert.Equal(42, result);
     }
@@ -159,7 +159,7 @@ public class BencodeReaderTests
         var reader = new BencodeReader();
 
         // Assuming a registry serializer exists for int
-        var result = await reader.ReadAsync<int>(stream).FirstAsync();
+        var result = await reader.ReadMultipleAsync<int>(stream).FirstAsync();
         Assert.Equal(42, result);
     }
 
@@ -173,7 +173,7 @@ public class BencodeReaderTests
         var reader = new BencodeReader();
 
         int sum = 0;
-        await foreach (var obj in reader.ReadAsync(stream))
+        await foreach (var obj in reader.ReadMultipleAsync(stream))
             sum += (int)((Binteger)obj).Value;
 
         int expected = Enumerable.Range(0, 10000).Sum();
@@ -194,7 +194,7 @@ public class BencodeReaderTests
 
         await Assert.ThrowsAsync<TaskCanceledException>(async () =>
         {
-            await foreach (var _ in reader.ReadAsync(stream, cts.Token)) { }
+            await foreach (var _ in reader.ReadMultipleAsync(stream, cts.Token)) { }
         });
     }
 
@@ -215,7 +215,7 @@ public class BencodeReaderTests
         var reader = new BencodeReader();
 
         int totalCount = 0;
-        await foreach (var obj in reader.ReadAsync(stream))
+        await foreach (var obj in reader.ReadMultipleAsync(stream))
         {
             var list = (Blist)obj;
             totalCount += list.Count;
@@ -238,7 +238,7 @@ public class BencodeReaderTests
 
             try
             {
-                await foreach (var _ in reader.ReadAsync(stream))
+                await foreach (var _ in reader.ReadMultipleAsync(stream))
                 {
                     // Just iterate to trigger parsing and validation
                 }
@@ -276,7 +276,7 @@ public class BencodeReaderTests
 
         try
         {
-            await foreach (var _ in reader.ReadAsync(stream, cts.Token))
+            await foreach (var _ in reader.ReadMultipleAsync(stream, cts.Token))
             {
                 count++;
             }

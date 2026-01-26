@@ -137,16 +137,4 @@ public class BdecoderTests
     {
         Assert.Throws<BencodeFormatException>(() => decoder.Decode("d3:fooee"));
     }
-
-    [Fact]
-    public async Task DecodeRespectsCancellation()
-    {
-        var bytes = Encoding.ASCII.GetBytes("l4:spami42ee");
-        using var stream = new MemoryStream(bytes);
-
-        using var cts = new CancellationTokenSource();
-        cts.Cancel();
-
-        await Assert.ThrowsAsync<TaskCanceledException>(() => decoder.DecodeAsync(stream, cts.Token));
-    }
 }

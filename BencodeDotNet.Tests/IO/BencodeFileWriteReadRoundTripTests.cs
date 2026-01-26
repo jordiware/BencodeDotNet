@@ -17,7 +17,7 @@ public class BencodeFileWriteReadRoundTripTests
             await writer.WriteToFileAsync(value, filePath, overwrite: true);
 
             var reader = new BencodeReader();
-            await foreach (var readValue in reader.ReadFromFileAsync(filePath))
+            await foreach (var readValue in reader.ReadMultipleFromFileAsync(filePath))
             {
                 var integer = Assert.IsType<Binteger>(readValue);
                 Assert.Equal(42, integer.Value);
@@ -41,7 +41,7 @@ public class BencodeFileWriteReadRoundTripTests
             await writer.WriteToFileAsync(value, filePath, overwrite: true);
 
             var reader = new BencodeReader();
-            await foreach (var readValue in reader.ReadFromFileAsync(filePath))
+            await foreach (var readValue in reader.ReadMultipleFromFileAsync(filePath))
             {
                 var str = Assert.IsType<Bstring>(readValue);
                 Assert.Equal("spam", Encoding.ASCII.GetString(str.Value));
@@ -76,7 +76,7 @@ public class BencodeFileWriteReadRoundTripTests
             await writer.WriteToFileAsync(value, filePath, overwrite: true);
 
             var reader = new BencodeReader();
-            await foreach (var readValue in reader.ReadFromFileAsync(filePath))
+            await foreach (var readValue in reader.ReadMultipleFromFileAsync(filePath))
             {
                 var list = Assert.IsType<Blist>(readValue);
 
@@ -110,7 +110,7 @@ public class BencodeFileWriteReadRoundTripTests
             int[] expected = { 2 }; // only last write survives overwrite
             int i = 0;
 
-            await foreach (var readValue in reader.ReadFromFileAsync(filePath))
+            await foreach (var readValue in reader.ReadMultipleFromFileAsync(filePath))
             {
                 var integer = Assert.IsType<Binteger>(readValue);
                 Assert.Equal(expected[i], integer.Value);
@@ -135,7 +135,7 @@ public class BencodeFileWriteReadRoundTripTests
             await writer.WriteBencodeToFileAsync(value, filePath, overwrite: true);
 
             var reader = new BencodeReader();
-            await foreach (var readValue in reader.ReadFromFileAsync(filePath))
+            await foreach (var readValue in reader.ReadMultipleFromFileAsync(filePath))
             {
                 Assert.Equal(123, ((Binteger)readValue).Value);
             }
@@ -159,7 +159,7 @@ public class BencodeFileWriteReadRoundTripTests
             var reader = new BencodeReader();
             int count = 0;
 
-            await foreach (var readValue in reader.ReadFromFileAsync(filePath))
+            await foreach (var readValue in reader.ReadMultipleFromFileAsync(filePath))
             {
                 Assert.Equal(7, ((Binteger)readValue).Value);
                 count++;
@@ -187,7 +187,7 @@ public class BencodeFileWriteReadRoundTripTests
             var originalBytes = File.ReadAllBytes(filePath);
 
             var reader = new BencodeReader();
-            await foreach (var readValue in reader.ReadFromFileAsync(filePath))
+            await foreach (var readValue in reader.ReadMultipleFromFileAsync(filePath))
             {
                 using var mem = new MemoryStream();
                 var writer2 = new BencodeWriter();
