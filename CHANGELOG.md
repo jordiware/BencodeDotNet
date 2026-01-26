@@ -4,10 +4,12 @@
 - Reflection-based serializer for complex/POCO types
 - Asynchronous Stream-based reader and writer APIs
 - Custom `BencodeException` types
+- Dedicated `byte[]` serializer: `ByteArraySerializer`
 
 ## Changed
-- `Bencoder` type name to `BencodeEncoder`
-- `Bdecoder` type name to `BencodeDecoder`
+- `Bencoder` type renamed as `BencodeEncoder`
+- `Bdecoder` type renamed as `BencodeDecoder`
+- `BencodeDecoder` file/stream async reads moved to `BencodeReader`
 - Changed thrown exceptions to custom `BencodeException` types
 
 # v0.2.0
