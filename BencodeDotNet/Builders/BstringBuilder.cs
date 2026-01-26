@@ -67,14 +67,14 @@ internal sealed class BstringBuilder : BobjectBuilder
     /// <param name="digit">
     /// The ASCII byte representing a digit (<c>'0'</c>–<c>'9'</c>).
     /// </param>
+    /// <exception cref="BencodeFormatException">
+    /// Thrown if the digit is invalid or violates Bencode length rules.
+    /// </exception>
+    /// <exception cref="BencodeValidationException">
+    /// Thrown if the length exceeds the maximum allowed length.
+    /// </exception>
     /// <exception cref="ObjectDisposedException">
     /// Thrown if the builder has been disposed.
-    /// </exception>
-    /// <exception cref="InvalidOperationException">
-    /// Thrown if the length has already been finalized.
-    /// </exception>
-    /// <exception cref="FormatException">
-    /// Thrown if the digit is invalid or violates Bencode length rules.
     /// </exception>
     /// <remarks>
     /// This method enforces the following constraints:
@@ -89,13 +89,13 @@ internal sealed class BstringBuilder : BobjectBuilder
         ThrowIfDisposed();
 
         if (digit < Bencode.MinNumberCharacter || digit > Bencode.MaxNumberCharacter)
-            throw new FormatException("Digit outside the 0-9 range");
+            throw new BencodeFormatException("Digit outside the 0-9 range");
 
         if (IsLengthFinished)
-            throw new InvalidOperationException("Finished length value");
+            throw new BencodeFormatException("Finished length value");
 
         if (_length.HasValue && _length.Value == 0)
-            throw new FormatException("Unallowed '0' padding");
+            throw new BencodeFormatException("Unallowed '0' padding");
 
         if (_length.HasValue)
             _length = checked((_length.Value * 10) + (digit - Bencode.MinNumberCharacter));
@@ -103,7 +103,7 @@ internal sealed class BstringBuilder : BobjectBuilder
             _length = (digit - Bencode.MinNumberCharacter);
 
         if (_length > Options.MaxPayloadLength)
-            throw new InvalidOperationException("Max capacity reached");
+            throw new BencodeValidationException("Max capacity reached");
     }
 
     /// <summary>
@@ -113,7 +113,7 @@ internal sealed class BstringBuilder : BobjectBuilder
     /// <exception cref="ObjectDisposedException">
     /// Thrown if the builder has been disposed.
     /// </exception>
-    /// <exception cref="InvalidOperationException">
+    /// <exception cref="BencodeFormatException">
     /// Thrown if the length has not been set.
     /// </exception>
     public void FinishLength()
@@ -121,7 +121,7 @@ internal sealed class BstringBuilder : BobjectBuilder
         ThrowIfDisposed();
 
         if (_length is null)
-            throw new InvalidOperationException("Length is not set");
+            throw new BencodeFormatException("Length is not set");
 
         _bytes = new byte[_length.Value];
         _offset = 0;
@@ -133,22 +133,24 @@ internal sealed class BstringBuilder : BobjectBuilder
     /// <param name="b">
     /// The byte to append.
     /// </param>
+    /// <exception cref="BencodeFormatException">
+    /// Thrown if the length has not been finalized.
+    /// </exception>
+    /// <exception cref="BencodeValidationException">
+    /// Thrown if declared length has already been reached.
+    /// </exception>
     /// <exception cref="ObjectDisposedException">
     /// Thrown if the builder has been disposed.
-    /// </exception>
-    /// <exception cref="InvalidOperationException">
-    /// Thrown if the length has not been finalized or if the
-    /// declared length has already been reached.
     /// </exception>
     public void PushByte(byte b)
     {
         ThrowIfDisposed();
 
         if (!IsLengthFinished)
-            throw new InvalidOperationException("Unfinished length value");
+            throw new BencodeFormatException("Unfinished length value");
 
         if (_offset >= _length)
-            throw new InvalidOperationException("Max capacity reached");
+            throw new BencodeValidationException("Max capacity reached");
 
         _bytes![_offset] = b;
         _offset++;
@@ -164,7 +166,7 @@ internal sealed class BstringBuilder : BobjectBuilder
     /// <exception cref="ObjectDisposedException">
     /// Thrown if the builder has been disposed.
     /// </exception>
-    /// <exception cref="InvalidOperationException">
+    /// <exception cref="BencodeFormatException">
     /// Thrown if the length or payload is incomplete.
     /// </exception>
     public override IBobject ToBobject()
@@ -172,10 +174,10 @@ internal sealed class BstringBuilder : BobjectBuilder
         ThrowIfDisposed();
 
         if (_bytes is null)
-            throw new InvalidOperationException("Unfinished length value");
+            throw new BencodeFormatException("Unfinished length value");
 
         if (!IsCompleted)
-            throw new InvalidOperationException("Unfinished value");
+            throw new BencodeFormatException("Unfinished value");
 
         return new Bstring(_bytes);
     }

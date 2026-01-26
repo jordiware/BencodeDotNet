@@ -193,7 +193,7 @@ public abstract class BencodeSerializer<TOrigin, TTarget> : IBencodeSerializer
             throw new ArgumentNullException(nameof(writer));
 
         if (!TrySerialize(input, out var bobject) || bobject is null)
-            throw new InvalidOperationException($"Serialization of {typeof(TOrigin)} failed; no Bencode object was produced.");
+            throw new BencodeSerializerException($"Serialization of {typeof(TOrigin)} failed; no Bencode object was produced.");
 
         await writer.WriteAsync(bobject.ToBinaryEncoding(), cancellationToken);
     }
@@ -232,7 +232,7 @@ public abstract class BencodeSerializer<TOrigin, TTarget> : IBencodeSerializer
     async Task IBencodeSerializer.WriteToPipeAsync(object input, PipeWriter writer, CancellationToken cancellationToken)
     {
         if (input is not TOrigin typedInput)
-            throw new InvalidOperationException();
+            throw new ArgumentException($"Input is not of type '{typeof(TOrigin)}'");
 
         await WriteToPipeAsync(typedInput, writer, cancellationToken);
     }

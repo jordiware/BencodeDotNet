@@ -98,7 +98,7 @@ public sealed class FloatBencodeSerializer : UnmanagedTypeBencodeSerializer<floa
     public override async Task WriteToPipeAsync(float input, PipeWriter writer, CancellationToken cancellationToken = default)
     {
         if (!FloatingPointNumberFormatter.TryFormat(input, out var s))
-            throw new InvalidOperationException($"Unable to format float value {input}.");
+            throw new BencodeFormatException($"Unable to format float value {input}.");
 
         await BencodePipeWriter.WriteStringAsync(s, Encoding.ASCII, writer, cancellationToken);
     }
@@ -195,7 +195,7 @@ public sealed class DoubleBencodeSerializer : UnmanagedTypeBencodeSerializer<dou
     public override async Task WriteToPipeAsync(double input, PipeWriter writer, CancellationToken cancellationToken = default)
     {
         if (!FloatingPointNumberFormatter.TryFormat(input, out var s))
-            throw new InvalidOperationException($"Unable to format double value {input}.");
+            throw new BencodeFormatException($"Unable to format double value {input}.");
 
         await BencodePipeWriter.WriteStringAsync(s, Encoding.ASCII, writer, cancellationToken);
     }
@@ -288,7 +288,7 @@ public sealed class DecimalBencodeSerializer : UnmanagedTypeBencodeSerializer<de
     public override async Task WriteToPipeAsync(decimal input, PipeWriter writer, CancellationToken cancellationToken = default)
     {
         if (!FloatingPointNumberFormatter.TryFormat(input, out var s))
-            throw new InvalidOperationException($"Unable to format decimal value {input}.");
+            throw new BencodeFormatException($"Unable to format decimal value {input}.");
 
         await BencodePipeWriter.WriteStringAsync(s, Encoding.ASCII, writer, cancellationToken);
     }

@@ -57,7 +57,7 @@ public sealed class BencodeWriter : BencodeIO
     /// <exception cref="ArgumentNullException">
     /// Thrown if <paramref name="value"/> or <paramref name="output"/> is <c>null</c>.
     /// </exception>
-    /// <exception cref="InvalidOperationException">
+    /// <exception cref="BencodeIOException">
     /// Thrown if <paramref name="output"/> is not writable.
     /// </exception>
     /// <remarks>
@@ -78,7 +78,7 @@ public sealed class BencodeWriter : BencodeIO
         if (output is null)
             throw new ArgumentNullException(nameof(output));
         if (!output.CanWrite)
-            throw new InvalidOperationException("The output stream must be writable.");
+            throw new BencodeIOException("The output stream must be writable.");
 
         var writer = PipeWriter.Create(output);
         await value.WriteToPipeAsync(writer, cancellationToken);
@@ -100,8 +100,11 @@ public sealed class BencodeWriter : BencodeIO
     /// <exception cref="ArgumentNullException">
     /// Thrown if <paramref name="value"/> or <paramref name="output"/> is <c>null</c>.
     /// </exception>
-    /// <exception cref="InvalidOperationException">
-    /// Thrown if <paramref name="output"/> is not writable, or if no serializer could be found for the specified type.
+    /// <exception cref="BencodeIOException">
+    /// Thrown if <paramref name="output"/> is not writable.
+    /// </exception>
+    /// <exception cref="BencodeSerializerNotFoundException">
+    /// Thrown if no serializer could be found for the specified type.
     /// </exception>
     public async Task WriteAsync<T>(T value, Stream output, IBencodeSerializer? serializer = null, CancellationToken cancellationToken = default)
     {
@@ -110,7 +113,7 @@ public sealed class BencodeWriter : BencodeIO
         if (output is null)
             throw new ArgumentNullException(nameof(output));
         if (!output.CanWrite)
-            throw new InvalidOperationException("The output stream must be writable.");
+            throw new BencodeIOException("The output stream must be writable.");
 
         if (value is IBobject b)
         {
@@ -121,7 +124,7 @@ public sealed class BencodeWriter : BencodeIO
         // Resolve serializer if not provided
         serializer ??= (BencodeSerializer.TryGetSerializerForType(typeof(T), _options, out var resolved) && resolved is not null)
                        ? resolved
-                       : throw new InvalidOperationException($"No serializer found for type {typeof(T)}.");
+                       : throw new BencodeSerializerNotFoundException($"No serializer found for type {typeof(T)}.");
 
         var writer = PipeWriter.Create(output);
         await serializer.WriteToPipeAsync(value, writer, cancellationToken);
@@ -216,7 +219,7 @@ public sealed class BencodeWriter : BencodeIO
     /// <exception cref="IOException">
     /// Thrown if the file already exists and <paramref name="overwrite"/> is <c>false</c>.
     /// </exception>
-    /// <exception cref="InvalidOperationException">
+    /// <exception cref="BencodeSerializerNotFoundException">
     /// Thrown if no suitable serializer can be resolved for the specified type.
     /// </exception>
     /// <remarks>

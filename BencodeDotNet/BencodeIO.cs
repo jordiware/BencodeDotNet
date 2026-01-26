@@ -95,7 +95,7 @@ public abstract class BencodeIO
                             return true;
                         continue;
                     }
-                    throw new FormatException($"Unexpected character {(char)b}");
+                    throw new BencodeFormatException($"Unexpected character {(char)b}");
                 }
             }
 
@@ -103,7 +103,7 @@ public abstract class BencodeIO
             {
                 case Bencode.TerminationCharacter:
                     if (stack.Count == 0)
-                        throw new FormatException("Unexpected 'e'");
+                        throw new BencodeFormatException("Unexpected 'e'");
 
                     builder = stack.Pop();
                     var completed = builder.ToBobject();
@@ -116,13 +116,13 @@ public abstract class BencodeIO
                     break;
                 case Bencode.ListBeginCharacter:
                     if (stack.Count >= _options.MaxDepth)
-                        throw new InvalidOperationException("Maximum nesting depth exceeded");
+                        throw new BencodeValidationException("Maximum nesting depth exceeded");
 
                     stack.Push(new BlistBuilder());
                     break;
                 case Bencode.DictionaryBeginCharacter:
                     if (stack.Count >= _options.MaxDepth)
-                        throw new InvalidOperationException("Maximum nesting depth exceeded");
+                        throw new BencodeValidationException("Maximum nesting depth exceeded");
 
                     stack.Push(new BdictionaryBuilder());
                     break;
@@ -132,7 +132,7 @@ public abstract class BencodeIO
                     stack.Push(strBuilder);
                     break;
                 default:
-                    throw new FormatException($"Unexpected character {(char)b}");
+                    throw new BencodeFormatException($"Unexpected character {(char)b}");
             }
         }
 
@@ -178,7 +178,7 @@ public abstract class BencodeIO
         if (b == Bencode.StringPaddingCharacter)
         {
             if (bstringBuilder.IsLengthFinished)
-                throw new FormatException($"Unexpected character {(char)b}");
+                throw new BencodeFormatException($"Unexpected character {(char)b}");
 
             bstringBuilder.FinishLength();
 
@@ -229,7 +229,7 @@ public abstract class BencodeIO
                     if (obj is Bstring bstring)
                         db.PushKey(bstring);
                     else
-                        throw new InvalidOperationException("String key expected");
+                        throw new BencodeFormatException("String key expected");
 
                     break;
                 }
@@ -240,9 +240,9 @@ public abstract class BencodeIO
                     break;
                 }
 
-                throw new InvalidOperationException("Unexpected builder state");
+                throw new BencodeFormatException("Unexpected builder state");
             default:
-                throw new InvalidOperationException("Unexpected object");
+                throw new BencodeFormatException("Unexpected object");
         }
     }
 }

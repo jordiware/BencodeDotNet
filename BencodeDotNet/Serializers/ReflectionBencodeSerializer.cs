@@ -53,7 +53,7 @@ public sealed class ReflectionBencodeSerializer<TType> : BencodeSerializer<TType
     /// <returns>
     /// Always returns <c>true</c>. Failures are reported via exceptions.
     /// </returns>
-    /// <exception cref="InvalidOperationException">
+    /// <exception cref="BencodeSerializerException">
     /// Thrown if a member value cannot be serialized using its resolved Bencode serializer.
     /// </exception>
     /// <remarks>
@@ -81,7 +81,7 @@ public sealed class ReflectionBencodeSerializer<TType> : BencodeSerializer<TType
                 continue;
 
             if (!member.Serializer.TrySerialize(value, out var bvalue) || bvalue is null)
-                throw new InvalidOperationException($"Failed to serialize member '{member.Name}' of type '{member.MemberType}'.");
+                throw new BencodeSerializerException($"Failed to serialize member '{member.Name}' of type '{member.MemberType}'.");
 
             dict.Add(member.Key, bvalue);
         }
@@ -100,7 +100,7 @@ public sealed class ReflectionBencodeSerializer<TType> : BencodeSerializer<TType
     /// <returns>
     /// Always returns <c>true</c>. Failures are reported via exceptions.
     /// </returns>
-    /// <exception cref="InvalidOperationException">
+    /// <exception cref="BencodeSerializerException">
     /// Thrown if a dictionary value cannot be deserialized into the corresponding member type.
     /// </exception>
     /// <remarks>
@@ -126,7 +126,7 @@ public sealed class ReflectionBencodeSerializer<TType> : BencodeSerializer<TType
                 continue;
 
             if (!member.Serializer.TryDeserialize(bvalue, out var value))
-                throw new InvalidOperationException($"Failed to deserialize member '{member.Name}' (key '{key}') of type '{member.MemberType}'.");
+                throw new BencodeSerializerException($"Failed to deserialize member '{member.Name}' (key '{key}') of type '{member.MemberType}'.");
 
             member.Setter(instance, value);
         }
@@ -202,9 +202,7 @@ public sealed class ReflectionBencodeSerializer<TType> : BencodeSerializer<TType
             var effectiveType = Nullable.GetUnderlyingType(info.FieldType) ?? info.FieldType;
 
             if (!BencodeSerializer.TryGetSerializerForType(effectiveType, new(), out var serializer) || serializer is null)
-            {
-                throw new NotSupportedException($"No Bencode serializer found for member '{info.Name}' of type '{info.FieldType}'.");
-            }
+                throw new BencodeSerializerNotFoundException($"No Bencode serializer found for member '{info.Name}' of type '{info.FieldType}'.");
 
             var nameAttribute = info.GetCustomAttribute<BencodeNameAttribute>(false);
 
@@ -219,7 +217,7 @@ public sealed class ReflectionBencodeSerializer<TType> : BencodeSerializer<TType
             };
 
             if (keyset.Contains(metadata.Key))
-                throw new InvalidOperationException($"Duplicate Bencode key '{metadata.Key}' in type '{typeof(TType)}'.");
+                throw new BencodeFormatException($"Duplicate Bencode key '{metadata.Key}' in type '{typeof(TType)}'.");
 
             keyset.Add(metadata.Key);
             members.Add(metadata);
@@ -229,9 +227,7 @@ public sealed class ReflectionBencodeSerializer<TType> : BencodeSerializer<TType
             var effectiveType = Nullable.GetUnderlyingType(info.PropertyType) ?? info.PropertyType;
 
             if (!BencodeSerializer.TryGetSerializerForType(effectiveType, new(), out var serializer) || serializer is null)
-            {
-                throw new NotSupportedException($"No Bencode serializer found for member '{info.Name}' of type '{info.PropertyType}'.");
-            }
+                throw new BencodeSerializerNotFoundException($"No Bencode serializer found for member '{info.Name}' of type '{info.PropertyType}'.");
 
             var nameAttribute = info.GetCustomAttribute<BencodeNameAttribute>(false);
 
@@ -246,7 +242,7 @@ public sealed class ReflectionBencodeSerializer<TType> : BencodeSerializer<TType
             };
 
             if (keyset.Contains(metadata.Key))
-                throw new InvalidOperationException($"Duplicate Bencode key '{metadata.Key}' in type '{typeof(TType)}'.");
+                throw new BencodeFormatException($"Duplicate Bencode key '{metadata.Key}' in type '{typeof(TType)}'.");
 
             keyset.Add(metadata.Key);
             members.Add(metadata);

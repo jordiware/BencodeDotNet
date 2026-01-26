@@ -207,10 +207,10 @@ public sealed class DictionaryBencodeSerializer<TKey, TValue> : ReferenceTypeBen
             throw new ArgumentNullException(nameof(input));
 
         if (!BencodeSerializer.TryGetSerializerForType(typeof(TKey), _options, out var keySerializer) || keySerializer is null)
-            throw new NotSupportedException($"No Bencode serializer is registered for element type '{typeof(TKey)}'.");
+            throw new BencodeSerializerNotFoundException($"No Bencode serializer is registered for element type '{typeof(TKey)}'.");
 
         if (!BencodeSerializer.TryGetSerializerForType(typeof(TValue), _options, out var valueSerializer) || valueSerializer is null)
-            throw new NotSupportedException($"No Bencode serializer is registered for element type '{typeof(TValue)}'.");
+            throw new BencodeSerializerNotFoundException($"No Bencode serializer is registered for element type '{typeof(TValue)}'.");
 
         var orderedDictionary = input.Where(kvp => kvp.Key is not null && kvp.Value is not null).Select(kvp =>
         {

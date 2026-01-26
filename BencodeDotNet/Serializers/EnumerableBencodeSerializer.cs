@@ -189,7 +189,7 @@ public sealed class EnumerableBencodeSerializer<TType> : ReferenceTypeBencodeSer
             throw new ArgumentNullException(nameof(input));
 
         if (!BencodeSerializer.TryGetSerializerForType(typeof(TType), _options, out var serializer) || serializer is null)
-            throw new NotSupportedException($"No Bencode serializer is registered for element type '{typeof(TType)}'.");
+            throw new BencodeSerializerNotFoundException($"No Bencode serializer is registered for element type '{typeof(TType)}'.");
 
         await writer.WriteAsync(new byte[] { Bencode.ListBeginCharacter }, cancellationToken);
 

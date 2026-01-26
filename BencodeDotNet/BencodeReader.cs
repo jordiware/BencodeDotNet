@@ -63,10 +63,10 @@ public sealed class BencodeReader : BencodeIO
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="stream"/> is <c>null</c>.
     /// </exception>
-    /// <exception cref="ArgumentException">
+    /// <exception cref="BencodeIOException">
     /// Thrown when <paramref name="stream"/> does not support reading.
     /// </exception>
-    /// <exception cref="FormatException">
+    /// <exception cref="BencodeFormatException">
     /// Thrown when the input stream contains malformed Bencode data, when validation
     /// fails, or when the stream ends unexpectedly while an object is being parsed.
     /// </exception>
@@ -78,7 +78,7 @@ public sealed class BencodeReader : BencodeIO
     /// </para>
     /// <para>
     /// Enumeration completes when the end of the stream is reached. If the stream ends
-    /// while a Bencode object is only partially read, a <see cref="FormatException"/> is thrown.
+    /// while a Bencode object is only partially read, a <see cref="BencodeFormatException"/> is thrown.
     /// </para>
     /// </remarks>
     public async IAsyncEnumerable<IBobject> ReadAsync(Stream stream, [EnumeratorCancellation] CancellationToken ct = default)
@@ -87,7 +87,7 @@ public sealed class BencodeReader : BencodeIO
             throw new ArgumentNullException(nameof(stream));
 
         if (!stream.CanRead)
-            throw new ArgumentException("Stream can not be read");
+            throw new BencodeIOException("Stream can not be read");
 
         var stack = new Stack<BobjectBuilder>();
 
@@ -108,7 +108,7 @@ public sealed class BencodeReader : BencodeIO
                     }
                     catch
                     {
-                        throw new FormatException("Validation failed for decoded object.");
+                        throw new BencodeFormatException("Validation failed for decoded object.");
                     }
 
                     yield return element;
@@ -123,7 +123,7 @@ public sealed class BencodeReader : BencodeIO
         }
 
         if (stack.Count != 0)
-            throw new FormatException("Unexpected end of stream while parsing Bencode object.");
+            throw new BencodeFormatException("Unexpected end of stream while parsing Bencode object.");
     }
 
     /// <summary>
@@ -147,12 +147,12 @@ public sealed class BencodeReader : BencodeIO
     /// <returns>
     /// An asynchronous sequence of deserialized values of type <typeparamref name="TType"/>.
     /// </returns>
-    /// <exception cref="NotSupportedException">
-    /// Thrown when no compatible serializer can be resolved for <typeparamref name="TType"/>.
-    /// </exception>
-    /// <exception cref="SerializationException">
+    /// <exception cref="BencodeSerializerException">
     /// Thrown when a decoded Bencode object cannot be deserialized into
     /// <typeparamref name="TType"/>.
+    /// </exception>
+    /// <exception cref="BencodeSerializerNotFoundException">
+    /// Thrown when no compatible serializer can be resolved for <typeparamref name="TType"/>.
     /// </exception>
     public async IAsyncEnumerable<TType> ReadAsync<TType>(Stream stream, 
                                                           IBencodeSerializer? serializer = null,
@@ -162,13 +162,13 @@ public sealed class BencodeReader : BencodeIO
             throw new ArgumentNullException(nameof(stream));
 
         if (!stream.CanRead)
-            throw new ArgumentException("Stream can not be read");
+            throw new BencodeIOException("Stream can not be read");
 
         if (serializer is null)
         {
             if (!BencodeSerializer.TryGetSerializerForType(typeof(TType), _options, out var resolvedSerializer) 
                 || resolvedSerializer is null)
-                throw new NotSupportedException($"No Bencode serializer is registered or declared for type '{typeof(TType)}'.");
+                throw new BencodeSerializerNotFoundException($"No Bencode serializer is registered or declared for type '{typeof(TType)}'.");
 
             serializer = resolvedSerializer;
         }
@@ -176,7 +176,7 @@ public sealed class BencodeReader : BencodeIO
         await foreach (var bobject in ReadAsync(stream, ct))
         {
             if (!serializer.TryDeserialize(bobject, out var value))
-                throw new SerializationException($"Failed to deserialize Bencode object to type '{typeof(TType)}'.");
+                throw new BencodeSerializerException($"Failed to deserialize Bencode object to type '{typeof(TType)}'.");
 
             yield return (TType)value!;
         }
@@ -193,7 +193,7 @@ public sealed class BencodeReader : BencodeIO
     /// An <see cref="IAsyncEnumerable{IBobject}"/> that yields each top-level Bencode object as it is parsed and validated.
     /// </returns>
     /// <exception cref="ArgumentException">Thrown if <paramref name="filePath"/> is <c>null</c>, empty, or whitespace.</exception>
-    /// <exception cref="FormatException">
+    /// <exception cref="BencodeFormatException">
     /// Thrown if the stream contains invalid Bencode data, if validation fails for any object,
     /// or if the end of stream is reached unexpectedly.
     /// </exception>
@@ -226,9 +226,9 @@ public sealed class BencodeReader : BencodeIO
                     {
                         _options.Validate(element);
                     }
-                    catch
+                    catch (Exception e)
                     {
-                        throw new FormatException("Validation failed for decoded object.");
+                        throw new BencodeValidationException("Validation failed for decoded object.", e);
                     }
 
                     yield return element;
@@ -243,7 +243,7 @@ public sealed class BencodeReader : BencodeIO
         }
 
         if (stack.Count != 0)
-            throw new FormatException("Unexpected end of stream while parsing Bencode object.");
+            throw new BencodeFormatException("Unexpected end of stream while parsing Bencode object.");
     }
 
     /// <summary>
@@ -262,8 +262,8 @@ public sealed class BencodeReader : BencodeIO
     /// An <see cref="IAsyncEnumerable{TType}"/> yielding each deserialized object in order.
     /// </returns>
     /// <exception cref="ArgumentException">Thrown if <paramref name="filePath"/> is <c>null</c>, empty, or whitespace.</exception>
-    /// <exception cref="NotSupportedException">Thrown if no serializer can be resolved for <typeparamref name="TType"/>.</exception>
-    /// <exception cref="SerializationException">Thrown if deserialization of any Bencode object fails.</exception>
+    /// <exception cref="BencodeSerializerException">Thrown if deserialization of any Bencode object fails.</exception>
+    /// <exception cref="BencodeSerializerNotFoundException">Thrown if no serializer can be resolved for <typeparamref name="TType"/>.</exception>
     /// <remarks>
     /// <para>
     /// Instances of <see cref="BencodeReader"/> are not thread-safe. A single reader instance
@@ -281,7 +281,7 @@ public sealed class BencodeReader : BencodeIO
         {
             if (!BencodeSerializer.TryGetSerializerForType(typeof(TType), _options, out var resolvedSerializer)
                 || resolvedSerializer is null)
-                throw new NotSupportedException($"No Bencode serializer is registered or declared for type '{typeof(TType)}'.");
+                throw new BencodeSerializerNotFoundException($"No Bencode serializer is registered or declared for type '{typeof(TType)}'.");
 
             serializer = resolvedSerializer;
         }
@@ -291,7 +291,7 @@ public sealed class BencodeReader : BencodeIO
         await foreach (var bobject in ReadAsync(stream, ct))
         {
             if (!serializer.TryDeserialize(bobject, out var value))
-                throw new SerializationException($"Failed to deserialize Bencode object to type '{typeof(TType)}'.");
+                throw new BencodeSerializerException($"Failed to deserialize Bencode object to type '{typeof(TType)}'.");
 
             yield return (TType)value!;
         }
