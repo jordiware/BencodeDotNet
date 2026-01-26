@@ -4,7 +4,6 @@ using Jordiware.BencodeDotNet.Serializers;
 using System.Buffers;
 using System.IO.Pipelines;
 using System.Runtime.CompilerServices;
-using System.Runtime.Serialization;
 
 namespace Jordiware.BencodeDotNet;
 
