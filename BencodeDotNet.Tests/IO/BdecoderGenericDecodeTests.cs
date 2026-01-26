@@ -23,7 +23,7 @@ public class BdecoderGenericDecodeTests
         var decoder = new BencodeDecoder();
         var bytes = Encoding.ASCII.GetBytes(input);
 
-        Assert.Throws<NotSupportedException>(() => decoder.Decode<DateTimeOffset>(bytes));
+        Assert.Throws<BencodeSerializerNotFoundException>(() => decoder.Decode<DateTimeOffset>(bytes));
     }
 
     [Theory]
@@ -33,7 +33,7 @@ public class BdecoderGenericDecodeTests
         var decoder = new BencodeDecoder();
         var bytes = Encoding.ASCII.GetBytes(input);
 
-        Assert.Throws<InvalidOperationException>(() => decoder.Decode<string>(bytes));
+        Assert.Throws<BencodeSerializerException>(() => decoder.Decode<string>(bytes));
     }
 
     [Theory]

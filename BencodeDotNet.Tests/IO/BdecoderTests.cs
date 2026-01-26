@@ -32,13 +32,13 @@ public class BdecoderTests
     [InlineData("i-e")]
     public async Task DecodeInvalidIntegerThrows(string input)
     {
-        Assert.Throws<FormatException>(() => decoder.Decode(input));
+        Assert.Throws<BencodeFormatException>(() => decoder.Decode(input));
     }
 
     [Fact]
     public async Task DecodeEmptyIntegerThrows()
     {
-        Assert.Throws<FormatException>(() => decoder.Decode("ie"));
+        Assert.Throws<BencodeFormatException>(() => decoder.Decode("ie"));
     }
 
     [Theory]
@@ -63,7 +63,7 @@ public class BdecoderTests
     [InlineData("2x:ab")]
     public async Task DecodeInvalidStringThrows(string input)
     {
-        Assert.Throws<FormatException>(() => decoder.Decode(input));
+        Assert.Throws<BencodeFormatException>(() => decoder.Decode(input));
     }
 
     [Fact]
@@ -122,20 +122,20 @@ public class BdecoderTests
     [Fact]
     public async Task DictionaryKeyMustBeString()
     {
-        Assert.Throws<InvalidOperationException>(() => decoder.Decode("di1e3:fooee"));
+        Assert.Throws<BencodeFormatException>(() => decoder.Decode("di1e3:fooee"));
     }
 
     [Fact]
     public async Task DictionaryKeysMustBeSorted()
     {
         // "spam" > "cow" -> invalid
-        Assert.Throws<FormatException>(() => decoder.Decode("d4:spam3:moo3:cow3:mooee"));
+        Assert.Throws<BencodeFormatException>(() => decoder.Decode("d4:spam3:moo3:cow3:mooee"));
     }
 
     [Fact]
     public async Task DictionaryMissingValueThrows()
     {
-        Assert.Throws<InvalidOperationException>(() => decoder.Decode("d3:fooee"));
+        Assert.Throws<BencodeFormatException>(() => decoder.Decode("d3:fooee"));
     }
 
     [Fact]

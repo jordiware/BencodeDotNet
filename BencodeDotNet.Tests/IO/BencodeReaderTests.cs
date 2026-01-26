@@ -27,7 +27,7 @@ public class BencodeReaderTests
     {
         var stream = new UnreadableStream();
         var reader = new BencodeReader();
-        await Assert.ThrowsAsync<ArgumentException>(async () =>
+        await Assert.ThrowsAsync<BencodeIOException>(async () =>
         {
             await foreach (var _ in reader.ReadAsync(stream)) { }
         });
@@ -69,7 +69,7 @@ public class BencodeReaderTests
     {
         var stream = CreateStream("i123"); // missing 'e'
         var reader = new BencodeReader();
-        await Assert.ThrowsAsync<FormatException>(async () =>
+        await Assert.ThrowsAsync<BencodeFormatException>(async () =>
         {
             await foreach (var _ in reader.ReadAsync(stream)) { }
         });
@@ -81,7 +81,7 @@ public class BencodeReaderTests
         var options = new BencodeOptions(maxPayloadLength: 1);
         var reader = new BencodeReader(options);
         var stream = CreateStream("5:Hello"); // string length exceeds MaxStringLength
-        await Assert.ThrowsAsync<FormatException>(async () =>
+        await Assert.ThrowsAsync<BencodeValidationException>(async () =>
         {
             await foreach (var _ in reader.ReadAsync(stream)) { }
         });
@@ -92,7 +92,7 @@ public class BencodeReaderTests
     {
         var stream = new MemoryStream(new byte[] { (byte)'l', (byte)'i', (byte)'1' }); // incomplete list
         var reader = new BencodeReader();
-        await Assert.ThrowsAsync<FormatException>(async () =>
+        await Assert.ThrowsAsync<BencodeFormatException>(async () =>
         {
             await foreach (var _ in reader.ReadAsync(stream)) { }
         });
@@ -243,11 +243,11 @@ public class BencodeReaderTests
                     // Just iterate to trigger parsing and validation
                 }
             }
-            catch (FormatException)
+            catch (BencodeFormatException)
             {
                 // Expected for malformed or invalid random streams
             }
-            catch (InvalidOperationException)
+            catch (BencodeValidationException)
             {
                 // Expected for malformed or invalid random streams
             }
@@ -285,11 +285,11 @@ public class BencodeReaderTests
         {
             // Expected when cancellation occurs
         }
-        catch (FormatException)
+        catch (BencodeFormatException)
         {
             // Possible due to deliberate random truncation
         }
-        catch (InvalidOperationException)
+        catch (BencodeValidationException)
         {
             // Expected for malformed or invalid random streams
         }

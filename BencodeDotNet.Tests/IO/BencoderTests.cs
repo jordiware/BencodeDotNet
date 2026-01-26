@@ -111,7 +111,7 @@ public class BencoderTests
         var encoder = new BencodeEncoder(options);
         var input = new AttributedType { Value = value };
 
-        Assert.Throws<InvalidOperationException>(() => encoder.Encode(input));
+        Assert.Throws<BencodeValidationException>(() => encoder.Encode(input));
     }
 
     [Theory]
@@ -144,7 +144,7 @@ public class BencoderTests
         var serializer = new FailingSerializer();
         var input = new AttributedType { Value = value };
 
-        Assert.Throws<InvalidOperationException>(() =>
+        Assert.Throws<BencodeSerializerException>(() =>
             encoder.Encode<AttributedType, Binteger>(input, serializer));
     }
 
@@ -156,7 +156,7 @@ public class BencoderTests
         var serializer = new NullResultSerializer();
         var input = new AttributedType { Value = value };
 
-        Assert.Throws<InvalidOperationException>(() =>
+        Assert.Throws<BencodeSerializerException>(() =>
             encoder.Encode<AttributedType, Binteger>(input, serializer));
     }
 
@@ -183,7 +183,7 @@ public class BencoderTests
         var serializer = new ListSerializer();
         var input = new AttributedType { Value = value };
 
-        Assert.Throws<InvalidOperationException>(() =>
+        Assert.Throws<BencodeValidationException>(() =>
             encoder.Encode<AttributedType, Blist>(input, serializer));
     }
 }

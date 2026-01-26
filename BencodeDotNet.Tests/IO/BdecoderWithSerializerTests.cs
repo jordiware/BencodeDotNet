@@ -27,7 +27,7 @@ public class BdecoderWithSerializerTests
         var decoder = new BencodeDecoder();
         var serializer = new StringExpectingSerializer();
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => decode(decoder, serializer));
+        await Assert.ThrowsAsync<BencodeSerializerException>(() => decode(decoder, serializer));
     }
 
     [Theory]
@@ -37,7 +37,7 @@ public class BdecoderWithSerializerTests
         var decoder = new BencodeDecoder();
         var serializer = new RejectingIntegerSerializer();
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => decode(decoder, serializer));
+        await Assert.ThrowsAsync<BencodeSerializerException>(() => decode(decoder, serializer));
     }
 
     [Theory]
@@ -47,7 +47,7 @@ public class BdecoderWithSerializerTests
         var decoder = new BencodeDecoder();
         var serializer = new NullProducingIntegerSerializer();
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() => decode(decoder, serializer));
+        await Assert.ThrowsAsync<BencodeSerializerException>(() => decode(decoder, serializer));
     }
 
     public static TheoryData<Func<BencodeDecoder, BencodeSerializer<int, Binteger>, Task<int>>> GetSuccessfulDecodeCases()

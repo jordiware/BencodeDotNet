@@ -160,7 +160,7 @@ public class ReflectionBencodeSerializerTests
     {
         var serializer = new ReflectionBencodeSerializer<InvalidModel>();
 
-        Assert.Throws<NotSupportedException>(() =>
+        Assert.Throws<BencodeSerializerNotFoundException>(() =>
         {
             serializer.TrySerialize(new InvalidModel(), out _);
         });
@@ -176,7 +176,7 @@ public class ReflectionBencodeSerializerTests
             AnotherValue = 2
         };
 
-        Assert.Throws<InvalidOperationException>(() =>
+        Assert.Throws<BencodeFormatException>(() =>
         {
             serializer.TrySerialize(model, out _);
         });

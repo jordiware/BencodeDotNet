@@ -108,7 +108,7 @@ public sealed class BencodeReader : BencodeIO
                     }
                     catch
                     {
-                        throw new BencodeFormatException("Validation failed for decoded object.");
+                        throw new BencodeValidationException("Validation failed for decoded object.");
                     }
 
                     yield return element;

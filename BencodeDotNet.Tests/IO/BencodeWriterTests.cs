@@ -36,7 +36,7 @@ public class BencodeWriterTests
         var value = new TestBobject("4:spam");
         using var stream = new MemoryStream(Array.Empty<byte>(), writable: false);
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        await Assert.ThrowsAsync<BencodeIOException>(() =>
             writer.WriteAsync(value, stream));
     }
 
@@ -70,7 +70,7 @@ public class BencodeWriterTests
         var writer = new BencodeWriter();
         using var stream = new MemoryStream();
 
-        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+        await Assert.ThrowsAsync<BencodeSerializerNotFoundException>(() =>
             writer.WriteAsync(new object(), stream));
     }
 
