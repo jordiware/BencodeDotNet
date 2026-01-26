@@ -3,7 +3,7 @@ using Jordiware.BencodeDotNet.Objects;
 using Jordiware.BencodeDotNet.Serializers;
 using System.Text;
 
-namespace Jordiware.BencodeDotNet.Tests.EncodeDecode;
+namespace Jordiware.BencodeDotNet.Tests.IO;
 
 public class BencodeRoundTripTests
 {
@@ -44,8 +44,8 @@ public class BencodeRoundTripTests
     [InlineData(42)]
     public void IntegerRoundTripsCorrectly(long value)
     {
-        var encoder = new Bencoder();
-        var decoder = new Bdecoder();
+        var encoder = new BencodeEncoder();
+        var decoder = new BencodeDecoder();
 
         var encoded = encoder.Encode(value);
         var decoded = decoder.Decode<long>(encoded.ToBinaryEncoding());
@@ -59,8 +59,8 @@ public class BencodeRoundTripTests
     [InlineData("bencode")]
     public void StringRoundTripsCorrectly(string value)
     {
-        var encoder = new Bencoder();
-        var decoder = new Bdecoder();
+        var encoder = new BencodeEncoder();
+        var decoder = new BencodeDecoder();
 
         var encoded = encoder.Encode(value);
         var decoded = decoder.Decode<string>(encoded.ToBinaryEncoding());
@@ -74,8 +74,8 @@ public class BencodeRoundTripTests
     [InlineData(new[] { 1, 2, 3 })]
     public void ListRoundTripsCorrectly(int[] values)
     {
-        var encoder = new Bencoder();
-        var decoder = new Bdecoder();
+        var encoder = new BencodeEncoder();
+        var decoder = new BencodeDecoder();
 
         var encoded = encoder.Encode(values);
         var decoded = decoder.Decode<int[]>(encoded.ToBinaryEncoding());
@@ -89,8 +89,8 @@ public class BencodeRoundTripTests
     [InlineData(100)]
     public void DictionaryRoundTripsCorrectly(int value)
     {
-        var encoder = new Bencoder();
-        var decoder = new Bdecoder();
+        var encoder = new BencodeEncoder();
+        var decoder = new BencodeDecoder();
 
         var input = new Dictionary<string, int>
         {
@@ -108,8 +108,8 @@ public class BencodeRoundTripTests
     [InlineData(42)]
     public void AttributedObjectRoundTripsCorrectly(int value)
     {
-        var encoder = new Bencoder();
-        var decoder = new Bdecoder();
+        var encoder = new BencodeEncoder();
+        var decoder = new BencodeDecoder();
 
         var input = new SimpleObject { Value = value };
 
@@ -124,8 +124,8 @@ public class BencodeRoundTripTests
     [InlineData(1)]
     public void NestedObjectRoundTripsCorrectly(int value)
     {
-        var encoder = new Bencoder();
-        var decoder = new Bdecoder();
+        var encoder = new BencodeEncoder();
+        var decoder = new BencodeDecoder();
 
         var input = new Dictionary<string, int[]>
         {

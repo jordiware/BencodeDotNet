@@ -1,4 +1,7 @@
-﻿using System.Text;
+﻿using System.Buffers;
+using System.Globalization;
+using System.IO.Pipelines;
+using System.Text;
 using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Jordiware.BencodeDotNet.Objects;
@@ -120,6 +123,32 @@ public sealed class Binteger : IBobject, IEquatable<Binteger>, IComparable<Binte
             length++;
 
         return length;
+    }
+
+    /// <summary>
+    /// Writes the Bencode integer representation of this value to the specified <see cref="PipeWriter"/>.
+    /// </summary>
+    /// <param name="writer">
+    /// The <see cref="PipeWriter"/> to which the Bencode data will be written.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// A <see cref="CancellationToken"/> to observe while writing asynchronously.
+    /// </param>
+    /// <returns>
+    /// A <see cref="Task"/> representing the asynchronous write operation.
+    /// </returns>
+    /// <remarks>
+    /// <para>
+    /// The integer is encoded using the standard Bencode format:
+    /// <c>i&lt;digits&gt;e</c>, where the numeric value is written using
+    /// an invariant culture representation.
+    /// </para>
+    /// </remarks>
+    public async Task WriteToPipeAsync(PipeWriter writer, CancellationToken cancellationToken = default)
+    {
+        await writer.WriteAsync(new[] { Bencode.IntegerBeginCharacter }, cancellationToken);
+        await writer.WriteAsync(Encoding.ASCII.GetBytes(Value.ToString(CultureInfo.InvariantCulture)), cancellationToken);
+        await writer.WriteAsync(new[] { Bencode.TerminationCharacter }, cancellationToken);
     }
     #endregion
 

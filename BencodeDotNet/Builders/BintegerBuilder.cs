@@ -45,14 +45,14 @@ internal sealed class BintegerBuilder : BobjectBuilder
     /// <para>
     /// Attempting to mark the integer as negative more than once
     /// or after digits have been processed may result in a
-    /// <see cref="FormatException"/>.
+    /// <see cref="BencodeFormatException"/>.
     /// </para>
     /// </remarks>
+    /// <exception cref="BencodeFormatException">
+    /// Thrown if an invalid sign transition is attempted.
+    /// </exception>
     /// <exception cref="ObjectDisposedException">
     /// Thrown if the builder has been disposed.
-    /// </exception>
-    /// <exception cref="FormatException">
-    /// Thrown if an invalid sign transition is attempted.
     /// </exception>
     public bool IsPositive
     {
@@ -66,10 +66,10 @@ internal sealed class BintegerBuilder : BobjectBuilder
             ThrowIfDisposed();
 
             if (_value.HasValue)
-                throw new FormatException("Unexpected sign change");
+                throw new BencodeFormatException("Unexpected sign change");
 
             if (!_isPositive && !value)
-                throw new FormatException("Value is already negative");
+                throw new BencodeFormatException("Value is already negative");
 
             _isPositive = value;
         }
@@ -81,12 +81,12 @@ internal sealed class BintegerBuilder : BobjectBuilder
     /// <param name="digit">
     /// The ASCII byte representing a digit (<c>'0'</c>–<c>'9'</c>).
     /// </param>
-    /// <exception cref="ObjectDisposedException">
-    /// Thrown if the builder has been disposed.
-    /// </exception>
-    /// <exception cref="FormatException">
+    /// <exception cref="BencodeFormatException">
     /// Thrown if the digit is outside the valid range or violates
     /// Bencode integer formatting rules.
+    /// </exception>
+    /// <exception cref="ObjectDisposedException">
+    /// Thrown if the builder has been disposed.
     /// </exception>
     /// <remarks>
     /// This method enforces the following Bencode constraints:
@@ -101,13 +101,13 @@ internal sealed class BintegerBuilder : BobjectBuilder
         ThrowIfDisposed();
 
         if (digit < Bencode.MinNumberCharacter || digit > Bencode.MaxNumberCharacter)
-            throw new FormatException("Digit outside the 0-9 range");
+            throw new BencodeFormatException("Digit outside the 0-9 range");
 
         if (!_isPositive && digit == Bencode.MinNumberCharacter && !(_value.HasValue && _value.Value > 0))
-            throw new FormatException("Unallowed '0' padding");
+            throw new BencodeFormatException("Unallowed '0' padding");
 
         if (_value.HasValue && _value.Value == 0)
-            throw new FormatException("Unallowed '0' padding");
+            throw new BencodeFormatException("Unallowed '0' padding");
 
         if (_value.HasValue)
             _value = checked((_value.Value * 10) + (digit - Bencode.MinNumberCharacter));
@@ -122,18 +122,18 @@ internal sealed class BintegerBuilder : BobjectBuilder
     /// <returns>
     /// A fully constructed <see cref="Binteger"/>.
     /// </returns>
+    /// <exception cref="BencodeFormatException">
+    /// Thrown if no digits have been provided.
+    /// </exception>
     /// <exception cref="ObjectDisposedException">
     /// Thrown if the builder has been disposed.
-    /// </exception>
-    /// <exception cref="FormatException">
-    /// Thrown if no digits have been provided.
     /// </exception>
     public override IBobject ToBobject()
     {
         ThrowIfDisposed();
 
         if (!_value.HasValue)
-            throw new FormatException("Builder has no value");
+            throw new BencodeFormatException("Builder has no value");
 
         var value = _isPositive ? _value : -_value;
         return new Binteger(value.Value);

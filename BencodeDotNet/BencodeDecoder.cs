@@ -3,7 +3,6 @@ using Jordiware.BencodeDotNet.Objects;
 using Jordiware.BencodeDotNet.Serializers;
 using System.Buffers;
 using System.IO.Pipelines;
-using System.Text;
 
 namespace Jordiware.BencodeDotNet;
 
@@ -13,7 +12,7 @@ namespace Jordiware.BencodeDotNet;
 /// </summary>
 /// <remarks>
 /// <para>
-/// <see cref="Bdecoder"/> supports decoding from in-memory buffers
+/// <see cref="BencodeDecoder"/> supports decoding from in-memory buffers
 /// (<see cref="byte[]"/>, <see cref="ReadOnlySpan{T}"/>, and strings)
 /// as well as streaming sources via <see cref="Stream"/> using
 /// <see cref="System.IO.Pipelines.PipeReader"/>.
@@ -33,12 +32,10 @@ namespace Jordiware.BencodeDotNet;
 /// </list>
 /// </para>
 /// </remarks>
-public sealed class Bdecoder
+public sealed class BencodeDecoder : BencodeIO
 {
-    private readonly BencodeOptions _options;
-
     /// <summary>
-    /// Initializes a new instance of the <see cref="Bdecoder"/> class
+    /// Initializes a new instance of the <see cref="BencodeDecoder"/> class
     /// with the specified decoding options.
     /// </summary>
     /// <param name="options">
@@ -46,9 +43,8 @@ public sealed class Bdecoder
     /// such as maximum nesting depth.
     /// If <see langword="null"/>, default options are used.
     /// </param>
-    public Bdecoder(BencodeOptions? options = null)
+    public BencodeDecoder(BencodeOptions? options = null) : base(options)
     {
-        _options = options ?? new();
     }
 
     /// <summary>
@@ -60,7 +56,7 @@ public sealed class Bdecoder
     /// <returns>
     /// The decoded <see cref="IBobject"/> instance.
     /// </returns>
-    /// <exception cref="FormatException">
+    /// <exception cref="BencodeFormatException">
     /// Thrown if the input does not contain a valid Bencode object,
     /// contains multiple top-level objects, or includes trailing data.
     /// </exception>
@@ -79,7 +75,7 @@ public sealed class Bdecoder
     /// <returns>
     /// The decoded <see cref="IBobject"/> instance.
     /// </returns>
-    /// <exception cref="FormatException">
+    /// <exception cref="BencodeFormatException">
     /// Thrown if the encoded data does not represent a valid Bencode object
     /// or contains trailing data.
     /// </exception>
@@ -99,7 +95,7 @@ public sealed class Bdecoder
     /// <returns>
     /// The decoded <see cref="IBobject"/> instance.
     /// </returns>
-    /// <exception cref="FormatException">
+    /// <exception cref="BencodeFormatException">
     /// Thrown if the input does not represent a valid Bencode object
     /// or contains trailing data.
     /// </exception>
@@ -117,10 +113,10 @@ public sealed class Bdecoder
         var reader = new SequenceReader<byte>(sequence);
 
         if (!TryParseBencode(ref reader, ref stack, out var value) || stack.Count != 0)
-            throw new FormatException("Incomplete or invalid bencode object");
+            throw new BencodeFormatException("Incomplete or invalid bencode object");
 
         if (reader.Remaining > 0)
-            throw new FormatException("Trailing data after top-level object");
+            throw new BencodeFormatException("Trailing data after top-level object");
 
         _options.Validate(value!);
 
@@ -142,11 +138,11 @@ public sealed class Bdecoder
     /// <exception cref="ArgumentNullException">
     /// <paramref name="bytes"/> is <c>null</c>.
     /// </exception>
-    /// <exception cref="NotSupportedException">
-    /// No Bencode serializer is registered or declared for <typeparamref name="TResult" />.
-    /// </exception>
-    /// <exception cref="InvalidOperationException">
+    /// <exception cref="BencodeSerializerException">
     /// The decoded Bencode value cannot be deserialized into <typeparamref name="TResult" />.
+    /// </exception>
+    /// <exception cref="BencodeSerializerNotFoundException">
+    /// No Bencode serializer is registered or declared for <typeparamref name="TResult" />.
     /// </exception>
     public TResult Decode<TResult>(byte[] bytes)
     {
@@ -169,11 +165,11 @@ public sealed class Bdecoder
     /// <exception cref="ArgumentNullException">
     /// <paramref name="s"/> is <c>null</c>.
     /// </exception>
-    /// <exception cref="NotSupportedException">
-    /// No Bencode serializer is registered or declared for <typeparamref name="TResult" />.
-    /// </exception>
-    /// <exception cref="InvalidOperationException">
+    /// <exception cref="BencodeSerializerException">
     /// The decoded Bencode value cannot be deserialized into <typeparamref name="TResult" />.
+    /// </exception>
+    /// <exception cref="BencodeSerializerNotFoundException">
+    /// No Bencode serializer is registered or declared for <typeparamref name="TResult" />.
     /// </exception>
     public TResult Decode<TResult>(string s)
     {
@@ -194,11 +190,11 @@ public sealed class Bdecoder
     /// <returns>
     /// The deserialized CLR value of type <typeparamref name="TResult" />.
     /// </returns>
-    /// <exception cref="NotSupportedException">
-    /// No Bencode serializer is registered or declared for <typeparamref name="TResult" />.
-    /// </exception>
-    /// <exception cref="InvalidOperationException">
+    /// <exception cref="BencodeSerializerException">
     /// The decoded Bencode value cannot be deserialized into <typeparamref name="TResult" />.
+    /// </exception>
+    /// <exception cref="BencodeSerializerNotFoundException">
+    /// No Bencode serializer is registered or declared for <typeparamref name="TResult" />.
     /// </exception>
     public TResult Decode<TResult>(ReadOnlySpan<byte> data)
     {
@@ -209,11 +205,11 @@ public sealed class Bdecoder
     private TResult Decode<TResult>(ReadOnlyMemory<byte> rom)
     {
         if (!BencodeSerializer.TryGetSerializerForType(typeof(TResult), _options, out var serializer) || serializer is null)
-            throw new NotSupportedException($"No Bencode serializer is registered or declared for type '{typeof(TResult)}'.");
+            throw new BencodeSerializerNotFoundException($"No Bencode serializer is registered or declared for type '{typeof(TResult)}'.");
 
         var decoded = Decode(rom);
         if (!serializer.TryDeserialize(decoded, out var result))
-            throw new InvalidOperationException($"Decoded Bencode value cannot be deserialized into '{typeof(TResult)}'.");
+            throw new BencodeSerializerException($"Decoded Bencode value cannot be deserialized into '{typeof(TResult)}'.");
 
         return (TResult)result!;
     }
@@ -240,7 +236,7 @@ public sealed class Bdecoder
     /// <exception cref="ArgumentNullException">
     /// <paramref name="bytes"/> or <paramref name="serializer"/> is <see langword="null"/>.
     /// </exception>
-    /// <exception cref="InvalidOperationException">
+    /// <exception cref="BencodeSerializerException">
     /// The decoded Bencode value cannot be deserialized into <typeparamref name="TResult"/>,
     /// or the serializer produced a <see langword="null"/> result.
     /// </exception>
@@ -282,7 +278,7 @@ public sealed class Bdecoder
     /// <exception cref="ArgumentNullException">
     /// <paramref name="serializer"/> is <see langword="null"/>.
     /// </exception>
-    /// <exception cref="InvalidOperationException">
+    /// <exception cref="BencodeSerializerException">
     /// The decoded Bencode value cannot be deserialized into <typeparamref name="TResult"/>,
     /// or the serializer produced a <see langword="null"/> result.
     /// </exception>
@@ -321,7 +317,7 @@ public sealed class Bdecoder
     /// <exception cref="ArgumentNullException">
     /// <paramref name="serializer"/> is <see langword="null"/>.
     /// </exception>
-    /// <exception cref="InvalidOperationException">
+    /// <exception cref="BencodeSerializerException">
     /// The decoded Bencode value cannot be deserialized into <typeparamref name="TResult"/>,
     /// or the serializer produced a <see langword="null"/> result.
     /// </exception>
@@ -340,10 +336,10 @@ public sealed class Bdecoder
     {
         var decoded = Decode(rom);
         if (decoded is not TBobject bobject || !serializer.TryDeserialize(bobject, out var result))
-            throw new InvalidOperationException($"Decoded Bencode value cannot be deserialized into '{typeof(TResult)}'.");
+            throw new BencodeSerializerException($"Decoded Bencode value cannot be deserialized into '{typeof(TResult)}'.");
 
         if (result is null)
-            throw new InvalidOperationException($"The serializer '{serializer.GetType()}' produced a null {typeof(TResult)} object.");
+            throw new BencodeSerializerException($"The serializer '{serializer.GetType()}' produced a null {typeof(TResult)} object.");
 
         return result;
     }
@@ -360,7 +356,7 @@ public sealed class Bdecoder
     /// <returns>
     /// A task that completes with the decoded <see cref="IBobject"/>.
     /// </returns>
-    /// <exception cref="FormatException">
+    /// <exception cref="BencodeFormatException">
     /// Thrown if the file does not contain exactly one valid Bencode object
     /// or contains trailing data.
     /// </exception>
@@ -393,11 +389,11 @@ public sealed class Bdecoder
     /// <exception cref="ArgumentException">
     /// <paramref name="filePath"/> is empty or consists only of whitespace.
     /// </exception>
-    /// <exception cref="NotSupportedException">
-    /// No Bencode serializer is registered or declared for <typeparamref name="TResult" />.
-    /// </exception>
-    /// <exception cref="InvalidOperationException">
+    /// <exception cref="BencodeSerializerException">
     /// The decoded Bencode value cannot be deserialized into <typeparamref name="TResult" />.
+    /// </exception>
+    /// <exception cref="BencodeSerializerNotFoundException">
+    /// No Bencode serializer is registered or declared for <typeparamref name="TResult" />.
     /// </exception>
     /// <exception cref="OperationCanceledException">
     /// The operation was canceled via <paramref name="ct"/>.
@@ -405,12 +401,12 @@ public sealed class Bdecoder
     public async Task<TResult> DecodeAsync<TResult>(string filePath, CancellationToken ct = default)
     {
         if (!BencodeSerializer.TryGetSerializerForType(typeof(TResult), _options, out var serializer) || serializer is null)
-            throw new NotSupportedException($"No Bencode serializer is registered or declared for type '{typeof(TResult)}'.");
+            throw new BencodeSerializerNotFoundException($"No Bencode serializer is registered or declared for type '{typeof(TResult)}'.");
 
         using var stream = File.OpenRead(filePath);
         var decoded = await DecodeAsync(stream, ct);
         if (!serializer.TryDeserialize(decoded, out var result))
-            throw new InvalidOperationException($"Decoded Bencode value cannot be deserialized into '{typeof(TResult)}'.");
+            throw new BencodeSerializerException($"Decoded Bencode value cannot be deserialized into '{typeof(TResult)}'.");
 
         return (TResult)result!;
     }
@@ -441,7 +437,7 @@ public sealed class Bdecoder
     /// <exception cref="ArgumentNullException">
     /// <paramref name="serializer"/> is <see langword="null"/>.
     /// </exception>
-    /// <exception cref="InvalidOperationException">
+    /// <exception cref="BencodeSerializerException">
     /// The decoded Bencode value cannot be deserialized into <typeparamref name="TResult"/>,
     /// or the serializer produced a <see langword="null"/> result.
     /// </exception>
@@ -457,10 +453,10 @@ public sealed class Bdecoder
         using var stream = File.OpenRead(filePath);
         var decoded = await DecodeAsync(stream, ct);
         if (decoded is not TBobject bobject || !serializer.TryDeserialize(bobject, out var result))
-            throw new InvalidOperationException($"Decoded Bencode value cannot be deserialized into '{typeof(TResult)}'.");
+            throw new BencodeSerializerException($"Decoded Bencode value cannot be deserialized into '{typeof(TResult)}'.");
 
         if (result is null)
-            throw new InvalidOperationException($"The serializer '{serializer.GetType()}' produced a null {typeof(TResult)} object.");
+            throw new BencodeSerializerException($"The serializer '{serializer.GetType()}' produced a null {typeof(TResult)} object.");
 
         return result;
     }
@@ -480,30 +476,20 @@ public sealed class Bdecoder
     /// <exception cref="ArgumentNullException">
     /// Thrown if <paramref name="stream"/> is <c>null</c>.
     /// </exception>
-    /// <exception cref="ArgumentException">
-    /// Thrown if the stream does not support reading.
-    /// </exception>
-    /// <exception cref="FormatException">
+    /// <exception cref="BencodeFormatException">
     /// Thrown if the stream does not contain exactly one valid Bencode object
     /// or contains trailing data.
     /// </exception>
-    /// <remarks>
-    /// <para>
-    /// This method uses <see cref="PipeReader"/> to incrementally process
-    /// the input stream without requiring it to be fully buffered in memory.
-    /// </para>
-    /// <para>
-    /// Parsing state is preserved across reads, allowing correct handling
-    /// of arbitrarily segmented input.
-    /// </para>
-    /// </remarks>
+    /// <exception cref="BencodeIOException">
+    /// Thrown if the stream does not support reading.
+    /// </exception>
     public async Task<IBobject> DecodeAsync(Stream stream, CancellationToken ct = default)
     {
         if (stream is null)
             throw new ArgumentNullException(nameof(stream));
 
         if (!stream.CanRead)
-            throw new ArgumentException("Stream can not be read");
+            throw new BencodeIOException("Stream can not be read");
 
         var stack = new Stack<BobjectBuilder>();
 
@@ -521,16 +507,16 @@ public sealed class Bdecoder
                 if (TryParseBencode(ref seqReader, ref stack, out var element))
                 {
                     if (bobject is not null)
-                        throw new FormatException("Multiple top-level bencode objects");
+                        throw new BencodeFormatException("Multiple top-level bencode objects");
 
                     bobject = element;
 
                     if (seqReader.Remaining > 0)
-                        throw new FormatException("Trailing data after top-level object");
+                        throw new BencodeFormatException("Trailing data after top-level object");
                 }
                 else if (bobject is not null && seqReader.Remaining > 0)
                 {
-                    throw new FormatException("Trailing data after top-level object");
+                    throw new BencodeFormatException("Trailing data after top-level object");
                 }
 
                 reader.AdvanceTo(seqReader.Position, result.Buffer.End);
@@ -542,7 +528,7 @@ public sealed class Bdecoder
         }
 
         if (bobject is null)
-            throw new FormatException("Incomplete or invalid bencode object");
+            throw new BencodeFormatException("Incomplete or invalid bencode object");
 
         _options.Validate(bobject);
 
@@ -569,22 +555,23 @@ public sealed class Bdecoder
     /// <exception cref="ArgumentNullException">
     /// <paramref name="stream"/> is <c>null</c>.
     /// </exception>
-    /// <exception cref="NotSupportedException">
+    /// <exception cref="BencodeSerializerException">
+    /// The decoded Bencode value cannot be deserialized into <typeparamref name="TResult" />.
+    /// </exception>
+    /// <exception cref="BencodeSerializerNotFoundException">
     /// No Bencode serializer is registered or declared for <typeparamref name="TResult" />.
     /// </exception>
-    /// <exception cref="InvalidOperationException">
-    /// The decoded Bencode value cannot be deserialized into <typeparamref name="TResult" />.
     /// <exception cref="OperationCanceledException">
     /// The operation was canceled via <paramref name="ct"/>.
     /// </exception>
     public async Task<TResult> DecodeAsync<TResult>(Stream stream, CancellationToken ct = default)
     {
         if (!BencodeSerializer.TryGetSerializerForType(typeof(TResult), _options, out var serializer) || serializer is null)
-            throw new NotSupportedException($"No Bencode serializer is registered or declared for type '{typeof(TResult)}'.");
+            throw new BencodeSerializerNotFoundException($"No Bencode serializer is registered or declared for type '{typeof(TResult)}'.");
 
         var decoded = await DecodeAsync(stream, ct);
         if (!serializer.TryDeserialize(decoded, out var result))
-            throw new InvalidOperationException($"Decoded Bencode value cannot be deserialized into '{typeof(TResult)}'.");
+            throw new BencodeSerializerException($"Decoded Bencode value cannot be deserialized into '{typeof(TResult)}'.");
 
         return (TResult)result!;
     }
@@ -615,7 +602,7 @@ public sealed class Bdecoder
     /// <exception cref="ArgumentNullException">
     /// <paramref name="serializer"/> is <see langword="null"/>.
     /// </exception>
-    /// <exception cref="InvalidOperationException">
+    /// <exception cref="BencodeSerializerException">
     /// The decoded Bencode value cannot be deserialized into <typeparamref name="TResult"/>,
     /// or the serializer produced a <see langword="null"/> result.
     /// </exception>
@@ -630,188 +617,11 @@ public sealed class Bdecoder
 
         var decoded = await DecodeAsync(stream, ct);
         if (decoded is not TBobject bobject || !serializer.TryDeserialize(bobject, out var result))
-            throw new InvalidOperationException($"Decoded Bencode value cannot be deserialized into '{typeof(TResult)}'.");
+            throw new BencodeSerializerException($"Decoded Bencode value cannot be deserialized into '{typeof(TResult)}'.");
 
         if (result is null)
-            throw new InvalidOperationException($"The serializer '{serializer.GetType()}' produced a null {typeof(TResult)} object.");
+            throw new BencodeSerializerException($"The serializer '{serializer.GetType()}' produced a null {typeof(TResult)} object.");
 
         return result;
-    }
-
-    private bool TryParseBencode(ref SequenceReader<byte> reader, ref Stack<BobjectBuilder> stack, out IBobject? value)
-    {
-        value = null;
-
-        while (reader.TryRead(out byte b))
-        {
-            if (stack.TryPeek(out var builder))
-            {
-                if (builder is BintegerBuilder ib)
-                {
-                    if (TryReadBintegerByte(ref ib, b, ref stack, out value))
-                    {
-                        if (value is not null)
-                            return true;
-                        continue;
-                    }
-                }
-
-                if (builder is BstringBuilder sb)
-                {
-                    if (TryReadBstringByte(ref sb, b, ref stack, out value))
-                    {
-                        if (value is not null)
-                            return true;
-                        continue;
-                    }
-                    throw new FormatException($"Unexpected character {(char)b}");
-                }
-            }
-
-            switch (b)
-            {
-                case Bencode.TerminationCharacter:
-                    if (stack.Count == 0)
-                        throw new FormatException("Unexpected 'e'");
-
-                    builder = stack.Pop();
-                    var completed = builder.ToBobject();
-
-                    if (AttachOrReturn(completed, ref stack, out value))
-                        return true;
-                    break;
-                case Bencode.IntegerBeginCharacter:
-                    stack.Push(new BintegerBuilder());
-                    break;
-                case Bencode.ListBeginCharacter:
-                    if (stack.Count >= _options.MaxDepth)
-                        throw new InvalidOperationException("Maximum nesting depth exceeded");
-
-                    stack.Push(new BlistBuilder());
-                    break;
-                case Bencode.DictionaryBeginCharacter:
-                    if (stack.Count >= _options.MaxDepth)
-                        throw new InvalidOperationException("Maximum nesting depth exceeded");
-
-                    stack.Push(new BdictionaryBuilder());
-                    break;
-                case >= Bencode.MinNumberCharacter and <= Bencode.MaxNumberCharacter:
-                    var strBuilder = new BstringBuilder();
-                    strBuilder.PushLengthDigit(b);
-                    stack.Push(strBuilder);
-                    break;
-                default:
-                    throw new FormatException($"Unexpected character {(char)b}");
-            }
-        }
-
-        return false;
-    }
-
-    private bool TryReadBintegerByte(ref BintegerBuilder bintegerBuilder, byte b, ref Stack<BobjectBuilder> stack, out IBobject? value)
-    {
-        value = null;
-        switch (b)
-        {
-            case (byte)'-':
-                bintegerBuilder.IsPositive = false;
-                return true;
-            case Bencode.TerminationCharacter:
-                var builder = stack.Pop();
-                var completed = builder.ToBobject();
-                AttachOrReturn(completed, ref stack, out value);
-                return true;
-            case >= Bencode.MinNumberCharacter and <= Bencode.MaxNumberCharacter:
-                bintegerBuilder.PushDigit(b);
-                return true;
-        }
-        return false;
-    }
-
-    private bool TryReadBstringByte(ref BstringBuilder bstringBuilder, byte b, ref Stack<BobjectBuilder> stack, out IBobject? value)
-    {
-        value = null;
-        if (b is >= Bencode.MinNumberCharacter and <= Bencode.MaxNumberCharacter && !bstringBuilder.IsLengthFinished)
-        {
-            bstringBuilder.PushLengthDigit(b);
-
-            return true;
-        }
-        if (bstringBuilder.IsLengthFinished && !bstringBuilder.IsCompleted)
-        {
-            bstringBuilder.PushByte(b);
-
-            TryCloseStringBuilder(ref bstringBuilder, ref stack, out value);
-            return true;
-        }
-        if (b == Bencode.StringPaddingCharacter)
-        {
-            if (bstringBuilder.IsLengthFinished)
-                throw new FormatException($"Unexpected character {(char)b}");
-
-            bstringBuilder.FinishLength();
-
-            TryCloseStringBuilder(ref bstringBuilder, ref stack, out value);
-            return true;
-        }
-        return false;
-    }
-
-    private bool TryCloseStringBuilder(ref BstringBuilder bstringBuilder, ref Stack<BobjectBuilder> stack, out IBobject? value)
-    {
-        value = null;
-        if (bstringBuilder.IsCompleted)
-        {
-            var sb = (BstringBuilder)stack.Pop();
-            var bstring = (Bstring)sb.ToBobject();
-
-            if (AttachOrReturn(bstring, ref stack, out value))
-                return true;
-        }
-        return false;
-    }
-
-    private bool AttachOrReturn(IBobject obj, ref Stack<BobjectBuilder> stack, out IBobject? value)
-    {
-        value = null;
-
-        if (stack.Count == 0)
-        {
-            value = obj;
-            return true;
-        }
-
-        AttachToParent(stack.Peek(), obj);
-        return false;
-    }
-
-    private void AttachToParent(BobjectBuilder parent, IBobject obj)
-    {
-        switch (parent)
-        {
-            case BlistBuilder lb:
-                lb.PushObject(obj);
-                break;
-            case BdictionaryBuilder db:
-                if (db.IsExpectingKey)
-                {
-                    if (obj is Bstring bstring)
-                        db.PushKey(bstring);
-                    else
-                        throw new InvalidOperationException("String key expected");
-
-                    break;
-                }
-
-                if (db.IsExpectingValue)
-                {
-                    db.PushValue(obj);
-                    break;
-                }
-
-                throw new InvalidOperationException("Unexpected builder state");
-            default:
-                throw new InvalidOperationException("Unexpected object");
-        }
     }
 }

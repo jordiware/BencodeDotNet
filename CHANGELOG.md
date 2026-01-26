@@ -1,4 +1,16 @@
-﻿# v0.2.0
+﻿# v0.3.0
+
+## Added
+- Reflection-based serializer for complex/POCO types
+- Asynchronous Stream-based reader and writer APIs
+- Custom `BencodeException` types
+
+## Changed
+- `Bencoder` type name to `BencodeEncoder`
+- `Bdecoder` type name to `BencodeDecoder`
+- Changed thrown exceptions to custom `BencodeException` types
+
+# v0.2.0
 
 ## Added
 - Synchronous Bencode encoding

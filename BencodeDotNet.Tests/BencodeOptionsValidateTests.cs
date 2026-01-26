@@ -32,7 +32,7 @@ public class BencodeOptionsValidateTests
 
         var options = new BencodeOptions(maxDepth: 1, maxContainerItems: 1, maxPayloadLength: value.GetEncodedLength() - 1);
 
-        Assert.Throws<InvalidOperationException>(() => options.Validate(value));
+        Assert.Throws<BencodeValidationException>(() => options.Validate(value));
     }
 
     [Fact]
@@ -48,7 +48,7 @@ public class BencodeOptionsValidateTests
 
         var options = new BencodeOptions(maxDepth: 3, maxContainerItems: 10, maxPayloadLength: 64);
 
-        Assert.Throws<InvalidOperationException>(() => options.Validate(node));
+        Assert.Throws<BencodeValidationException>(() => options.Validate(node));
     }
 
     [Fact]
@@ -76,7 +76,7 @@ public class BencodeOptionsValidateTests
 
         var options = new BencodeOptions(maxDepth: 1, maxContainerItems: 2, maxPayloadLength: 64);
 
-        Assert.Throws<InvalidOperationException>(() => options.Validate(list));
+        Assert.Throws<BencodeValidationException>(() => options.Validate(list));
     }
 
     [Fact]
@@ -90,7 +90,7 @@ public class BencodeOptionsValidateTests
 
         var options = new BencodeOptions(maxDepth: 1, maxContainerItems: 1, maxPayloadLength: 64);
 
-        Assert.Throws<InvalidOperationException>(() => options.Validate(dict));
+        Assert.Throws<BencodeValidationException>(() => options.Validate(dict));
     }
 
     [Fact]
@@ -108,7 +108,7 @@ public class BencodeOptionsValidateTests
 
         var options = new BencodeOptions(maxDepth: 1, maxContainerItems: 1, maxPayloadLength: encodedLength - 1);
 
-        Assert.Throws<InvalidOperationException>(() => options.Validate(dict));
+        Assert.Throws<BencodeValidationException>(() => options.Validate(dict));
     }
 
     [Fact]
@@ -126,7 +126,7 @@ public class BencodeOptionsValidateTests
 
         var options = new BencodeOptions(maxDepth: 2, maxContainerItems: 2, maxPayloadLength: encodedLength - 1);
 
-        Assert.Throws<InvalidOperationException>(() => options.Validate(node));
+        Assert.Throws<BencodeValidationException>(() => options.Validate(node));
     }
 
     [Fact]

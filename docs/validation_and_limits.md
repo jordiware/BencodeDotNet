@@ -32,6 +32,8 @@ The decoder enforces, among others, the following rules:
 - String length prefixes must be valid decimal integers
 - String payloads must match the declared length
 - Lists (`l...e`) and dictionaries (`d...e`) must be properly terminated
+- String payloads are interpreted according to the configured `BencodeOptions.TextEncoding`
+  and must match the declared length in encoded bytes.
 
 Any deviation from the grammar results in immediate failure.
 
@@ -85,7 +87,9 @@ Decoding into CLR types introduces an additional validation layer.
 For a deserialization operation to succeed:
 
 - The Bencode data must be structurally valid
-- A compatible serializer must be resolvable for the target CLR type
+- A compatible serializer must be resolvable for the target CLR type, either:
+  - Automatically via type-declared attributes or the central serializer registry
+  - Explicitly provided by the caller
 - The resolved serializer must accept the Bencode object
 - All nested serializers must also succeed
 
@@ -115,10 +119,20 @@ BencodeDotNet provides the following guarantees:
 - Linear-time decoding with respect to input size
 - No quadratic parsing behavior
 - Streaming-safe decoding using `PipeReader`
-- Cancellation via `CancellationToken` is honored promptly
+- `CancellationToken` is respected during asynchronous decoding from streams or files.
+- If cancellation occurs, decoding aborts immediately and no partial result is returned.
 - Memory usage grows proportionally to input size and structure
 
 These guarantees apply to both synchronous and asynchronous APIs.
+
+### Encoding Guarantees
+
+- `BencodeEncoder` enforces all configured limits during encoding:
+  - Maximum payload length
+  - Maximum nesting depth
+  - Container size limits
+- Serializers are required to produce non-null `IBobject` results
+- Failures in serialization result in deterministic exceptions
 
 ---
 

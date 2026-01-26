@@ -217,7 +217,7 @@ public struct BencodeOptions
     /// <exception cref="ArgumentNullException">
     /// Thrown if <paramref name="root"/> is <see langword="null"/>.
     /// </exception>
-    /// <exception cref="InvalidOperationException">
+    /// <exception cref="BencodeValidationException">
     /// Thrown when any configured validation constraint is violated.
     /// </exception>
     public void Validate(IBobject root)
@@ -226,23 +226,23 @@ public struct BencodeOptions
         ValidateInternal(root, depth: 1, ref encodedLength);
 
         if (encodedLength > MaxPayloadLength)
-            throw new InvalidOperationException($"Encoded payload length ({encodedLength}) exceeds the configured maximum ({MaxPayloadLength}).");
+            throw new BencodeValidationException($"Encoded payload length ({encodedLength}) exceeds the configured maximum ({MaxPayloadLength}).");
     }
 
     private void ValidateInternal(IBobject node, int depth, ref int encodedLength)
     {
         if (depth > MaxDepth)
-            throw new InvalidOperationException($"Maximum Bencode depth ({MaxDepth}) exceeded.");
+            throw new BencodeValidationException($"Maximum Bencode depth ({MaxDepth}) exceeded.");
 
         switch (node)
         {
             case Blist list:
                 if (list.Count > MaxContainerItems)
-                    throw new InvalidOperationException($"Bencode list contains {list.Count} items, exceeding the configured maximum ({MaxContainerItems}).");
+                    throw new BencodeValidationException($"Bencode list contains {list.Count} items, exceeding the configured maximum ({MaxContainerItems}).");
 
                 encodedLength += 2;
                 if (encodedLength > MaxPayloadLength)
-                    throw new InvalidOperationException($"Encoded payload length ({encodedLength}) exceeds the configured maximum ({MaxPayloadLength}).");
+                    throw new BencodeValidationException($"Encoded payload length ({encodedLength}) exceeds the configured maximum ({MaxPayloadLength}).");
 
                 foreach (var item in list)
                     ValidateInternal(item, depth + 1, ref encodedLength);
@@ -250,17 +250,17 @@ public struct BencodeOptions
 
             case Bdictionary dict:
                 if (dict.Count > MaxContainerItems)
-                    throw new InvalidOperationException($"Bencode dictionary contains {dict.Count} entries, exceeding the configured maximum ({MaxContainerItems}).");
+                    throw new BencodeValidationException($"Bencode dictionary contains {dict.Count} entries, exceeding the configured maximum ({MaxContainerItems}).");
 
                 encodedLength += 2;
                 if (encodedLength > MaxPayloadLength)
-                    throw new InvalidOperationException($"Encoded payload length ({encodedLength}) exceeds the configured maximum ({MaxPayloadLength}).");
+                    throw new BencodeValidationException($"Encoded payload length ({encodedLength}) exceeds the configured maximum ({MaxPayloadLength}).");
 
                 foreach (var (key, value) in dict)
                 {
                     encodedLength += key.GetEncodedLength();
                     if (encodedLength > MaxPayloadLength)
-                        throw new InvalidOperationException($"Encoded payload length ({encodedLength}) exceeds the configured maximum ({MaxPayloadLength}).");
+                        throw new BencodeValidationException($"Encoded payload length ({encodedLength}) exceeds the configured maximum ({MaxPayloadLength}).");
 
                     ValidateInternal(value, depth + 1, ref encodedLength);
                 }
@@ -269,7 +269,7 @@ public struct BencodeOptions
             default:
                 encodedLength += node.GetEncodedLength();
                 if (encodedLength > MaxPayloadLength)
-                    throw new InvalidOperationException($"Encoded payload length ({encodedLength}) exceeds the configured maximum ({MaxPayloadLength}).");
+                    throw new BencodeValidationException($"Encoded payload length ({encodedLength}) exceeds the configured maximum ({MaxPayloadLength}).");
 
                 break;
         }

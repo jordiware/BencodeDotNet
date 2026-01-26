@@ -58,11 +58,11 @@ internal sealed class BdictionaryBuilder : BobjectBuilder
     /// Adds a key to the dictionary and transitions the builder to value-accepting state.
     /// </summary>
     /// <param name="key">The dictionary key.</param>
-    /// <exception cref="InvalidOperationException">
-    /// Thrown if a value is currently expected or if the maximum container size is exceeded.
-    /// </exception>
-    /// <exception cref="FormatException">
+    /// <exception cref="BencodeFormatException">
     /// Thrown if the key ordering violates the Bencode requirement for sorted keys.
+    /// </exception>
+    /// <exception cref="BencodeValidationException">
+    /// Thrown if the maximum container size is exceeded.
     /// </exception>
     /// <exception cref="ObjectDisposedException">
     /// Thrown if the builder has been disposed.
@@ -72,14 +72,14 @@ internal sealed class BdictionaryBuilder : BobjectBuilder
         ThrowIfDisposed();
 
         if (IsExpectingValue)
-            throw new InvalidOperationException("Value expected");
+            throw new BencodeFormatException("Value expected");
 
         if (_objects!.Count >= Options.MaxContainerItems)
-            throw new InvalidOperationException("Max capacity reached");
+            throw new BencodeValidationException("Max capacity reached");
 
         if (_lastKey is not null
             && key.CompareTo(_lastKey) <= 0)
-            throw new FormatException("Dictionary keys must be sorted");
+            throw new BencodeFormatException("Dictionary keys must be sorted");
 
         _pendingKey = key;
     }
@@ -88,7 +88,7 @@ internal sealed class BdictionaryBuilder : BobjectBuilder
     /// Adds a value associated with the previously provided key.
     /// </summary>
     /// <param name="value">The value to associate with the current key.</param>
-    /// <exception cref="InvalidOperationException">
+    /// <exception cref="BencodeFormatException">
     /// Thrown if a key is expected instead of a value.
     /// </exception>
     /// <exception cref="ObjectDisposedException">
@@ -99,7 +99,7 @@ internal sealed class BdictionaryBuilder : BobjectBuilder
         ThrowIfDisposed();
 
         if (IsExpectingKey)
-            throw new InvalidOperationException("Key expected");
+            throw new BencodeFormatException("Key expected");
 
         _objects![_pendingKey!] = value;
         _lastKey = _pendingKey;
@@ -111,7 +111,7 @@ internal sealed class BdictionaryBuilder : BobjectBuilder
     /// all accumulated key/value pairs.
     /// </summary>
     /// <returns>The constructed <see cref="Bdictionary"/>.</returns>
-    /// <exception cref="InvalidOperationException">
+    /// <exception cref="BencodeFormatException">
     /// Thrown if a value is still pending for the last key.
     /// </exception>
     /// <exception cref="ObjectDisposedException">
@@ -122,7 +122,7 @@ internal sealed class BdictionaryBuilder : BobjectBuilder
         ThrowIfDisposed();
 
         if (IsExpectingValue)
-            throw new InvalidOperationException("Value expected");
+            throw new BencodeFormatException("Value expected");
 
         return new Bdictionary(_objects!);
     }

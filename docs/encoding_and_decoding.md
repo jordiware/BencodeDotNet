@@ -2,7 +2,7 @@
 
 This document describes how to encode and decode Bencode data using **BencodeDotNet**.
 
-It focuses on _usage semantics_, _validation guarantees_, and _design intent_, rather than exhaustive API listings. All examples assume familiarity with the Bencode data model and the `IBobject` hierarchy.
+It focuses on *usage semantics*, *validation guarantees*, and *design intent*, rather than exhaustive API listings. All examples assume familiarity with the Bencode data model and the `IBobject` hierarchy.
 
 ---
 
@@ -10,8 +10,8 @@ It focuses on _usage semantics_, _validation guarantees_, and _design intent_, r
 
 BencodeDotNet exposes two primary entry points:
 
-- `Bdecoder` — decodes Bencode-encoded data into `IBobject` instances or CLR values
-- `Bencoder` — encodes CLR values into validated `IBobject` representations
+- `BencodeDecoder` — decodes Bencode-encoded data into `IBobject` instances or CLR values
+- `BencodeEncoder` — encodes CLR values into validated `IBobject` representations
 
 Both components:
 
@@ -46,17 +46,12 @@ The selected text encoding affects:
 Custom encodings may be supplied by constructing `BencodeOptions` explicitly:
 
 ```csharp
-var options = new BencodeOptions(
-    textEncoding: Encoding.Unicode);
+var options = new BencodeOptions(textEncoding: Encoding.Unicode);
 ```
 
-The specified encoding is treated as a policy decision and is applied
-consistently across all encoding and decoding operations that use the
-associated BencodeOptions instance.
+The specified encoding is applied consistently across all encoding and decoding operations that use the associated `BencodeOptions` instance.
 
-No validation of encoded text is performed at construction time; invalid or
-non-decodable byte sequences are handled according to the behavior of the
-configured Encoding during decoding.
+No validation of encoded text is performed at construction time; invalid or non-decodable byte sequences are handled according to the behavior of the configured Encoding during decoding.
 
 ---
 
@@ -65,14 +60,14 @@ configured Encoding during decoding.
 ### Creating a Decoder
 
 ```csharp
-var decoder = new Bdecoder();
+var decoder = new BencodeDecoder();
 ```
 
 Custom decoding limits may be supplied via `BencodeOptions`:
 
 ```csharp
 var options = new BencodeOptions(maxDepth: 512);
-var decoder = new Bdecoder(options);
+var decoder = new BencodeDecoder(options);
 ```
 
 If no options are provided, default limits are used.
@@ -95,6 +90,18 @@ IBobject value = decoder.Decode(bytes);
 IBobject value = decoder.Decode(text);
 ```
 
+#### From a `ReadOnlySpan<byte>`
+
+```csharp
+IBobject value = decoder.Decode(span);
+```
+
+#### From a file (asynchronous)
+
+```csharp
+IBobject value = await decoder.DecodeAsync("data.bencode");
+```
+
 #### From a stream (asynchronous)
 
 ```csharp
@@ -113,18 +120,18 @@ All decoding operations:
 
 ### Decoding into CLR Types
 
-BencodeDotNet supports decoding directly into CLR values via registered or attributed serializers.
+BencodeDotNet supports decoding directly into CLR values via registered or attributed serializers:
 
 ```csharp
 var result = decoder.Decode<MyType>(bytes);
 ```
 
-Serializer resolution follows this order:
+Serializer resolution order:
 
-1. A serializer declared via `BencodeSerializerAttribute` on the target type
-2. A serializer registered in the global serializer registry
+1. `BencodeSerializerAttribute` on the target type
+2. Global serializer registry
 
-If no compatible serializer is found, decoding fails with `NotSupportedException`.
+If no compatible serializer is found, decoding fails with `BencodeSerializerNotFoundException`.
 
 ---
 
@@ -137,24 +144,21 @@ var serializer = new MyTypeBencodeSerializer();
 var result = decoder.Decode<MyType, Bdictionary>(bytes, serializer);
 ```
 
-Explicit serializers are required to:
+Explicit serializers must:
 
 - Match the expected `IBobject` type produced by decoding
 - Produce a non-null CLR value
 
-Violations result in `InvalidOperationException`.
+Violations result in `BencodeSerializerException`.
 
 ---
 
 ### Asynchronous Decoding
 
-Asynchronous decoding is supported for files and streams:
+Async decoding is supported for files and streams:
 
 ```csharp
 IBobject value = await decoder.DecodeAsync("data.bencode");
-```
-
-```csharp
 var result = await decoder.DecodeAsync<MyType>(stream, cancellationToken);
 ```
 
@@ -164,6 +168,7 @@ Async decoding:
 - Preserves parsing state across partial reads
 - Supports cancellation
 - Does **not** buffer the entire input
+- Detects multiple top-level objects or trailing data
 
 ---
 
@@ -172,13 +177,13 @@ Async decoding:
 ### Creating an Encoder
 
 ```csharp
-var encoder = new Bencoder();
+var encoder = new BencodeEncoder();
 ```
 
 Custom encoding limits may be supplied via `BencodeOptions`:
 
 ```csharp
-var encoder = new Bencoder(new BencodeOptions(maxDepth: 256));
+var encoder = new BencodeEncoder(new BencodeOptions(maxDepth: 256));
 ```
 
 ---
@@ -203,8 +208,6 @@ Encoding fails if any of these steps cannot be completed successfully.
 
 ### Using Explicit Serializers
 
-You may encode using a specific serializer:
-
 ```csharp
 var serializer = new MyTypeBencodeSerializer();
 IBobject encoded = encoder.Encode(value, serializer);
@@ -216,50 +219,53 @@ Explicit serializers must:
 - Produce a non-null `IBobject`
 - Produce output that satisfies all validation constraints
 
+Violations result in `BencodeSerializerException`.
+
 ---
 
 ## Validation and Safety
 
-BencodeDotNet is designed with a strong emphasis on correctness, predictability, and defensive behavior when handling untrusted input. Both encoding and decoding paths apply strict validation rules to ensure malformed or hostile data is rejected early and safely.
+BencodeDotNet enforces correctness, predictability, and defensive behavior:
 
 ### Structural Validation
 
-During decoding, the parser enforces the Bencode grammar rigorously. Integers, byte strings, lists, and dictionaries must all follow the exact specification; any deviation (such as invalid delimiters, malformed lengths, or unexpected end-of-input) results in a decoding failure rather than partial or best-effort recovery.
-
-Nested structures are validated incrementally as they are read, ensuring that lists and dictionaries are properly opened and closed and that their internal elements are well-formed.
+- Parser enforces the Bencode grammar for integers, byte strings, lists, and dictionaries
+- Any deviation triggers `BencodeFormatException`
+- Incremental validation ensures proper container opening/closing
 
 ### Depth and Size Limits
 
-To protect against resource-exhaustion attacks (for example, deeply nested lists or dictionaries), decoding enforces a configurable maximum depth. Once this limit is exceeded, decoding stops immediately and fails in a controlled manner.
-
-Similarly, string lengths and container sizes are validated as they are parsed. This prevents attempts to allocate excessive memory based on maliciously large length prefixes.
+- Configurable maximum depth prevents resource exhaustion
+- String lengths and container sizes are validated on read
 
 ### Dictionary Key Rules
 
-Dictionary keys are required to be valid byte strings and are processed in strict order, as mandated by the Bencode specification. Invalid key types, duplicated keys, or out-of-order keys are rejected to avoid ambiguous or non-canonical representations.
+- Keys must be valid byte strings and sorted
+- Duplicates or out-of-order keys are rejected
 
 ### Serializer Safety
 
-On the encoding side, serializers follow a non-throwing `TrySerialize` / `TryDeserialize` pattern. Invalid values, unsupported types, or incompatible serializers result in a clean `false` return value rather than exceptions, making failure modes explicit and easy to handle.
-
-Custom serializers resolved via attributes or the central registry are validated for compatibility before use, ensuring that only correctly declared serializers participate in the encoding or decoding process.
+- `TrySerialize` / `TryDeserialize` pattern ensures explicit failure handling
+- Custom or registry-resolved serializers are validated before use
 
 ### Cancellation and Predictable Failure
 
-Async decoding operations honor `CancellationToken` parameters, allowing long-running or stalled operations to be cancelled deterministically. In all failure cases—whether due to invalid data, validation limits, or cancellation—the library guarantees a well-defined and predictable outcome without leaving partially constructed objects behind.
+- Async operations honor `CancellationToken`
+- In all failure cases, partial objects are not exposed
 
-Together, these measures make BencodeDotNet suitable for processing both trusted and untrusted Bencode data while maintaining safety, clarity, and performance.
+---
 
 ## Error Handling
 
-BencodeDotNet uses exceptions to report invalid input or misuse:
+Exceptions are used to indicate invalid input or misuse:
 
-- `FormatException` — malformed or non-conformant Bencode data
-- `NotSupportedException` — missing serializers
-- `InvalidOperationException` — serializer failures or invalid results
-- `OperationCanceledException` — cancellation during async decoding
+- `BencodeFormatException` — malformed or non-conformant Bencode data
+- `BencodeSerializerNotFoundException` — missing serializer
+- `BencodeSerializerException` — serializer failure
+- `BencodeIOException` — unreadable stream
+- `OperationCanceledException` — cancellation
 
-No partial or undefined states are exposed to the caller.
+No partial or undefined states are exposed.
 
 ---
 
@@ -267,22 +273,27 @@ No partial or undefined states are exposed to the caller.
 
 ### No Factory Methods
 
-`Bdecoder` and `Bencoder` are instantiated explicitly to:
-
-- Make option ownership explicit
-- Avoid hidden global state
-- Enable reuse with consistent validation semantics
+- Explicit instantiation makes option ownership clear
+- Avoids hidden global state
+- Enables reuse with consistent validation semantics
 
 ### Data Passed to Methods
 
-All data is provided directly to encoding and decoding methods to:
-
-- Keep object lifetimes simple
-- Avoid implicit buffering
-- Make usage explicit and predictable
+- All data must be supplied to methods directly
+- No implicit buffering or hidden state
+- Usage is explicit and predictable
 
 ### Strictness by Design
 
-BencodeDotNet is intentionally strict.
+- Strict validation is intentional
+- No recovery from malformed input or spec violations
 
-It does not attempt to recover from malformed input, tolerate specification violations, or guess intent. This behavior is fundamental to the library and will not change in future versions.
+---
+
+This version fully reflects:
+
+- Sync and async decoding/encoding
+- File, stream, span, and string support
+- Serializer discovery and explicit serializer usage
+- Cancellation support
+- Full validation and error handling

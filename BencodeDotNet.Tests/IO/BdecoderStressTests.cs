@@ -1,12 +1,12 @@
 ﻿using Jordiware.BencodeDotNet.Objects;
 using System.Text;
 
-namespace Jordiware.BencodeDotNet.Tests.EncodeDecode;
+namespace Jordiware.BencodeDotNet.Tests.IO;
 
 public class BdecoderStressTests
 {
     private static readonly BencodeOptions options = new(textEncoding: Encoding.ASCII);
-    private static readonly Bdecoder decoder = new(options);
+    private static readonly BencodeDecoder decoder = new(options);
 
     [Theory]
     [InlineData(1_000_000)]
@@ -22,7 +22,7 @@ public class BdecoderStressTests
 
         if (bencode.Length > options.MaxPayloadLength)
         {
-            Assert.Throws<InvalidOperationException>(() => decoder.Decode(bencode));
+            Assert.Throws<BencodeValidationException>(() => decoder.Decode(bencode));
         }
         else
         {
@@ -52,7 +52,7 @@ public class BdecoderStressTests
 
         if (count > options.MaxContainerItems)
         {
-            Assert.Throws<InvalidOperationException>(() => decoder.Decode(sb.ToString()));
+            Assert.Throws<BencodeValidationException>(() => decoder.Decode(sb.ToString()));
         }
         else
         {
@@ -82,7 +82,7 @@ public class BdecoderStressTests
 
         if (depth >= options.MaxDepth)
         {
-            Assert.Throws<InvalidOperationException>(() => decoder.Decode(sb.ToString()));
+            Assert.Throws<BencodeValidationException>(() => decoder.Decode(sb.ToString()));
         }
         else
         {
@@ -119,7 +119,7 @@ public class BdecoderStressTests
 
         if (depth >= options.MaxDepth)
         {
-            Assert.Throws<InvalidOperationException>(() => decoder.Decode(sb.ToString()));
+            Assert.Throws<BencodeValidationException>(() => decoder.Decode(sb.ToString()));
         }
         else
         {

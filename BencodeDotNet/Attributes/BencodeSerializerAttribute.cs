@@ -1,4 +1,5 @@
 ﻿using Jordiware.BencodeDotNet.Serializers;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Jordiware.BencodeDotNet.Attributes;
 
@@ -82,7 +83,7 @@ public sealed class BencodeSerializerAttribute : Attribute
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="serializerType"/> is <see langword="null"/>.
     /// </exception>
-    /// <exception cref="InvalidOperationException">
+    /// <exception cref="BencodeSerializerException">
     /// Thrown when <paramref name="serializerType"/> does not implement
     /// <see cref="IBencodeSerializer"/>.
     /// </exception>
@@ -95,15 +96,12 @@ public sealed class BencodeSerializerAttribute : Attribute
     /// silently accepted.
     /// </para>
     /// </remarks>
-    public BencodeSerializerAttribute(Type serializerType, params object?[]? arguments)
+    public BencodeSerializerAttribute([NotNull] Type serializerType, params object?[]? arguments)
     {
         SerializerType = serializerType ?? throw new ArgumentNullException(nameof(serializerType));
 
         if (!serializerType.IsAssignableTo(typeof(IBencodeSerializer)))
-        {
-            throw new InvalidOperationException(
-                $"Serializer '{serializerType}' does not implement IBencodeSerializer.");
-        }
+            throw new BencodeSerializerException($"Serializer '{serializerType}' does not implement IBencodeSerializer.");
 
         Arguments = arguments;
     }

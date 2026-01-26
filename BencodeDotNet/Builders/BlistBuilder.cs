@@ -35,7 +35,7 @@ internal sealed class BlistBuilder : BobjectBuilder
     /// Appends a fully constructed child object to the list.
     /// </summary>
     /// <param name="obj">The object to add to the list.</param>
-    /// <exception cref="InvalidOperationException">
+    /// <exception cref="BencodeValidationException">
     /// Thrown if the maximum number of container items defined by
     /// <see cref="BencodeOptions.MaxContainerItems"/> has been reached.
     /// </exception>
@@ -47,7 +47,7 @@ internal sealed class BlistBuilder : BobjectBuilder
         ThrowIfDisposed();
 
         if (_objects!.Count >= Options.MaxContainerItems)
-            throw new InvalidOperationException("Max capacity reached");
+            throw new BencodeValidationException("Max capacity reached");
 
         _objects!.Add(obj);
     }

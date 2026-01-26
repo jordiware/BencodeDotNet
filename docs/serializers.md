@@ -110,6 +110,7 @@ When a serializer is requested for a CLR type, resolution proceeds in the follow
 1. **Attribute-declared serializer**
 2. **Enumerable and dictionary serializers**
 3. **Built-in registry lookup**
+4. **Reflection-based serializer** (if the type is eligible)
 
 Resolution stops at the first successful match.
 
@@ -179,6 +180,75 @@ Enumerable serializers:
 - Serialize elements in sequence order
 - Delegate element serialization to the resolved element serializer
 - Fail if any element cannot be serialized
+
+---
+
+## Reflection-based serializer
+
+BencodeDotNet provides an optional **reflection-based serializer** that enables automatic serialization and deserialization of simple object (POCO) types without requiring a custom serializer implementation.
+
+This serializer acts as a **fallback mechanism** in the serializer resolution process and is only used when no explicit serializer is declared via attributes and no registered serializer exists for the target type.
+
+### Purpose and scope
+
+The reflection-based serializer is designed to cover common, straightforward scenarios:
+
+- Plain CLR objects with a public parameterless constructor
+- Public instance members (properties or fields)
+- Member types that already have resolvable Bencode serializers
+
+It intentionally avoids attempting to support complex or ambiguous cases (inheritance hierarchies, polymorphism, private members, etc.) in order to keep behavior predictable and safe.
+
+### Supported types
+
+A type is eligible for reflection-based serialization only if all of the following conditions are met:
+
+- The type is **not** abstract
+- The type is **not** an interface
+- The type is **not** `object`
+- The type is **not** a primitive, enum, or pointer type
+- The type declares a **public parameterless constructor**
+
+If any of these conditions are not satisfied, the reflection-based serializer will not be instantiated.
+
+### Member discovery
+
+During serializer initialization, the type is inspected once using reflection and a metadata cache is built. Only the following members are considered:
+
+- Public instance properties or fields
+- Members with both a readable getter and a writable setter
+- Members whose types have a resolvable Bencode serializer
+
+Private members, static members, and members without setters are intentionally ignored.
+
+Each eligible member is mapped to a Bencode dictionary entry using its resolved key and serializer.
+
+### Serialization behavior
+
+When serializing an object:
+
+- A new `Bdictionary` is created
+- Each eligible member is read using its compiled getter
+- Members whose values are `null` are skipped
+- Each non-null value is serialized using the resolved member serializer
+- The resulting key/value pairs are added to the dictionary
+
+If a member serializer fails unexpectedly, serialization throws an `InvalidOperationException`.
+
+### Deserialization behavior
+
+When deserializing a `Bdictionary`:
+
+- A new instance of the target type is created using its parameterless constructor
+- Each key/value pair in the dictionary is processed
+- If a key does not correspond to a known member, it is ignored
+- If a matching member is found:
+  - The value is deserialized using the member’s serializer
+  - The resulting value is assigned using the compiled setter
+
+Unknown dictionary keys are silently ignored, allowing forward-compatible payloads.
+
+If a member fails to deserialize, an `InvalidOperationException` is thrown.
 
 ---
 

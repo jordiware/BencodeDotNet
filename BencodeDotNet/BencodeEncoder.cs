@@ -8,7 +8,7 @@ namespace Jordiware.BencodeDotNet;
 /// </summary>
 /// <remarks>
 /// <para>
-/// <see cref="Bencoder"/> is responsible for orchestrating the encoding process by:
+/// <see cref="BencodeEncoder"/> is responsible for orchestrating the encoding process by:
 /// </para>
 /// <list type="bullet">
 ///   <item>
@@ -22,20 +22,17 @@ namespace Jordiware.BencodeDotNet;
 ///   </item>
 /// </list>
 /// </remarks>
-public sealed class Bencoder
+public sealed class BencodeEncoder : BencodeIO
 {
-    private readonly BencodeOptions _options;
-
     /// <summary>
-    /// Initializes a new instance of the <see cref="Bencoder"/> class using the specified encoding options.
+    /// Initializes a new instance of the <see cref="BencodeEncoder"/> class using the specified encoding options.
     /// </summary>
     /// <param name="options">
     /// The <see cref="BencodeOptions"/> instance that defines validation limits for encoded payloads.
     /// If <see langword="null"/>, a new instance with default values is used.
     /// </param>
-    public Bencoder(BencodeOptions? options = null)
+    public BencodeEncoder(BencodeOptions? options = null) : base(options)
     {
-        _options = options ?? new();
     }
 
     /// <summary>
@@ -51,14 +48,14 @@ public sealed class Bencoder
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="value"/> is <see langword="null"/>.
     /// </exception>
-    /// <exception cref="NotSupportedException">
-    /// Thrown when no Bencode serializer is registered or declared for the runtime type
-    /// of <paramref name="value"/>.
-    /// </exception>
-    /// <exception cref="InvalidOperationException">
+    /// <exception cref="BencodeSerializerException">
     /// Thrown when the resolved serializer fails to serialize the object, produces a
     /// <see langword="null"/> Bencode result, or when the encoded output violates the
     /// configured <see cref="BencodeOptions"/> constraints.
+    /// </exception>
+    /// <exception cref="BencodeSerializerNotFoundException">
+    /// Thrown when no Bencode serializer is registered or declared for the runtime type
+    /// of <paramref name="value"/>.
     /// </exception>
     /// <remarks>
     /// <para>
@@ -78,13 +75,13 @@ public sealed class Bencoder
         var type = value.GetType();
 
         if (!BencodeSerializer.TryGetSerializerForType(type, _options, out var serializer) || serializer is null)
-            throw new NotSupportedException($"No Bencode serializer is registered or declared for type '{type}'.");
+            throw new BencodeSerializerNotFoundException($"No Bencode serializer is registered or declared for type '{type}'.");
 
         if (!serializer.TrySerialize(value, out var result))
-            throw new InvalidOperationException($"The serializer '{serializer.GetType()}' failed to serialize an instance of '{type}'.");
+            throw new BencodeSerializerException($"The serializer '{serializer.GetType()}' failed to serialize an instance of '{type}'.");
 
         if (result is null)
-            throw new InvalidOperationException($"The serializer '{serializer.GetType()}' produced a null Bencode object.");
+            throw new BencodeSerializerException($"The serializer '{serializer.GetType()}' produced a null Bencode object.");
 
         _options.Validate(result);
 
@@ -115,7 +112,7 @@ public sealed class Bencoder
     /// Thrown when <paramref name="value"/> or <paramref name="serializer"/> is
     /// <see langword="null"/>.
     /// </exception>
-    /// <exception cref="InvalidOperationException">
+    /// <exception cref="BencodeSerializerException">
     /// Thrown when the provided serializer fails to serialize the value, produces a
     /// <see langword="null"/> Bencode object, or when the resulting payload violates
     /// the configured <see cref="BencodeOptions"/> constraints.
@@ -130,10 +127,10 @@ public sealed class Bencoder
             throw new ArgumentNullException(nameof(serializer));
 
         if (!serializer.TrySerialize(value, out var result))
-            throw new InvalidOperationException($"The serializer '{serializer.GetType()}' failed to serialize an instance of '{typeof(TValue)}'.");
+            throw new BencodeSerializerException($"The serializer '{serializer.GetType()}' failed to serialize an instance of '{typeof(TValue)}'.");
 
         if (result is null)
-            throw new InvalidOperationException($"The serializer '{serializer.GetType()}' produced a null Bencode object.");
+            throw new BencodeSerializerException($"The serializer '{serializer.GetType()}' produced a null Bencode object.");
 
         _options.Validate(result);
 

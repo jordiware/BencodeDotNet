@@ -1,4 +1,5 @@
 ﻿using Jordiware.BencodeDotNet.Objects;
+using System.IO.Pipelines;
 
 namespace Jordiware.BencodeDotNet.Serializers;
 
@@ -170,5 +171,47 @@ public sealed class ArrayBencodeSerializer<TType> : ReferenceTypeBencodeSerializ
 
         output = objects!.ToArray();
         return true;
+    }
+
+    /// <summary>
+    /// Asynchronously serializes an array of values to the provided
+    /// <see cref="PipeWriter"/> in Bencode list format.
+    /// </summary>
+    /// <param name="input">
+    /// The array of values to serialize. Cannot be <see langword="null"/>.
+    /// </param>
+    /// <param name="writer">
+    /// The <see cref="PipeWriter"/> to which the serialized list will be written.
+    /// </param>
+    /// <param name="cancellationToken">
+    /// A <see cref="CancellationToken"/> that can be used to cancel the operation.
+    /// </param>
+    /// <returns>
+    /// A <see cref="Task"/> representing the asynchronous write operation.
+    /// </returns>
+    /// <remarks>
+    /// The method writes a Bencode list ('l' ... 'e') and serializes each non-null
+    /// element using the resolved serializer for <typeparamref name="TType"/>.  
+    /// <see langword="null"/> elements in the array are skipped and produce no output.
+    /// </remarks>
+    public override async Task WriteToPipeAsync(TType[] input, PipeWriter writer, CancellationToken cancellationToken = default)
+    {
+        if (input is null)
+            throw new ArgumentNullException(nameof(input));
+
+        if (!BencodeSerializer.TryGetSerializerForType(typeof(TType), _options, out var serializer) || serializer is null)
+            throw new BencodeSerializerNotFoundException($"No Bencode serializer is registered for element type '{typeof(TType)}'.");
+
+        await writer.WriteAsync(new byte[] { Bencode.ListBeginCharacter }, cancellationToken);
+
+        foreach (var item in input)
+        {
+            if (item is null)
+                continue;
+
+            await serializer.WriteToPipeAsync(item, writer, cancellationToken);
+        }
+
+        await writer.WriteAsync(new byte[] { Bencode.TerminationCharacter }, cancellationToken);
     }
 }
