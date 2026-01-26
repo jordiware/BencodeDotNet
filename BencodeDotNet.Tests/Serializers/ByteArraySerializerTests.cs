@@ -15,7 +15,7 @@ public class ByteArraySerializerTests
         yield return new object[] { new byte[4096] };                   // 4 KB array
         yield return new object[] { GenerateLargeArray(100_000) };      // 100 KB array
         yield return new object[] { GenerateLargeArray(1_000_000) };      // 1 MB array
-        yield return new object[] { GenerateLargeArray(10_000_000) };      // 10 MB array
+        // yield return new object[] { GenerateLargeArray(10_000_000) };      // 10 MB array (disabled, tests discovery was taking forever!)
     }
 
     private static byte[] GenerateLargeArray(int size)
