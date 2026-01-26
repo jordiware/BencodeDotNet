@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Jordiware.BencodeDotNet.Tests.IO;
 
-public class ReaderTests
+public class ReadMultipleTests
 {
     private static readonly Random _random = new();
 
