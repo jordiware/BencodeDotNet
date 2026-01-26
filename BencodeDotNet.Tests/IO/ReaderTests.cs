@@ -1,11 +1,10 @@
 ﻿using Jordiware.BencodeDotNet.Objects;
 using Jordiware.BencodeDotNet.Serializers;
-using System;
 using System.Text;
 
 namespace Jordiware.BencodeDotNet.Tests.IO;
 
-public class BencodeReaderTests
+public class ReaderTests
 {
     private static readonly Random _random = new();
 

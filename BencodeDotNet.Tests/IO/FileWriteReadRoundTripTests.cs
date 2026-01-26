@@ -3,7 +3,7 @@ using System.Text;
 
 namespace Jordiware.BencodeDotNet.Tests.IO;
 
-public class BencodeFileWriteReadRoundTripTests
+public class FileWriteReadRoundTripTests
 {
     [Fact]
     public async Task WriteAndReadSingleIntegerFile()

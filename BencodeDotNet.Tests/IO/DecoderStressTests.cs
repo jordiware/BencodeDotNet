@@ -3,7 +3,7 @@ using System.Text;
 
 namespace Jordiware.BencodeDotNet.Tests.IO;
 
-public class BdecoderStressTests
+public class DecoderStressTests
 {
     private static readonly BencodeOptions options = new(textEncoding: Encoding.ASCII);
     private static readonly BencodeDecoder decoder = new(options);

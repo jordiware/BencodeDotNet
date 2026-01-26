@@ -2,7 +2,7 @@
 
 namespace Jordiware.BencodeDotNet.Tests.IO;
 
-public class BdecoderGenericDecodeTests
+public class DecoderGenericDecodeTests
 {
     [Theory]
     [InlineData("i42e")]

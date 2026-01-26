@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Jordiware.BencodeDotNet.Tests.IO;
 
-public class BencodeRoundTripTests
+public class EncoderDecoderRoundTripTests
 {
     [BencodeSerializer(typeof(SimpleObjectSerializer))]
     private sealed class SimpleObject
@@ -13,8 +13,7 @@ public class BencodeRoundTripTests
         public int Value { get; init; }
     }
 
-    private sealed class SimpleObjectSerializer
-        : BencodeSerializer<SimpleObject, Bdictionary>
+    private sealed class SimpleObjectSerializer : BencodeSerializer<SimpleObject, Bdictionary>
     {
         private static readonly Bstring key = new Bstring("value", Encoding.UTF8);
 

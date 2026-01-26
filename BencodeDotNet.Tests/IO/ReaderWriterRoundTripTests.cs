@@ -3,7 +3,7 @@ using System.Text;
 
 namespace Jordiware.BencodeDotNet.Tests.IO;
 
-public class BencodeReaderWriterRoundTripTests
+public class ReaderWriterRoundTripTests
 {
     [Fact]
     public async Task RoundTripIntegerPreservesValue()
