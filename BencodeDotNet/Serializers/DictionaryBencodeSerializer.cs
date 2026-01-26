@@ -224,7 +224,7 @@ public sealed class DictionaryBencodeSerializer<TKey, TValue> : ReferenceTypeBen
         {
             var value = input[orderedDictionary[bkey]];
 
-            await BencodePipeWriter.WriteBytesAsync(bkey.ToBinaryEncoding(), writer, cancellationToken);
+            await bkey.WriteToPipeAsync(writer, cancellationToken);
             await valueSerializer.WriteToPipeAsync(value!, writer, cancellationToken);
         }
 

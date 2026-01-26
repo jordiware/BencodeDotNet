@@ -96,6 +96,6 @@ public sealed class CharBencodeSerializer : UnmanagedTypeBencodeSerializer<char,
     /// </remarks>
     public override async Task WriteToPipeAsync(char input, PipeWriter writer, CancellationToken cancellationToken = default)
     {
-        await BencodePipeWriter.WriteIntegerAsync(input, writer, cancellationToken);
+        await PipeWriterUtils.WriteIntegerAsync(input, writer, cancellationToken);
     }
 }

@@ -110,7 +110,7 @@ public sealed class EnumBencodeSerializer<TEnum> : BencodeSerializer<TEnum, Bint
     public override async Task WriteToPipeAsync(TEnum input, PipeWriter writer, CancellationToken cancellationToken = default)
     {
         var underlying = Convert.ToInt64(input);
-        await BencodePipeWriter.WriteIntegerAsync(underlying, writer, cancellationToken);
+        await PipeWriterUtils.WriteIntegerAsync(underlying, writer, cancellationToken);
     }
 
     private static bool IsValueInUnderlyingRange(long value)

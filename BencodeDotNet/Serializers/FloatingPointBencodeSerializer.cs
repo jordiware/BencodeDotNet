@@ -100,7 +100,7 @@ public sealed class FloatBencodeSerializer : UnmanagedTypeBencodeSerializer<floa
         if (!FloatingPointNumberFormatter.TryFormat(input, out var s))
             throw new BencodeFormatException($"Unable to format float value {input}.");
 
-        await BencodePipeWriter.WriteStringAsync(s, Encoding.ASCII, writer, cancellationToken);
+        await PipeWriterUtils.WriteStringAsync(s, Encoding.ASCII, writer, cancellationToken);
     }
 }
 
@@ -197,7 +197,7 @@ public sealed class DoubleBencodeSerializer : UnmanagedTypeBencodeSerializer<dou
         if (!FloatingPointNumberFormatter.TryFormat(input, out var s))
             throw new BencodeFormatException($"Unable to format double value {input}.");
 
-        await BencodePipeWriter.WriteStringAsync(s, Encoding.ASCII, writer, cancellationToken);
+        await PipeWriterUtils.WriteStringAsync(s, Encoding.ASCII, writer, cancellationToken);
     }
 }
 
@@ -290,6 +290,6 @@ public sealed class DecimalBencodeSerializer : UnmanagedTypeBencodeSerializer<de
         if (!FloatingPointNumberFormatter.TryFormat(input, out var s))
             throw new BencodeFormatException($"Unable to format decimal value {input}.");
 
-        await BencodePipeWriter.WriteStringAsync(s, Encoding.ASCII, writer, cancellationToken);
+        await PipeWriterUtils.WriteStringAsync(s, Encoding.ASCII, writer, cancellationToken);
     }
 }

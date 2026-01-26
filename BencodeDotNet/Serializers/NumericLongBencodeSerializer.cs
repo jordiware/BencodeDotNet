@@ -73,7 +73,7 @@ public sealed class LongBencodeSerializer : UnmanagedTypeBencodeSerializer<long,
     /// </param>
     public override async Task WriteToPipeAsync(long input, PipeWriter writer, CancellationToken cancellationToken = default)
     {
-        await BencodePipeWriter.WriteIntegerAsync(input, writer, cancellationToken);
+        await PipeWriterUtils.WriteIntegerAsync(input, writer, cancellationToken);
     }
 }
 
@@ -156,6 +156,6 @@ public sealed class UlongBencodeSerializer : UnmanagedTypeBencodeSerializer<ulon
     /// </param>
     public override async Task WriteToPipeAsync(ulong input, PipeWriter writer, CancellationToken cancellationToken = default)
     {
-        await BencodePipeWriter.WriteIntegerAsync(input, writer, cancellationToken);
+        await PipeWriterUtils.WriteIntegerAsync(input, writer, cancellationToken);
     }
 }

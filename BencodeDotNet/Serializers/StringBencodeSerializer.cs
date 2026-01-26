@@ -179,6 +179,6 @@ public sealed class StringBencodeSerializer : ReferenceTypeBencodeSerializer<str
     /// </returns>
     public override async Task WriteToPipeAsync(string input, PipeWriter writer, CancellationToken cancellationToken = default)
     {
-        await BencodePipeWriter.WriteStringAsync(input, _encoding, writer, cancellationToken);
+        await PipeWriterUtils.WriteStringAsync(input, _encoding, writer, cancellationToken);
     }
 }

@@ -81,7 +81,7 @@ public sealed class ShortBencodeSerializer : UnmanagedTypeBencodeSerializer<shor
     /// </param>
     public override async Task WriteToPipeAsync(short input, PipeWriter writer, CancellationToken cancellationToken = default)
     {
-        await BencodePipeWriter.WriteIntegerAsync(input, writer, cancellationToken);
+        await PipeWriterUtils.WriteIntegerAsync(input, writer, cancellationToken);
     }
 }
 
@@ -162,6 +162,6 @@ public sealed class UshortBencodeSerializer : UnmanagedTypeBencodeSerializer<ush
     /// </param>
     public override async Task WriteToPipeAsync(ushort input, PipeWriter writer, CancellationToken cancellationToken = default)
     {
-        await BencodePipeWriter.WriteIntegerAsync(input, writer, cancellationToken);
+        await PipeWriterUtils.WriteIntegerAsync(input, writer, cancellationToken);
     }
 }

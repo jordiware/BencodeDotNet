@@ -105,6 +105,6 @@ public sealed class BoolBencodeSerializer : UnmanagedTypeBencodeSerializer<bool,
     /// </param>
     public override async Task WriteToPipeAsync(bool input, PipeWriter writer, CancellationToken cancellationToken = default)
     {
-        await BencodePipeWriter.WriteIntegerAsync(input ? 1 : 0, writer, cancellationToken);
+        await PipeWriterUtils.WriteIntegerAsync(input ? 1 : 0, writer, cancellationToken);
     }
 }

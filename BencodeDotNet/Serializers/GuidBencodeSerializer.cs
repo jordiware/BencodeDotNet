@@ -115,6 +115,6 @@ public sealed class GuidBencodeSerializer : UnmanagedTypeBencodeSerializer<Guid,
     {
         Span<byte> bytes = stackalloc byte[16];
         input.TryWriteBytes(bytes);
-        await BencodePipeWriter.WriteBytesAsync(bytes.ToArray(), writer, cancellationToken);
+        await PipeWriterUtils.WriteBytesAsync(bytes.ToArray(), writer, cancellationToken);
     }
 }

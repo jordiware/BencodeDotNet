@@ -172,7 +172,7 @@ public sealed class ReflectionBencodeSerializer<TType> : BencodeSerializer<TType
             if (value is null)
                 continue;
 
-            await BencodePipeWriter.WriteBytesAsync(member.Key.ToBinaryEncoding(), writer, cancellationToken);
+            await member.Key.WriteToPipeAsync(writer, cancellationToken);
             await member.Serializer.WriteToPipeAsync(value, writer, cancellationToken);
         }
 
