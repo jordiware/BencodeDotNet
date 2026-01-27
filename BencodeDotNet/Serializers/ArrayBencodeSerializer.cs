@@ -202,7 +202,9 @@ public sealed class ArrayBencodeSerializer<TType> : ReferenceTypeBencodeSerializ
         if (!BencodeSerializer.TryGetSerializerForType(typeof(TType), _options, out var serializer) || serializer is null)
             throw new BencodeSerializerNotFoundException($"No Bencode serializer is registered for element type '{typeof(TType)}'.");
 
-        await writer.WriteAsync(new byte[] { Bencode.ListBeginCharacter }, cancellationToken);
+        Span<byte> span = writer.GetSpan(1);
+        span[0] = Bencode.ListBeginCharacter;
+        writer.Advance(1);
 
         foreach (var item in input)
         {
@@ -212,6 +214,8 @@ public sealed class ArrayBencodeSerializer<TType> : ReferenceTypeBencodeSerializ
             await serializer.WriteToPipeAsync(item, writer, cancellationToken);
         }
 
-        await writer.WriteAsync(new byte[] { Bencode.TerminationCharacter }, cancellationToken);
+        span = writer.GetSpan(1);
+        span[0] = Bencode.TerminationCharacter;
+        writer.Advance(1);
     }
 }

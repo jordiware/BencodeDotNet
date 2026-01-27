@@ -1,4 +1,5 @@
 ﻿using Jordiware.BencodeDotNet.Objects;
+using Jordiware.BencodeDotNet.Utils;
 using System.Buffers.Text;
 using System.IO.Pipelines;
 
@@ -55,18 +56,6 @@ public sealed class ByteArraySerializer : ReferenceTypeBencodeSerializer<byte[],
     /// </exception>
     public override async Task WriteToPipeAsync(byte[] input, PipeWriter writer, CancellationToken cancellationToken = default)
     {
-        Span<byte> span = writer.GetSpan(32);
-
-        int written = 0;
-        if (!Utf8Formatter.TryFormat(input.Length, span, out int lengthDigits))
-            throw new BencodeFormatException("Failed to format string length.");
-
-        written += lengthDigits;
-
-        span[written++] = (byte)':';
-
-        writer.Advance(written);
-
-        await writer.WriteAsync(input.AsMemory(), cancellationToken);
+        await PipeWriterUtils.WriteBytesAsync(input.AsMemory(), writer, cancellationToken);
     }
 }

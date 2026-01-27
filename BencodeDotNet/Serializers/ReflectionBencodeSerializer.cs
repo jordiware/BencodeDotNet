@@ -163,7 +163,9 @@ public sealed class ReflectionBencodeSerializer<TType> : BencodeSerializer<TType
         if (input is null)
             throw new ArgumentNullException(nameof(input));
 
-        await writer.WriteAsync(new byte[] { Bencode.DictionaryBeginCharacter }, cancellationToken);
+        Span<byte> span = writer.GetSpan(1);
+        span[0] = Bencode.DictionaryBeginCharacter;
+        writer.Advance(1);
 
         foreach (var member in metadata.Value.Members)
         {
@@ -176,7 +178,9 @@ public sealed class ReflectionBencodeSerializer<TType> : BencodeSerializer<TType
             await member.Serializer.WriteToPipeAsync(value, writer, cancellationToken);
         }
 
-        await writer.WriteAsync(new byte[] { Bencode.TerminationCharacter }, cancellationToken);
+        span = writer.GetSpan(1);
+        span[0] = Bencode.TerminationCharacter;
+        writer.Advance(1);
     }
 
     private static TypeMetadata GetTypeMetadata()

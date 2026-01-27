@@ -32,7 +32,9 @@ internal static class PipeWriterUtils
             throw new ArgumentNullException(nameof(writer));
 
         // Write 'i'
-        await writer.WriteAsync(new byte[] { Bencode.IntegerBeginCharacter }, cancellationToken);
+        Span<byte> span = writer.GetSpan(1);
+        span[0] = Bencode.IntegerBeginCharacter;
+        writer.Advance(1);
 
         ulong absValue;
         bool negative = false;
@@ -77,7 +79,9 @@ internal static class PipeWriterUtils
         // Special case 0
         if (absValue == 0)
         {
-            await writer.WriteAsync(new byte[] { Bencode.MinNumberCharacter }, cancellationToken);
+            span = writer.GetSpan(1);
+            span[0] = Bencode.MinNumberCharacter;
+            writer.Advance(1);
         }
         else
         {
@@ -96,11 +100,16 @@ internal static class PipeWriterUtils
                 buffer[--pos] = (byte)'-';
             }
 
-            await writer.WriteAsync(buffer[pos..].ToArray(), cancellationToken);
+            ReadOnlySpan<byte> remaining = buffer[pos..];
+            span = writer.GetSpan(remaining.Length);
+            remaining.CopyTo(span);
+            writer.Advance(remaining.Length);
         }
 
         // Write 'e'
-        await writer.WriteAsync(new byte[] { Bencode.TerminationCharacter }, cancellationToken);
+        span = writer.GetSpan(1);
+        span[0] = Bencode.TerminationCharacter;
+        writer.Advance(1);
     }
 
     /// <summary>
@@ -157,9 +166,6 @@ internal static class PipeWriterUtils
             writer.Advance(writeSize);
 
             remaining = remaining.Slice(writeSize);
-
-            // allow PipeWriter to flush asynchronously
-            await writer.FlushAsync(cancellationToken).ConfigureAwait(false);
         }
     }
 
@@ -229,8 +235,6 @@ internal static class PipeWriterUtils
                 writer.Advance(bytesUsed);
 
                 charsProcessed += charsUsed;
-
-                await writer.FlushAsync(cancellationToken).ConfigureAwait(false);
             }
 
             // Flush any remaining encoder state
@@ -240,7 +244,6 @@ internal static class PipeWriterUtils
                 var finalSpan = writer.GetSpan(finalBytes);
                 rentedBuffer.AsSpan(0, finalBytes).CopyTo(finalSpan);
                 writer.Advance(finalBytes);
-                await writer.FlushAsync(cancellationToken).ConfigureAwait(false);
             }
         }
         finally

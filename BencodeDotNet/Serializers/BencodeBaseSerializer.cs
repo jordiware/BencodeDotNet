@@ -195,7 +195,7 @@ public abstract class BencodeSerializer<TOrigin, TTarget> : IBencodeSerializer
         if (!TrySerialize(input, out var bobject) || bobject is null)
             throw new BencodeSerializerException($"Serialization of {typeof(TOrigin)} failed; no Bencode object was produced.");
 
-        await writer.WriteAsync(bobject.ToBinaryEncoding(), cancellationToken);
+        await bobject.WriteToPipeAsync(writer, cancellationToken);
     }
 
     /// <inheritdoc />

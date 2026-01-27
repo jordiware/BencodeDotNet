@@ -218,7 +218,9 @@ public sealed class DictionaryBencodeSerializer<TKey, TValue> : ReferenceTypeBen
             return (new Bstring(serializedKey!.ToBinaryEncoding()), kvp.Key!);
         }).ToDictionary().ToImmutableSortedDictionary();
 
-        await writer.WriteAsync(new byte[] { Bencode.DictionaryBeginCharacter }, cancellationToken);
+        Span<byte> span = writer.GetSpan(1);
+        span[0] = Bencode.DictionaryBeginCharacter;
+        writer.Advance(1);
 
         foreach (var bkey in orderedDictionary.Keys)
         {
@@ -228,7 +230,9 @@ public sealed class DictionaryBencodeSerializer<TKey, TValue> : ReferenceTypeBen
             await valueSerializer.WriteToPipeAsync(value!, writer, cancellationToken);
         }
 
-        await writer.WriteAsync(new byte[] { Bencode.TerminationCharacter }, cancellationToken);
+        span = writer.GetSpan(1);
+        span[0] = Bencode.TerminationCharacter;
+        writer.Advance(1);
     }
 
     /// <summary>
