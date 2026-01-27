@@ -5,10 +5,10 @@
     <File Path="README.md" />
   </Folder>
   <Folder Name="/Docfiles/Docs/">
-    <File Path="docs/encoding_and_decoding.md" />
+    <File Path="docs/encoding_writing.md" />
+    <File Path="docs/reading_decoding.md" />
     <File Path="docs/README.md" />
     <File Path="docs/serializers.md" />
-    <File Path="docs/streamed_read_write.md" />
     <File Path="docs/validation_and_limits.md" />
   </Folder>
   <Project Path="BencodeDotNet.Tests/BencodeDotNet.Tests.csproj" Id="e9ccd9a9-3592-40c6-a056-15b44a39530a" />

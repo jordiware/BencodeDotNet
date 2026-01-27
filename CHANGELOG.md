@@ -1,10 +1,10 @@
 ﻿# v0.3.0
 
 ## Added
-- Reflection-based serializer for complex/POCO types
 - Asynchronous Stream-based reader and writer APIs
-- Custom `BencodeException` types
+- Reflection-based serializer for complex/POCO types
 - Dedicated `byte[]` serializer: `ByteArraySerializer`
+- Custom `BencodeException` types
 
 ## Changed
 - `Bencoder` type renamed as `BencodeEncoder`
@@ -37,4 +37,4 @@
 - Streamed asynchronous decoder for Bencode data
 
 ## Notes
-- `BencodeOptions` were partially enforced and not consistently applied across all decoding paths
+- `BencodeOptions` partially enforced and not consistently applied
