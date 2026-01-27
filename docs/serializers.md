@@ -46,6 +46,45 @@ Key characteristics:
 
 Consumers are not expected to implement this interface directly. Instead, serializers should derive from the strongly typed base classes described below.
 
+#### Required Methods
+
+##### `TrySerialize`
+
+```csharp
+bool TrySerialize(object input, out IBobject? output);
+```
+
+- Serializes a CLR value to a Bencode object.
+- Returns `true` if successful, `false` otherwise.
+- `output` must be either fully valid or `null` on failure.
+- Must validate that the runtime type of `input` is supported.
+- Must respect `BencodeOptions` constraints.
+- **Do not partially initialize** output on failure.
+
+##### `TryDeserialize`
+
+```csharp
+bool TryDeserialize(IBobject input, out object? output);
+```
+
+- Deserializes a Bencode object into a CLR value.
+- Returns `true` if successful, `false` otherwise.
+- `output` must be fully defined when `true`, or `null` on failure.
+- Must validate compatibility between `input` and the target CLR type.
+
+##### `WriteToPipeAsync`
+
+```csharp
+Task WriteToPipeAsync(object input, PipeWriter writer, CancellationToken cancellationToken = default);
+```
+
+- Serializes a CLR value **directly to a `PipeWriter`** in Bencode format.
+- Avoids creating intermediate `IBobject` instances.
+- Intended for high-performance streaming.
+- The `PipeWriter` is **owned by the caller**; do **not flush, complete, or dispose** it.
+- Must respect `CancellationToken`.
+- Partial output may occur if canceled; only `OperationCanceledException` is allowed.
+
 ---
 
 ### `BencodeSerializer<TOrigin, TTarget>`
@@ -109,6 +148,7 @@ Developers who need to extend BencodeDotNet with custom serialization logic shou
 ```csharp
 bool TrySerialize(TOrigin input, out TTarget? output);
 bool TryDeserialize(TTarget input, out TOrigin? output);
+Task WriteToPipeAsync(TOrigin input, PipeWriter writer, CancellationToken cancellationToken = default);
 ```
 
 Guidelines:
