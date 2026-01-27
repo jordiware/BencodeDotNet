@@ -81,7 +81,7 @@ public sealed class IntBencodeSerializer : UnmanagedTypeBencodeSerializer<int, B
     /// </param>
     public override async Task WriteToPipeAsync(int input, PipeWriter writer, CancellationToken cancellationToken = default)
     {
-        await BencodePipeWriter.WriteIntegerAsync(input, writer, cancellationToken);
+        await PipeWriterUtils.WriteIntegerAsync(input, writer, cancellationToken);
     }
 }
 
@@ -162,6 +162,6 @@ public sealed class UintBencodeSerializer : UnmanagedTypeBencodeSerializer<uint,
     /// </param>
     public override async Task WriteToPipeAsync(uint input, PipeWriter writer, CancellationToken cancellationToken = default)
     {
-        await BencodePipeWriter.WriteIntegerAsync(input, writer, cancellationToken);
+        await PipeWriterUtils.WriteIntegerAsync(input, writer, cancellationToken);
     }
 }

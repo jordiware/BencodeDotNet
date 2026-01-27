@@ -1,12 +1,11 @@
-﻿
-using Jordiware.BencodeDotNet.Objects;
+﻿using Jordiware.BencodeDotNet.Objects;
 using Jordiware.BencodeDotNet.Serializers;
 using System.IO.Pipelines;
 using System.Text;
 
 namespace Jordiware.BencodeDotNet.Tests.IO;
 
-public class BencodeWriterTests
+public class WriterTests
 {
     [Theory]
     [InlineData(null)]

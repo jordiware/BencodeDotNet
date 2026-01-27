@@ -1,6 +1,6 @@
-﻿using System.Collections;
+﻿using System.Buffers.Text;
+using System.Collections;
 using System.Collections.Immutable;
-using System.Globalization;
 using System.IO.Pipelines;
 using System.Text;
 
@@ -213,9 +213,19 @@ public sealed class Bstring : IBobject, IReadOnlyList<byte>, IEquatable<Bstring>
     /// </remarks>
     public async Task WriteToPipeAsync(PipeWriter writer, CancellationToken cancellationToken = default)
     {
-        await writer.WriteAsync(Encoding.ASCII.GetBytes(Value.Length.ToString(CultureInfo.InvariantCulture)), cancellationToken);
-        await writer.WriteAsync(new[] { (byte)':' }, cancellationToken);
-        await writer.WriteAsync(Value, cancellationToken);
+        Span<byte> span = writer.GetSpan(32);
+
+        int written = 0;
+        if (!Utf8Formatter.TryFormat(_bytes.Length, span, out int lengthDigits))
+            throw new InvalidOperationException("Failed to format string length.");
+
+        written += lengthDigits;
+
+        span[written++] = (byte)':';
+
+        writer.Advance(written);
+
+        await writer.WriteAsync(_bytes.AsMemory(), cancellationToken);
     }
 
     IEnumerator IEnumerable.GetEnumerator()

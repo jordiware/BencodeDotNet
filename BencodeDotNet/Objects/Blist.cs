@@ -159,14 +159,18 @@ public sealed class Blist : IBobject, IReadOnlyList<IBobject>, IEquatable<Blist>
     /// </remarks>
     public async Task WriteToPipeAsync(PipeWriter writer, CancellationToken cancellationToken = default)
     {
-        await writer.WriteAsync(new[] { Bencode.ListBeginCharacter }, cancellationToken);
+        Span<byte> span = writer.GetSpan(1);
+        span[0] = Bencode.ListBeginCharacter;
+        writer.Advance(1);
 
         foreach (var item in _objects)
         {
             await item.WriteToPipeAsync(writer, cancellationToken);
         }
 
-        await writer.WriteAsync(new[] { Bencode.TerminationCharacter }, cancellationToken);
+        span = writer.GetSpan(1);
+        span[0] = Bencode.TerminationCharacter;
+        writer.Advance(1);
     }
 
     IEnumerator IEnumerable.GetEnumerator()

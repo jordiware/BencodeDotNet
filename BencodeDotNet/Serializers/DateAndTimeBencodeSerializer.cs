@@ -79,7 +79,7 @@ public sealed class DateTimeBencodeSerializer : UnmanagedTypeBencodeSerializer<D
     /// </remarks>
     public override async Task WriteToPipeAsync(DateTime input, PipeWriter writer, CancellationToken cancellationToken = default)
     {
-        await BencodePipeWriter.WriteIntegerAsync(input.ToBinary(), writer, cancellationToken);
+        await PipeWriterUtils.WriteIntegerAsync(input.ToBinary(), writer, cancellationToken);
     }
 }
 
@@ -166,7 +166,7 @@ public sealed class DateOnlyBencodeSerializer : UnmanagedTypeBencodeSerializer<D
     /// </remarks>
     public override async Task WriteToPipeAsync(DateOnly input, PipeWriter writer, CancellationToken cancellationToken = default)
     {
-        await BencodePipeWriter.WriteIntegerAsync(input.DayNumber, writer, cancellationToken);
+        await PipeWriterUtils.WriteIntegerAsync(input.DayNumber, writer, cancellationToken);
     }
 }
 
@@ -253,7 +253,7 @@ public sealed class TimeOnlyBencodeSerializer : UnmanagedTypeBencodeSerializer<T
 
     public override async Task WriteToPipeAsync(TimeOnly input, PipeWriter writer, CancellationToken cancellationToken = default)
     {
-        await BencodePipeWriter.WriteIntegerAsync(input.Ticks, writer, cancellationToken);
+        await PipeWriterUtils.WriteIntegerAsync(input.Ticks, writer, cancellationToken);
     }
 }
 
@@ -340,6 +340,6 @@ public sealed class TimeSpanBencodeSerializer : UnmanagedTypeBencodeSerializer<T
     /// </remarks>
     public override async Task WriteToPipeAsync(TimeSpan input, PipeWriter writer, CancellationToken cancellationToken = default)
     {
-        await BencodePipeWriter.WriteIntegerAsync(input.Ticks, writer, cancellationToken);
+        await PipeWriterUtils.WriteIntegerAsync(input.Ticks, writer, cancellationToken);
     }
 }

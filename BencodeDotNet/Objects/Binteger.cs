@@ -1,8 +1,6 @@
-﻿using System.Buffers;
-using System.Globalization;
+﻿using System.Buffers.Text;
 using System.IO.Pipelines;
 using System.Text;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Jordiware.BencodeDotNet.Objects;
 
@@ -144,11 +142,24 @@ public sealed class Binteger : IBobject, IEquatable<Binteger>, IComparable<Binte
     /// an invariant culture representation.
     /// </para>
     /// </remarks>
-    public async Task WriteToPipeAsync(PipeWriter writer, CancellationToken cancellationToken = default)
+    public Task WriteToPipeAsync(PipeWriter writer, CancellationToken cancellationToken = default)
     {
-        await writer.WriteAsync(new[] { Bencode.IntegerBeginCharacter }, cancellationToken);
-        await writer.WriteAsync(Encoding.ASCII.GetBytes(Value.ToString(CultureInfo.InvariantCulture)), cancellationToken);
-        await writer.WriteAsync(new[] { Bencode.TerminationCharacter }, cancellationToken);
+        Span<byte> span = writer.GetSpan(32);
+
+        int written = 0;
+
+        span[written++] = Bencode.IntegerBeginCharacter;
+
+        if (!Utf8Formatter.TryFormat(_value, span.Slice(written), out int digitsWritten))
+            throw new BencodeFormatException("Failed to format integer.");
+
+        written += digitsWritten;
+
+        span[written++] = Bencode.TerminationCharacter;
+
+        writer.Advance(written);
+
+        return Task.CompletedTask;
     }
     #endregion
 

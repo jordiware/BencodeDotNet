@@ -225,7 +225,9 @@ public sealed class Bdictionary : IBobject, IReadOnlyDictionary<Bstring, IBobjec
     /// </remarks>
     public async Task WriteToPipeAsync(PipeWriter writer, CancellationToken cancellationToken = default)
     {
-        await writer.WriteAsync(new[] { Bencode.DictionaryBeginCharacter }, cancellationToken);
+        Span<byte> span = writer.GetSpan(1);
+        span[0] = Bencode.DictionaryBeginCharacter;
+        writer.Advance(1);
 
         foreach (var (key, value) in _keyValuePairs)
         {
@@ -233,7 +235,9 @@ public sealed class Bdictionary : IBobject, IReadOnlyDictionary<Bstring, IBobjec
             await value.WriteToPipeAsync(writer, cancellationToken);
         }
 
-        await writer.WriteAsync(new[] { Bencode.TerminationCharacter }, cancellationToken);
+        span = writer.GetSpan(1);
+        span[0] = Bencode.TerminationCharacter;
+        writer.Advance(1);
     }
 
     IEnumerator IEnumerable.GetEnumerator()

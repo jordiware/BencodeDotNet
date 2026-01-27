@@ -4,7 +4,7 @@ using Jordiware.BencodeDotNet.Serializers;
 
 namespace Jordiware.BencodeDotNet.Tests.IO;
 
-public class BencoderTests
+public class EncoderTests
 {
     [BencodeSerializer(typeof(AttributedSerializer))]
     public sealed class AttributedType
@@ -12,8 +12,7 @@ public class BencoderTests
         public int Value { get; init; }
     }
 
-    private sealed class AttributedSerializer
-        : BencodeSerializer<AttributedType, Binteger>
+    private sealed class AttributedSerializer : BencodeSerializer<AttributedType, Binteger>
     {
         public override bool TryDeserialize(Binteger input, out AttributedType? output)
         {
@@ -27,8 +26,7 @@ public class BencoderTests
         }
     }
 
-    private sealed class FailingSerializer
-        : BencodeSerializer<AttributedType, Binteger>
+    private sealed class FailingSerializer : BencodeSerializer<AttributedType, Binteger>
     {
         public override bool TryDeserialize(Binteger input, out AttributedType? output)
         {
@@ -42,8 +40,7 @@ public class BencoderTests
         }
     }
 
-    private sealed class NullResultSerializer
-        : BencodeSerializer<AttributedType, Binteger>
+    private sealed class NullResultSerializer : BencodeSerializer<AttributedType, Binteger>
     {
         public override bool TryDeserialize(Binteger input, out AttributedType? output)
         {
@@ -57,8 +54,7 @@ public class BencoderTests
         }
     }
 
-    private sealed class ListSerializer
-        : BencodeSerializer<AttributedType, Blist>
+    private sealed class ListSerializer : BencodeSerializer<AttributedType, Blist>
     {
         public override bool TryDeserialize(Blist input, out AttributedType? output)
         {

@@ -4,7 +4,7 @@ using System.Text;
 
 namespace Jordiware.BencodeDotNet.Utils;
 
-internal static class BencodePipeWriter
+internal static class PipeWriterUtils
 {
     /// <summary>
     /// Writes an integer value to the provided <see cref="PipeWriter"/> using the

@@ -83,7 +83,7 @@ public sealed class NumericByteBencodeSerializer : UnmanagedTypeBencodeSerialize
     /// </param>
     public override async Task WriteToPipeAsync(byte input, PipeWriter writer, CancellationToken cancellationToken = default)
     {
-        await BencodePipeWriter.WriteIntegerAsync(input, writer, cancellationToken);
+        await PipeWriterUtils.WriteIntegerAsync(input, writer, cancellationToken);
     }
 }
 
@@ -164,6 +164,6 @@ public sealed class SbyteBencodeSerializer : UnmanagedTypeBencodeSerializer<sbyt
     /// </param>
     public override async Task WriteToPipeAsync(sbyte input, PipeWriter writer, CancellationToken cancellationToken = default)
     {
-        await BencodePipeWriter.WriteIntegerAsync(input, writer, cancellationToken);
+        await PipeWriterUtils.WriteIntegerAsync(input, writer, cancellationToken);
     }
 }

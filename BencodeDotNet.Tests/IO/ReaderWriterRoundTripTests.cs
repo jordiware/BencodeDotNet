@@ -3,7 +3,7 @@ using System.Text;
 
 namespace Jordiware.BencodeDotNet.Tests.IO;
 
-public class BencodeReaderWriterRoundTripTests
+public class ReaderWriterRoundTripTests
 {
     [Fact]
     public async Task RoundTripIntegerPreservesValue()
@@ -78,7 +78,7 @@ public class BencodeReaderWriterRoundTripTests
 
         stream.Position = 0;
 
-        var streamedArray = await reader.ReadAsync(stream).ToArrayAsync();
+        var streamedArray = await reader.ReadMultipleAsync(stream).ToArrayAsync();
 
         var first = streamedArray[0];
         var second = streamedArray[1];
@@ -134,7 +134,7 @@ public class BencodeReaderWriterRoundTripTests
             await writer.WriteBencodeAsync(bobject, stream1);
 
         stream1.Position = 0;
-        var decoded = await reader.ReadAsync(stream1).ToArrayAsync();
+        var decoded = await reader.ReadMultipleAsync(stream1).ToArrayAsync();
 
         using var stream2 = new MemoryStream();
         foreach (var bobject in decoded)
@@ -153,6 +153,6 @@ public class BencodeReaderWriterRoundTripTests
         await writer.WriteBencodeAsync(value, stream);
         stream.Position = 0;
 
-        return await reader.ReadAsync(stream).FirstOrDefaultAsync();
+        return await reader.ReadMultipleAsync(stream).FirstOrDefaultAsync();
     }
 }

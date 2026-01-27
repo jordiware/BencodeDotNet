@@ -226,6 +226,12 @@ public static class BencodeSerializer
         if (type == typeof(string))
             return false;
 
+        if (type == typeof(byte[]))
+        {
+            instance = new ByteArraySerializer();
+            return true;
+        }
+
         var typeInterfaces = type.IsInterface ? (new Type[] { type }).Concat(type.GetInterfaces()).ToArray() : type.GetInterfaces();
         if (typeInterfaces is null || typeInterfaces.Length == 0)
             return false;

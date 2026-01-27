@@ -2,7 +2,7 @@
 
 namespace Jordiware.BencodeDotNet.Tests.IO;
 
-public class BdecoderGenericDecodeTests
+public class DecoderGenericDecodeTests
 {
     [Theory]
     [InlineData("i42e")]
@@ -34,17 +34,5 @@ public class BdecoderGenericDecodeTests
         var bytes = Encoding.ASCII.GetBytes(input);
 
         Assert.Throws<BencodeSerializerException>(() => decoder.Decode<string>(bytes));
-    }
-
-    [Theory]
-    [InlineData("i42e")]
-    public async Task DecodeAsyncThrowsIfCancelled(string input)
-    {
-        var decoder = new BencodeDecoder();
-        using var stream = new MemoryStream(Encoding.ASCII.GetBytes(input));
-        using var cts = new CancellationTokenSource();
-        cts.Cancel();
-
-        await Assert.ThrowsAsync<TaskCanceledException>(() => decoder.DecodeAsync<int>(stream, cts.Token));
     }
 }

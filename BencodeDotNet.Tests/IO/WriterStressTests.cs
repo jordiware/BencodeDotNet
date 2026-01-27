@@ -5,7 +5,7 @@ using System.Text;
 
 namespace Jordiware.BencodeDotNet.Tests.IO;
 
-public class BencodeWriterStressTests
+public class WriterStressTests
 {
     [Theory]
     [InlineData(1_000)]
