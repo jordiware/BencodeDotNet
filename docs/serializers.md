@@ -1,29 +1,41 @@
 # Serializers
 
-This document describes the serializer model used by **BencodeDotNet**, including how built-in serializers are resolved, how primitive and framework types are handled, and how consumers can extend the system by implementing custom serializers.
+This document explains how **BencodeDotNet** converts between CLR objects and Bencode values using its serializer system. It covers the core concepts, the serializer contracts, how serializers are resolved at runtime, what is built in, and how consumers can safely extend the system.
 
-The serializer system is intentionally explicit, non-reflective, and non-throwing. Its goal is to provide predictable, safe, and easily auditable serialization behavior for Bencode data.
+The serializer model is intentionally explicit, non-reflective by default, and largely non-throwing. Its goal is to provide predictable, auditable, and safe behavior when encoding and decoding Bencode data.
 
 ---
 
-## Overview
+## At a Glance
 
-A _serializer_ in BencodeDotNet is responsible for converting between:
+- Serializers convert between a CLR type (**origin**) and a concrete `IBobject` (**target**)
+- All serializers follow a **non-throwing** `Try*` contract
+- Serializer resolution is centralized and deterministic
+- Built-in serializers are immutable and reserved for framework types
+- Custom serializers are opt-in and explicitly declared
 
-- A CLR type (the **origin** type)
-- A concrete Bencode object type implementing `IBobject` (the **target** type)
+---
 
-Serialization and deserialization are symmetrical whenever possible and always follow a **non-throwing** contract: failures are reported via a `bool` return value, never via exceptions.
+## Core Concept
+
+A **serializer** in BencodeDotNet is responsible for converting between:
+
+- A CLR type (the *origin* type)
+- A concrete Bencode object implementing `IBobject` (the *target* type)
+
+Serialization and deserialization are symmetrical whenever possible and always follow a non-throwing contract: failures are reported via a `bool` return value rather than exceptions.
 
 At runtime, serializers are resolved dynamically based on a CLR `Type` using a centralized resolver.
 
 ---
 
-## Core Contracts
+## Serializer Contracts
+
+Understanding the serializer contracts is essential before implementing or extending the system.
 
 ### `IBencodeSerializer`
 
-`IBencodeSerializer` defines the non-generic boundary used by the serializer registry and dynamic dispatch mechanisms.
+`IBencodeSerializer` defines the non-generic boundary used internally by the serializer registry and resolver.
 
 Key characteristics:
 
@@ -32,7 +44,7 @@ Key characteristics:
 - Used exclusively for runtime resolution and invocation
 - **Must never throw exceptions**
 
-Consumers are expected to build serializers by deriving from the strongly typed base classes described below, rather than implementing this interface directly.
+Consumers are not expected to implement this interface directly. Instead, serializers should derive from the strongly typed base classes described below.
 
 ---
 
@@ -45,17 +57,17 @@ This is the canonical base class for all serializers.
 
 Responsibilities:
 
-- Provide strongly typed `TrySerialize` / `TryDeserialize` methods
+- Expose strongly typed `TrySerialize` / `TryDeserialize` methods
 - Adapt those methods to the non-generic `IBencodeSerializer` interface
-- Enforce type safety at runtime
+- Enforce runtime type safety
 
 All concrete serializers in BencodeDotNet derive (directly or indirectly) from this class.
 
 ---
 
-### Specialized Base Classes
+## Specialized Base Classes
 
-#### Reference Types
+### Reference Types
 
 `ReferenceTypeBencodeSerializer<TOrigin, TTarget>` is intended for reference types:
 
@@ -68,53 +80,91 @@ Typical responsibilities include:
 - Creating new instances during deserialization
 - Delegating serialization of nested values
 
-#### Unmanaged Value Types
+---
+
+### Unmanaged Value Types
 
 `UnmanagedTypeBencodeSerializer<TOrigin, TTarget>` targets unmanaged value types:
 
 - `TOrigin` must be `unmanaged`
 - Intended for primitives and blittable framework types
 
-Deserialization guarantees that when the method returns `true`, the output value is fully defined.
+Deserialization guarantees that when the method returns `true`, the output value is fully initialized.
+
+---
+
+## Implementing a Custom Serializer
+
+Developers who need to extend BencodeDotNet with custom serialization logic should start here.
+
+### 1. Choose the Right Base Class
+
+- `UnmanagedTypeBencodeSerializer<TOrigin, TTarget>` for primitives and blittable structs
+- `ReferenceTypeBencodeSerializer<TOrigin, TTarget>` for classes and composite types
+
+---
+
+### 2. Implement the Typed Methods
+
+```csharp
+bool TrySerialize(TOrigin input, out TTarget? output);
+bool TryDeserialize(TTarget input, out TOrigin? output);
+```
+
+Guidelines:
+
+- Always derive from `BencodeSerializer<TOrigin, TTarget>`
+- Never throw exceptions
+- Fully validate before producing output
+- Return `false` on any failure
+- Do not partially initialize outputs
+
+---
+
+### 3. Declare or Provide the Serializer
+
+Extend the system using **one** of the following:
+
+- Apply `BencodeSerializerAttribute` to the CLR type (recommended)
+- Pass an explicit serializer instance to APIs that accept it
+
+Custom serializers must not attempt to modify the built-in registry.
+
+---
+
+## How Serializers Are Resolved
+
+When a serializer is requested for a CLR type, resolution proceeds in the following order:
+
+1. **Explicit serializer passed as a parameter**
+2. **Serializer declared via attribute on the type**
+3. **Dictionary, array, and enumerable serializers**
+4. **Built-in serializer registry**
+5. **Reflection-based serializer (fallback)**
+
+Resolution stops at the first successful match.
+
+No exceptions are propagated during resolution; failures are reported via return values.
 
 ---
 
 ## Built-in Serializer Registry
 
-The built-in serializer registry is **immutable** and reserved exclusively for primitive and framework types shipped with BencodeDotNet.
-
-Primitive and framework serializers are registered explicitly in a centralized registry.
+The built-in serializer registry contains serializers for primitive and framework types shipped with BencodeDotNet.
 
 ```csharp
 BencodeSerializer.TypeSerializers
 ```
 
-Characteristics of the registry:
+Registry characteristics:
 
 - Immutable and thread-safe
 - Maps CLR types to **serializer types**, not instances
-- Reserved exclusively for built-in primitive and framework serializers
-- **Cannot be extended or modified by consumers**
+- Reserved exclusively for built-in serializers
+- **Cannot be modified or extended by consumers**
 - No reflection-based scanning or auto-registration
 
-Serializer instances are created on demand using `Activator.CreateInstance`.
-
-Any construction or validation failure results in a graceful `false` return.
-
----
-
-## Serializer Resolution Order
-
-When a serializer is requested for a CLR type, resolution proceeds in the following order:
-
-1. **Attribute-declared serializer**
-2. **Enumerable and dictionary serializers**
-3. **Built-in registry lookup**
-4. **Reflection-based serializer** (if the type is eligible)
-
-Resolution stops at the first successful match.
-
-No exceptions are propagated during resolution.
+Serializer instances are created on demand using `Activator.CreateInstance`. Any construction or validation failure results in a graceful `false` return.
 
 ---
 
@@ -132,39 +182,37 @@ public sealed class MyType
 
 ### Rules and Constraints
 
-- The attribute participates in the **first tier** of resolution
+- Participates in the **first tier** of resolution
 - The declared serializer type:
   - Must implement `IBencodeSerializer`
   - **Must derive from** `BencodeSerializer<TOrigin, TTarget>`
   - Must declare `TOrigin` **exactly equal** to the annotated type
 - Open generic serializer types are rejected
 
-The attribute is **metadata-only**:
+The attribute is metadata-only:
 
 - It does not instantiate serializers
-- It does not influence global registration
+- It does not affect global registration
 
-All instantiation is performed by the central resolver.
-
-Optional constructor arguments may be supplied via the attribute and are forwarded during instantiation.
+All instantiation is handled by the central resolver. Optional constructor arguments supplied via the attribute are forwarded during creation.
 
 ---
 
-## Enumerable and Dictionary Serializers
+## Collection Serializers
 
-BencodeDotNet provides built-in support for common collection abstractions.
+BencodeDotNet includes built-in support for common collection abstractions.
 
 ### Dictionaries
 
-Types implementing `IDictionary<TKey, TValue>` are handled by:
-
-- `DictionaryBencodeSerializer<TKey, TValue>`
+Types implementing `IDictionary<TKey, TValue>` are handled by `DictionaryBencodeSerializer<TKey, TValue>`.
 
 Dictionary serializers:
 
-- Require both key and value serializers to be resolvable
-- Enforce key validity and ordering rules
+- Require resolvable serializers for both keys and values
+- Enforce Bencode dictionary key rules and ordering
 - Reject unsupported or invalid key types
+
+---
 
 ### Enumerables
 
@@ -173,140 +221,95 @@ Types implementing `IEnumerable<T>` are handled by:
 - `ArrayBencodeSerializer<T>` for arrays
 - `EnumerableBencodeSerializer<T>` for other enumerable types
 
-`string` is explicitly excluded from enumerable handling.
+`string` and `byte[]` are explicitly excluded and have dedicated serializers.
 
 Enumerable serializers:
 
 - Serialize elements in sequence order
-- Delegate element serialization to the resolved element serializer
+- Delegate element handling to the resolved element serializer
 - Fail if any element cannot be serialized
 
 ---
 
-## Reflection-based serializer
+## Reflection-Based Serializer (Fallback)
 
-BencodeDotNet provides an optional **reflection-based serializer** that enables automatic serialization and deserialization of simple object (POCO) types without requiring a custom serializer implementation.
+BencodeDotNet provides an optional **reflection-based serializer** as a last-resort fallback when no explicit or registered serializer is available.
 
-This serializer acts as a **fallback mechanism** in the serializer resolution process and is only used when no explicit serializer is declared via attributes and no registered serializer exists for the target type.
+This mechanism is intentionally conservative and designed to cover simple POCO scenarios without introducing ambiguity or hidden behavior.
 
-### Purpose and scope
+### Eligibility
 
-The reflection-based serializer is designed to cover common, straightforward scenarios:
+A type is eligible only if all of the following are true:
 
-- Plain CLR objects with a public parameterless constructor
-- Public instance members (properties or fields)
-- Member types that already have resolvable Bencode serializers
+- The type is not abstract or an interface
+- The type is not `object`
+- The type is not a primitive, enum, or pointer
+- The type declares a public parameterless constructor
 
-It intentionally avoids attempting to support complex or ambiguous cases (inheritance hierarchies, polymorphism, private members, etc.) in order to keep behavior predictable and safe.
-
-### Supported types
-
-A type is eligible for reflection-based serialization only if all of the following conditions are met:
-
-- The type is **not** abstract
-- The type is **not** an interface
-- The type is **not** `object`
-- The type is **not** a primitive, enum, or pointer type
-- The type declares a **public parameterless constructor**
-
-If any of these conditions are not satisfied, the reflection-based serializer will not be instantiated.
-
-### Member discovery
-
-During serializer initialization, the type is inspected once using reflection and a metadata cache is built. Only the following members are considered:
-
-- Public instance properties or fields
-- Members with both a readable getter and a writable setter
-- Members whose types have a resolvable Bencode serializer
-
-Private members, static members, and members without setters are intentionally ignored.
-
-Each eligible member is mapped to a Bencode dictionary entry using its resolved key and serializer.
-
-### Serialization behavior
-
-When serializing an object:
-
-- A new `Bdictionary` is created
-- Each eligible member is read using its compiled getter
-- Members whose values are `null` are skipped
-- Each non-null value is serialized using the resolved member serializer
-- The resulting key/value pairs are added to the dictionary
-
-If a member serializer fails unexpectedly, serialization throws an `InvalidOperationException`.
-
-### Deserialization behavior
-
-When deserializing a `Bdictionary`:
-
-- A new instance of the target type is created using its parameterless constructor
-- Each key/value pair in the dictionary is processed
-- If a key does not correspond to a known member, it is ignored
-- If a matching member is found:
-  - The value is deserialized using the member’s serializer
-  - The resulting value is assigned using the compiled setter
-
-Unknown dictionary keys are silently ignored, allowing forward-compatible payloads.
-
-If a member fails to deserialize, an `InvalidOperationException` is thrown.
+If any condition fails, the reflection-based serializer is not used.
 
 ---
 
-## Implementing a Custom Serializer
+### Member Discovery
 
-### Step 1: Derive from the Correct Base Class
+During initialization, the type is inspected once and a metadata cache is built.
 
-- Use `UnmanagedTypeBencodeSerializer<TOrigin, TTarget>` for primitives or blittable structs
-- Use `ReferenceTypeBencodeSerializer<TOrigin, TTarget>` for classes and composite types
+Eligible members:
 
-### Step 2: Implement the Typed Methods
+- Public instance properties or fields
+- Readable and writable members only
+- Member types with resolvable serializers
 
-Implement:
+Private members, static members, and write-only or read-only members are ignored.
 
-```csharp
-bool TrySerialize(TOrigin input, out TTarget? output);
-bool TryDeserialize(TTarget input, out TOrigin? output);
-```
+Each eligible member maps to a dictionary entry using its resolved key and serializer.
 
-Guidelines:
+---
 
-- Always derive from `BencodeSerializer<TOrigin, TTarget>` (directly or indirectly)
-- Choose the appropriate specialization for your CLR type
-- Never throw exceptions
-- Perform full validation before producing output
-- Return `false` on any failure
-- Do not partially initialize output values
+### Serialization Behavior
 
-### Step 3: Declare or Register
+When serializing:
 
-Choose **one** of the following extension mechanisms:
+- A new `Bdictionary` is created
+- Each eligible member value is read
+- `null` values are skipped
+- Non-null values are serialized via the member serializer
+- Key/value pairs are added to the dictionary
 
-- Apply `BencodeSerializerAttribute` to the target CLR type (the standard and recommended approach for custom or extensible types)
-- Pass an explicit serializer instance to encoding or decoding APIs that accept custom serializers
+If a member serializer fails unexpectedly, an `InvalidOperationException` is thrown.
 
-Custom serializers **must not** attempt to register themselves in the built-in registry, which is immutable and reserved for framework and primitive types.
+---
+
+### Deserialization Behavior
+
+When deserializing:
+
+- A new instance is created via the parameterless constructor
+- Each dictionary entry is processed
+- Unknown keys are ignored
+- Known members are deserialized and assigned
+
+If a member fails to deserialize, an `InvalidOperationException` is thrown. This behavior allows forward-compatible payloads while maintaining strict member correctness.
 
 ---
 
 ## Common Pitfalls
 
-- Not deriving from `BencodeSerializer<TOrigin, TTarget>` when implementing a custom serializer
-- Using an incorrect `TOrigin` type in the serializer base class
+- Implementing `IBencodeSerializer` directly
+- Using an incorrect `TOrigin` type
 - Throwing exceptions instead of returning `false`
-- Relying on implicit registration or reflection-based discovery
-- Attempting to serialize unsupported nested types without resolvable serializers
+- Relying on implicit registration
+- Serializing nested types without resolvable serializers
 
 ---
 
 ## Design Intent
 
-The serializer system is designed to be:
+The serializer system prioritizes:
 
-- Explicit and auditable
-- Predictable in behavior
-- Safe under malformed or adversarial input
-- Easy to extend without global side effects
+- Explicit, auditable behavior
+- Deterministic resolution
+- Safety under malformed or adversarial input
+- Extension without global side effects
 
-All serializer resolution logic is centralized, and all failure modes are explicit.
-
-This design favors correctness and clarity over convenience or magic.
+Correctness and clarity are favored over convenience or implicit magic.
