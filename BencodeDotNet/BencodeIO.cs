@@ -42,7 +42,7 @@ public abstract class BencodeIO
     /// <see cref="IBObject"/> instances as they are completed.
     /// </summary>
     /// <param name="reader">The sequence reader supplying the bytes to parse.</param>
-    /// <param name="stack">A stack of <see cref="BobjectBuilder"/> instances used for nested structures.</param>
+    /// <param name="stack">A stack of <see cref="BObjectBuilder"/> instances used for nested structures.</param>
     /// <param name="value">
     /// When this method returns <c>true</c>, contains the top-level <see cref="IBObject"/>
     /// that was fully parsed; otherwise, <c>null</c>.
@@ -69,7 +69,7 @@ public abstract class BencodeIO
     /// or <see cref="InvalidOperationException"/> being thrown.
     /// </para>
     /// </remarks>
-    private protected bool TryParseBencode(ref SequenceReader<byte> reader, ref Stack<BobjectBuilder> stack, out IBObject? value)
+    private protected bool TryParseBencode(ref SequenceReader<byte> reader, ref Stack<BObjectBuilder> stack, out IBObject? value)
     {
         value = null;
 
@@ -77,7 +77,7 @@ public abstract class BencodeIO
         {
             if (stack.TryPeek(out var builder))
             {
-                if (builder is BintegerBuilder ib)
+                if (builder is BIntegerBuilder ib)
                 {
                     if (TryReadBintegerByte(ref ib, b, ref stack, out value))
                     {
@@ -87,7 +87,7 @@ public abstract class BencodeIO
                     }
                 }
 
-                if (builder is BstringBuilder sb)
+                if (builder is BStringBuilder sb)
                 {
                     if (TryReadBstringByte(ref sb, b, ref stack, out value))
                     {
@@ -112,22 +112,22 @@ public abstract class BencodeIO
                         return true;
                     break;
                 case Bencode.IntegerBeginCharacter:
-                    stack.Push(new BintegerBuilder());
+                    stack.Push(new BIntegerBuilder());
                     break;
                 case Bencode.ListBeginCharacter:
                     if (stack.Count >= _options.MaxDepth)
                         throw new BencodeValidationException("Maximum nesting depth exceeded");
 
-                    stack.Push(new BlistBuilder());
+                    stack.Push(new BListBuilder());
                     break;
                 case Bencode.DictionaryBeginCharacter:
                     if (stack.Count >= _options.MaxDepth)
                         throw new BencodeValidationException("Maximum nesting depth exceeded");
 
-                    stack.Push(new BdictionaryBuilder());
+                    stack.Push(new BDictionaryBuilder());
                     break;
                 case >= Bencode.MinNumberCharacter and <= Bencode.MaxNumberCharacter:
-                    var strBuilder = new BstringBuilder();
+                    var strBuilder = new BStringBuilder();
                     strBuilder.PushLengthDigit(b);
                     stack.Push(strBuilder);
                     break;
@@ -139,7 +139,7 @@ public abstract class BencodeIO
         return false;
     }
 
-    private bool TryReadBintegerByte(ref BintegerBuilder bintegerBuilder, byte b, ref Stack<BobjectBuilder> stack, out IBObject? value)
+    private bool TryReadBintegerByte(ref BIntegerBuilder bintegerBuilder, byte b, ref Stack<BObjectBuilder> stack, out IBObject? value)
     {
         value = null;
         switch (b)
@@ -159,7 +159,7 @@ public abstract class BencodeIO
         return false;
     }
 
-    private bool TryReadBstringByte(ref BstringBuilder bstringBuilder, byte b, ref Stack<BobjectBuilder> stack, out IBObject? value)
+    private bool TryReadBstringByte(ref BStringBuilder bstringBuilder, byte b, ref Stack<BObjectBuilder> stack, out IBObject? value)
     {
         value = null;
         if (b is >= Bencode.MinNumberCharacter and <= Bencode.MaxNumberCharacter && !bstringBuilder.IsLengthFinished)
@@ -188,12 +188,12 @@ public abstract class BencodeIO
         return false;
     }
 
-    private bool TryCloseStringBuilder(ref BstringBuilder bstringBuilder, ref Stack<BobjectBuilder> stack, out IBObject? value)
+    private bool TryCloseStringBuilder(ref BStringBuilder bstringBuilder, ref Stack<BObjectBuilder> stack, out IBObject? value)
     {
         value = null;
         if (bstringBuilder.IsCompleted)
         {
-            var sb = (BstringBuilder)stack.Pop();
+            var sb = (BStringBuilder)stack.Pop();
             var bstring = (BString)sb.ToBobject();
 
             if (AttachOrReturn(bstring, ref stack, out value))
@@ -202,7 +202,7 @@ public abstract class BencodeIO
         return false;
     }
 
-    private bool AttachOrReturn(IBObject obj, ref Stack<BobjectBuilder> stack, out IBObject? value)
+    private bool AttachOrReturn(IBObject obj, ref Stack<BObjectBuilder> stack, out IBObject? value)
     {
         value = null;
 
@@ -216,14 +216,14 @@ public abstract class BencodeIO
         return false;
     }
 
-    private void AttachToParent(BobjectBuilder parent, IBObject obj)
+    private void AttachToParent(BObjectBuilder parent, IBObject obj)
     {
         switch (parent)
         {
-            case BlistBuilder lb:
+            case BListBuilder lb:
                 lb.PushObject(obj);
                 break;
-            case BdictionaryBuilder db:
+            case BDictionaryBuilder db:
                 if (db.IsExpectingKey)
                 {
                     if (obj is BString bstring)

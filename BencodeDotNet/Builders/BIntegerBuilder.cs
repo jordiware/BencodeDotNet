@@ -21,18 +21,18 @@ namespace Jordiware.BencodeDotNet.Builders;
 /// a <see cref="BInteger"/> once construction is complete.
 /// </para>
 /// </remarks>
-internal sealed class BintegerBuilder : BobjectBuilder
+internal sealed class BIntegerBuilder : BObjectBuilder
 {
     private long? _value = null;
     private bool _isPositive = true;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="BintegerBuilder"/> class.
+    /// Initializes a new instance of the <see cref="BIntegerBuilder"/> class.
     /// </summary>
     /// <param name="options">
     /// Optional decoding options.
     /// </param>
-    public BintegerBuilder(BencodeOptions? options = default) : base(options)
+    public BIntegerBuilder(BencodeOptions? options = default) : base(options)
     {
     }
 

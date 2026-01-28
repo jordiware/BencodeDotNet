@@ -10,7 +10,7 @@ namespace Jordiware.BencodeDotNet.Builders;
 /// handling for builders that incrementally construct immutable
 /// <see cref="IBObject"/> instances.
 /// <para>
-/// Builders derived from <see cref="BobjectBuilder"/> are intended to be
+/// Builders derived from <see cref="BObjectBuilder"/> are intended to be
 /// used exclusively by the decoding pipeline and are not thread-safe.
 /// </para>
 /// <para>
@@ -23,7 +23,7 @@ namespace Jordiware.BencodeDotNet.Builders;
 /// </list>
 /// </para>
 /// </remarks>
-internal abstract class BobjectBuilder : IBobjectBuilder
+internal abstract class BObjectBuilder : IBObjectBuilder
 {
     private bool _isDisposed = false;
     private readonly BencodeOptions _options;
@@ -45,14 +45,14 @@ internal abstract class BobjectBuilder : IBobjectBuilder
     }
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="BobjectBuilder"/> class
+    /// Initializes a new instance of the <see cref="BObjectBuilder"/> class
     /// with the specified decoding options.
     /// </summary>
     /// <param name="options">
     /// The decoding options to apply. If <see langword="null"/>, default
     /// options are used.
     /// </param>
-    protected BobjectBuilder(BencodeOptions? options)
+    protected BObjectBuilder(BencodeOptions? options)
     {
         _options = options ?? new();
     }

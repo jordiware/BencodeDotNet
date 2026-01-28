@@ -20,19 +20,19 @@ namespace Jordiware.BencodeDotNet.Builders;
 /// this builder is responsible solely for content validation and accumulation.
 /// </para>
 /// </remarks>
-internal sealed class BdictionaryBuilder : BobjectBuilder
+internal sealed class BDictionaryBuilder : BObjectBuilder
 {
     private Dictionary<BString, IBObject>? _objects = new();
     private BString? _pendingKey;
     private BString? _lastKey;
 
     /// <summary>
-    /// Initializes a new <see cref="BdictionaryBuilder"/>.
+    /// Initializes a new <see cref="BDictionaryBuilder"/>.
     /// </summary>
     /// <param name="options">
     /// Optional decoding options.
     /// </param>
-    public BdictionaryBuilder(BencodeOptions? options = default) : base(options)
+    public BDictionaryBuilder(BencodeOptions? options = default) : base(options)
     {
     }
 

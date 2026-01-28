@@ -19,7 +19,7 @@ namespace Jordiware.BencodeDotNet.Builders;
 /// Implementations are expected to be single-use and not thread-safe.
 /// </para>
 /// </remarks>
-internal interface IBobjectBuilder : IDisposable
+internal interface IBObjectBuilder : IDisposable
 {
     /// <summary>
     /// Finalizes construction and returns the built Bencode object.

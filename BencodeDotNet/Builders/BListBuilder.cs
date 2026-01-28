@@ -17,17 +17,17 @@ namespace Jordiware.BencodeDotNet.Builders;
 /// enforcement.
 /// </para>
 /// </remarks>
-internal sealed class BlistBuilder : BobjectBuilder
+internal sealed class BListBuilder : BObjectBuilder
 {
     private List<IBObject>? _objects = new();
 
     /// <summary>
-    /// Initializes a new <see cref="BlistBuilder"/>.
+    /// Initializes a new <see cref="BListBuilder"/>.
     /// </summary>
     /// <param name="options">
     /// Optional decoding options.
     /// </param>
-    public BlistBuilder(BencodeOptions? options = default) : base(options)
+    public BListBuilder(BencodeOptions? options = default) : base(options)
     {
     }
 

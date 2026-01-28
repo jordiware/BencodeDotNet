@@ -18,7 +18,7 @@ namespace Jordiware.BencodeDotNet;
 /// </para>
 /// <para>
 /// Decoding is performed in a single forward pass using
-/// <see cref="SequenceReader{T}"/> and a stack of <see cref="BobjectBuilder"/>
+/// <see cref="SequenceReader{T}"/> and a stack of <see cref="BObjectBuilder"/>
 /// instances, ensuring linear-time parsing with no backtracking.
 /// </para>
 /// <para>
@@ -106,7 +106,7 @@ public sealed class BencodeDecoder : BencodeIO
 
     private IBObject Decode(ReadOnlyMemory<byte> rom)
     {
-        var stack = new Stack<BobjectBuilder>();
+        var stack = new Stack<BObjectBuilder>();
 
         var sequence = new ReadOnlySequence<byte>(rom);
         var reader = new SequenceReader<byte>(sequence);

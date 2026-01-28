@@ -86,7 +86,7 @@ public sealed class BencodeReader : BencodeIO
         if (!stream.CanRead)
             throw new BencodeIOException("Stream can not be read");
 
-        var stack = new Stack<BobjectBuilder>();
+        var stack = new Stack<BObjectBuilder>();
 
         var reader = PipeReader.Create(stream, new StreamPipeReaderOptions(leaveOpen: true));
         ReadResult result = default!;
@@ -300,7 +300,7 @@ public sealed class BencodeReader : BencodeIO
         if (!stream.CanRead)
             throw new BencodeIOException("Stream can not be read");
 
-        var stack = new Stack<BobjectBuilder>();
+        var stack = new Stack<BObjectBuilder>();
 
         var reader = PipeReader.Create(stream, new StreamPipeReaderOptions(leaveOpen: true));
         ReadResult result = default!;
@@ -478,7 +478,7 @@ public sealed class BencodeReader : BencodeIO
         return await ReadSingleAsync<TType>(stream, serializer, ct);
     }
 
-    private IEnumerable<IBObject> ParseBufferForMultiple(ReadOnlySequence<byte> buffer, Stack<BobjectBuilder> stack)
+    private IEnumerable<IBObject> ParseBufferForMultiple(ReadOnlySequence<byte> buffer, Stack<BObjectBuilder> stack)
     {
         var seqReader = new SequenceReader<byte>(buffer);
         var results = new List<IBObject>();
@@ -492,7 +492,7 @@ public sealed class BencodeReader : BencodeIO
         return results;
     }
 
-    private IBObject? ParseBufferForSingle(ReadOnlySequence<byte> buffer, Stack<BobjectBuilder> stack)
+    private IBObject? ParseBufferForSingle(ReadOnlySequence<byte> buffer, Stack<BObjectBuilder> stack)
     {
         var seqReader = new SequenceReader<byte>(buffer);
 

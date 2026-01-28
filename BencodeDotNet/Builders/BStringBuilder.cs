@@ -25,19 +25,19 @@ namespace Jordiware.BencodeDotNet.Builders;
 /// </list>
 /// </para>
 /// </remarks>
-internal sealed class BstringBuilder : BobjectBuilder
+internal sealed class BStringBuilder : BObjectBuilder
 {
     private long? _length = null;
     private long _offset = 0;
     private byte[]? _bytes = null;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="BstringBuilder"/> class.
+    /// Initializes a new instance of the <see cref="BStringBuilder"/> class.
     /// </summary>
     /// <param name="options">
     /// Optional decoding options.
     /// </param>
-    public BstringBuilder(BencodeOptions? options = default) : base(options)
+    public BStringBuilder(BencodeOptions? options = default) : base(options)
     {
     }
 
