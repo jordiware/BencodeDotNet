@@ -12,58 +12,58 @@ public class EncoderTests
         public int Value { get; init; }
     }
 
-    private sealed class AttributedSerializer : BencodeSerializer<AttributedType, Binteger>
+    private sealed class AttributedSerializer : BencodeSerializer<AttributedType, BInteger>
     {
-        public override bool TryDeserialize(Binteger input, out AttributedType? output)
+        public override bool TryDeserialize(BInteger input, out AttributedType? output)
         {
             throw new NotImplementedException();
         }
 
-        public override bool TrySerialize(AttributedType value, out Binteger result)
+        public override bool TrySerialize(AttributedType value, out BInteger result)
         {
-            result = new Binteger(value.Value);
+            result = new BInteger(value.Value);
             return true;
         }
     }
 
-    private sealed class FailingSerializer : BencodeSerializer<AttributedType, Binteger>
+    private sealed class FailingSerializer : BencodeSerializer<AttributedType, BInteger>
     {
-        public override bool TryDeserialize(Binteger input, out AttributedType? output)
+        public override bool TryDeserialize(BInteger input, out AttributedType? output)
         {
             throw new NotImplementedException();
         }
 
-        public override bool TrySerialize(AttributedType value, out Binteger result)
+        public override bool TrySerialize(AttributedType value, out BInteger result)
         {
             result = null!;
             return false;
         }
     }
 
-    private sealed class NullResultSerializer : BencodeSerializer<AttributedType, Binteger>
+    private sealed class NullResultSerializer : BencodeSerializer<AttributedType, BInteger>
     {
-        public override bool TryDeserialize(Binteger input, out AttributedType? output)
+        public override bool TryDeserialize(BInteger input, out AttributedType? output)
         {
             throw new NotImplementedException();
         }
 
-        public override bool TrySerialize(AttributedType value, out Binteger result)
+        public override bool TrySerialize(AttributedType value, out BInteger result)
         {
             result = null!;
             return true;
         }
     }
 
-    private sealed class ListSerializer : BencodeSerializer<AttributedType, Blist>
+    private sealed class ListSerializer : BencodeSerializer<AttributedType, BList>
     {
-        public override bool TryDeserialize(Blist input, out AttributedType? output)
+        public override bool TryDeserialize(BList input, out AttributedType? output)
         {
             throw new NotImplementedException();
         }
 
-        public override bool TrySerialize(AttributedType value, out Blist result)
+        public override bool TrySerialize(AttributedType value, out BList result)
         {
-            result = new Blist([new Binteger(value.Value)]);
+            result = new BList([new BInteger(value.Value)]);
             return true;
         }
     }
@@ -83,7 +83,7 @@ public class EncoderTests
     {
         var encoder = new BencodeEncoder();
 
-        Assert.Throws<ArgumentNullException>(() => encoder.Encode<object, IBobject>(value, null!));
+        Assert.Throws<ArgumentNullException>(() => encoder.Encode<object, IBObject>(value, null!));
     }
 
     [Theory]
@@ -96,7 +96,7 @@ public class EncoderTests
         var result = encoder.Encode(input);
 
         Assert.NotNull(result);
-        Assert.IsType<Binteger>(result);
+        Assert.IsType<BInteger>(result);
     }
 
     [Theory]
@@ -118,7 +118,7 @@ public class EncoderTests
         var serializer = new AttributedSerializer();
 
         Assert.Throws<ArgumentNullException>(() =>
-            encoder.Encode<AttributedType, Binteger>(value!, serializer));
+            encoder.Encode<AttributedType, BInteger>(value!, serializer));
     }
 
     [Theory]
@@ -129,7 +129,7 @@ public class EncoderTests
         var input = new AttributedType { Value = value };
 
         Assert.Throws<ArgumentNullException>(() =>
-            encoder.Encode<AttributedType, Binteger>(input, null!));
+            encoder.Encode<AttributedType, BInteger>(input, null!));
     }
 
     [Theory]
@@ -141,7 +141,7 @@ public class EncoderTests
         var input = new AttributedType { Value = value };
 
         Assert.Throws<BencodeSerializerException>(() =>
-            encoder.Encode<AttributedType, Binteger>(input, serializer));
+            encoder.Encode<AttributedType, BInteger>(input, serializer));
     }
 
     [Theory]
@@ -153,7 +153,7 @@ public class EncoderTests
         var input = new AttributedType { Value = value };
 
         Assert.Throws<BencodeSerializerException>(() =>
-            encoder.Encode<AttributedType, Binteger>(input, serializer));
+            encoder.Encode<AttributedType, BInteger>(input, serializer));
     }
 
     [Theory]
@@ -164,10 +164,10 @@ public class EncoderTests
         var serializer = new AttributedSerializer();
         var input = new AttributedType { Value = value };
 
-        var result = encoder.Encode<AttributedType, Binteger>(input, serializer);
+        var result = encoder.Encode<AttributedType, BInteger>(input, serializer);
 
         Assert.NotNull(result);
-        Assert.IsType<Binteger>(result);
+        Assert.IsType<BInteger>(result);
     }
 
     [Theory]
@@ -180,6 +180,6 @@ public class EncoderTests
         var input = new AttributedType { Value = value };
 
         Assert.Throws<BencodeValidationException>(() =>
-            encoder.Encode<AttributedType, Blist>(input, serializer));
+            encoder.Encode<AttributedType, BList>(input, serializer));
     }
 }

@@ -10,7 +10,7 @@ namespace Jordiware.BencodeDotNet.Serializers;
 /// <remarks>
 /// <para>
 /// <see cref="ArrayBencodeSerializer{TType}"/> encodes arrays as Bencode lists
-/// (<see cref="Blist"/>), where each array element is serialized using the
+/// (<see cref="BList"/>), where each array element is serialized using the
 /// resolved Bencode serializer for <typeparamref name="TType"/>.
 /// </para>
 /// <para>
@@ -30,7 +30,7 @@ namespace Jordiware.BencodeDotNet.Serializers;
 /// if any individual element cannot be serialized or deserialized.
 /// </para>
 /// </remarks>
-public sealed class ArrayBencodeSerializer<TType> : ReferenceTypeBencodeSerializer<TType[], Blist>
+public sealed class ArrayBencodeSerializer<TType> : ReferenceTypeBencodeSerializer<TType[], BList>
 {
     private readonly BencodeOptions _options;
 
@@ -83,7 +83,7 @@ public sealed class ArrayBencodeSerializer<TType> : ReferenceTypeBencodeSerializ
     /// </param>
     /// <param name="output">
     /// When this method returns <see langword="true"/>, contains a
-    /// <see cref="Blist"/> representing the serialized form of
+    /// <see cref="BList"/> representing the serialized form of
     /// <paramref name="input"/>. When this method returns
     /// <see langword="false"/>, this parameter is set to <see langword="null"/>.
     /// </param>
@@ -100,10 +100,10 @@ public sealed class ArrayBencodeSerializer<TType> : ReferenceTypeBencodeSerializ
     /// <para>
     /// Each element is serialized using the resolved serializer for
     /// <typeparamref name="TType"/> and added to the resulting
-    /// <see cref="Blist"/> in the same order as in the source array.
+    /// <see cref="BList"/> in the same order as in the source array.
     /// </para>
     /// </remarks>
-    public override bool TrySerialize(TType[] input, out Blist? output)
+    public override bool TrySerialize(TType[] input, out BList? output)
     {
         output = default;
         if (input is null)
@@ -112,7 +112,7 @@ public sealed class ArrayBencodeSerializer<TType> : ReferenceTypeBencodeSerializ
         if (!BencodeSerializer.TryGetSerializerForType(typeof(TType), _options, out var serializer))
             return false;
 
-        var objects = new List<IBobject>();
+        var objects = new List<IBObject>();
         foreach (var item in input)
         {
             if (!serializer!.TrySerialize(item!, out var serialized))
@@ -120,7 +120,7 @@ public sealed class ArrayBencodeSerializer<TType> : ReferenceTypeBencodeSerializ
             objects.Add(serialized!);
         }
 
-        output = new Blist(objects!);
+        output = new BList(objects!);
         return true;
     }
 
@@ -128,7 +128,7 @@ public sealed class ArrayBencodeSerializer<TType> : ReferenceTypeBencodeSerializ
     /// Attempts to deserialize a Bencode list into a CLR array.
     /// </summary>
     /// <param name="input">
-    /// The <see cref="Blist"/> to deserialize.
+    /// The <see cref="BList"/> to deserialize.
     /// </param>
     /// <param name="output">
     /// When this method returns <see langword="true"/>, contains an array of
@@ -147,12 +147,12 @@ public sealed class ArrayBencodeSerializer<TType> : ReferenceTypeBencodeSerializ
     /// or if deserialization of any list element fails.
     /// </para>
     /// <para>
-    /// Each element of the <see cref="Blist"/> is deserialized using the resolved
+    /// Each element of the <see cref="BList"/> is deserialized using the resolved
     /// serializer for <typeparamref name="TType"/> and placed into the resulting
     /// array in the same order.
     /// </para>
     /// </remarks>
-    public override bool TryDeserialize(Blist input, out TType[]? output)
+    public override bool TryDeserialize(BList input, out TType[]? output)
     {
         output = default;
         if (input is null)

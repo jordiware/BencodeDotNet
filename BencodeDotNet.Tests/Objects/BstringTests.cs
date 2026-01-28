@@ -3,7 +3,7 @@ using System.Text;
 
 namespace Jordiware.BencodeDotNet.Tests.Objects;
 
-public class BstringTests
+public class BStringTests
 {
     [Theory]
     [InlineData(new byte[0])]
@@ -12,7 +12,7 @@ public class BstringTests
     [InlineData(new byte[] { 0xf0, 0x9f, 0x99, 0x82 })]
     public void BytesConstructorStoresValue(byte[] value)
     {
-        var bstring = new Bstring(value);
+        var bstring = new BString(value);
 
         Assert.Equal(value, bstring.Value);
     }
@@ -28,7 +28,7 @@ public class BstringTests
                 new byte[] { 0xf0, 0x9f, 0x99, 0x82 })]
     public void Utf8StringConstructorStoresValue(string value, byte[] expected)
     {
-        var bstring = new Bstring(value, Encoding.UTF8);
+        var bstring = new BString(value, Encoding.UTF8);
 
         Assert.Equal(expected, bstring.Value);
     }
@@ -42,7 +42,7 @@ public class BstringTests
                 "13:Hello, world!")]
     public void ToStringReturnsValidBencode(byte[] value, string expected)
     {
-        var bstring = new Bstring(value);
+        var bstring = new BString(value);
 
         Assert.Equal(expected, bstring.ToString());
     }
@@ -58,7 +58,7 @@ public class BstringTests
                 "4:F0-9F-99-82")]
     public void ToHexStringReturnsValidBencode(byte[] value, string expected)
     {
-        var bstring = new Bstring(value);
+        var bstring = new BString(value);
 
         Assert.Equal(expected, bstring.ToHexString());
     }
@@ -74,7 +74,7 @@ public class BstringTests
                 new byte[] { 0x34, 0x3a, 0xf0, 0x9f, 0x99, 0x82 })]
     public void ToBinaryEncodingMatchesBencode(byte[] value, byte[] expected)
     {
-        var bstring = new Bstring(value);
+        var bstring = new BString(value);
 
         Assert.Equal(expected, bstring.ToBinaryEncoding());
     }
@@ -90,8 +90,8 @@ public class BstringTests
                 new byte[] { 0xf0, 0x9f, 0x99, 0x82 })]
     public void EqualsReturnsTrueForSameValue(byte[] left, byte[] right)
     {
-        var a = new Bstring(left);
-        var b = new Bstring(right);
+        var a = new BString(left);
+        var b = new BString(right);
 
         Assert.True(a.Equals(b));
     }
@@ -105,8 +105,8 @@ public class BstringTests
                 new byte[] { 0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x2c, 0x20, 0x76, 0x6f, 0x72, 0x6c, 0x64, 0x21 })]
     public void EqualsReturnsFalsForDifferentValue(byte[] left, byte[] right)
     {
-        var a = new Bstring(left);
-        var b = new Bstring(right);
+        var a = new BString(left);
+        var b = new BString(right);
 
         Assert.False(a.Equals(b));
     }
@@ -122,8 +122,8 @@ public class BstringTests
                 new byte[] { 0xf0, 0x9f, 0x99, 0x82 })]
     public void CompareToReturnsZeroForEqualValues(byte[] left, byte[] right)
     {
-        var a = new Bstring(left);
-        var b = new Bstring(right);
+        var a = new BString(left);
+        var b = new BString(right);
 
         Assert.True(a.CompareTo(b) == 0);
     }
@@ -139,8 +139,8 @@ public class BstringTests
                 new byte[] { 0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x2c, 0x20, 0x77, 0x6f, 0x72, 0x6c, 0x64, 0x21 })]
     public void CompareToReturnsPositiveForGreaterValues(byte[] left, byte[] right)
     {
-        var a = new Bstring(left);
-        var b = new Bstring(right);
+        var a = new BString(left);
+        var b = new BString(right);
 
         Assert.True(a.CompareTo(b) > 0);
     }
@@ -156,8 +156,8 @@ public class BstringTests
                 new byte[] { 0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x2c, 0x20, 0x77, 0x6f, 0x72, 0x6c, 0x64, 0x21 })]
     public void CompareToReturnsNegativeForLesserValues(byte[] left, byte[] right)
     {
-        var a = new Bstring(left);
-        var b = new Bstring(right);
+        var a = new BString(left);
+        var b = new BString(right);
 
         Assert.True(b.CompareTo(a) < 0);
     }
@@ -165,7 +165,7 @@ public class BstringTests
     [Fact]
     public void CompareToReturnsPositiveWhenOtherIsNull()
     {
-        var a = new Bstring([]);
+        var a = new BString([]);
 
         Assert.True(a.CompareTo(null) > 0);
     }
@@ -178,7 +178,7 @@ public class BstringTests
     [InlineData("áéíóú")]
     public void EncodedLengthMatchesBinaryEncodingLength(string value)
     {
-        var bstring = new Bstring(value, Encoding.UTF8);
+        var bstring = new BString(value, Encoding.UTF8);
 
         var encoded = bstring.ToBinaryEncoding();
         var length = bstring.GetEncodedLength();
@@ -190,7 +190,7 @@ public class BstringTests
     public void EncodedLengthMatchesBinaryEncodingLengthForBinaryData()
     {
         var bytes = new byte[] { 0, 1, 2, 3, 255 };
-        var bstring = new Bstring(bytes);
+        var bstring = new BString(bytes);
 
         var encoded = bstring.ToBinaryEncoding();
         var length = bstring.GetEncodedLength();

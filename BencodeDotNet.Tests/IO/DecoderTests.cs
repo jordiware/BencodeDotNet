@@ -18,7 +18,7 @@ public class DecoderTests
     {
         var result = decoder.Decode(input);
 
-        var integer = Assert.IsType<Binteger>(result);
+        var integer = Assert.IsType<BInteger>(result);
         Assert.Equal(expected, integer.Value);
     }
 
@@ -49,7 +49,7 @@ public class DecoderTests
     {
         var result = decoder.Decode(input);
 
-        var str = Assert.IsType<Bstring>(result);
+        var str = Assert.IsType<BString>(result);
         Assert.Equal(expected, Encoding.ASCII.GetString(str.Value));
     }
 
@@ -71,7 +71,7 @@ public class DecoderTests
     {
         var result = decoder.Decode("le");
 
-        var list = Assert.IsType<Blist>(result);
+        var list = Assert.IsType<BList>(result);
         Assert.Empty(list);
     }
 
@@ -80,11 +80,11 @@ public class DecoderTests
     {
         var result = decoder.Decode("l4:spami42ee");
 
-        var list = Assert.IsType<Blist>(result);
+        var list = Assert.IsType<BList>(result);
         Assert.Collection(
             list,
-            item => Assert.IsType<Bstring>(item),
-            item => Assert.Equal(42, Assert.IsType<Binteger>(item).Value)
+            item => Assert.IsType<BString>(item),
+            item => Assert.Equal(42, Assert.IsType<BInteger>(item).Value)
         );
     }
 
@@ -93,7 +93,7 @@ public class DecoderTests
     {
         var result = decoder.Decode("de");
 
-        var dict = Assert.IsType<Bdictionary>(result);
+        var dict = Assert.IsType<BDictionary>(result);
         Assert.Empty(dict);
     }
 
@@ -101,22 +101,22 @@ public class DecoderTests
     public async Task DecodeSimpleDictionary()
     {
         var result = decoder.Decode("d3:cow3:moo4:spam4:eggse");
-        var dict = Assert.IsType<Bdictionary>(result);
+        var dict = Assert.IsType<BDictionary>(result);
 
-        Assert.Equal(new Bstring("moo", Encoding.ASCII), dict[new Bstring("cow", Encoding.ASCII)]);
-        Assert.Equal(new Bstring("eggs", Encoding.ASCII), dict[new Bstring("spam", Encoding.ASCII)]);
+        Assert.Equal(new BString("moo", Encoding.ASCII), dict[new BString("cow", Encoding.ASCII)]);
+        Assert.Equal(new BString("eggs", Encoding.ASCII), dict[new BString("spam", Encoding.ASCII)]);
     }
 
     [Fact]
     public async Task DecodeComplexDictionary()
     {
         var result = decoder.Decode("d3:barl4:spami42ee3:fooi99ee");
-        var dict = Assert.IsType<Bdictionary>(result);
+        var dict = Assert.IsType<BDictionary>(result);
 
-        var bar = Assert.IsType<Blist>(dict[new Bstring("bar", Encoding.ASCII)]);
-        Assert.Contains(new Bstring("spam", Encoding.ASCII), bar);
-        Assert.Contains(new Binteger(42), bar);
-        Assert.Equal(new Binteger(99), dict[new Bstring("foo", Encoding.ASCII)]);
+        var bar = Assert.IsType<BList>(dict[new BString("bar", Encoding.ASCII)]);
+        Assert.Contains(new BString("spam", Encoding.ASCII), bar);
+        Assert.Contains(new BInteger(42), bar);
+        Assert.Equal(new BInteger(99), dict[new BString("foo", Encoding.ASCII)]);
     }
 
     [Fact]

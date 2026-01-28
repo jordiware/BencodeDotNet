@@ -24,12 +24,12 @@ namespace Jordiware.BencodeDotNet.Objects;
 /// <c>d3:cow3:moo4:spam4:eggse</c>
 /// </para>
 /// </remarks>
-public sealed class Bdictionary : IBobject, IReadOnlyDictionary<Bstring, IBobject>, IEquatable<Bdictionary>
+public sealed class BDictionary : IBObject, IReadOnlyDictionary<BString, IBObject>, IEquatable<BDictionary>
 {
-    private readonly ImmutableSortedDictionary<Bstring, IBobject> _keyValuePairs = ImmutableSortedDictionary<Bstring, IBobject>.Empty;
+    private readonly ImmutableSortedDictionary<BString, IBObject> _keyValuePairs = ImmutableSortedDictionary<BString, IBObject>.Empty;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="Bdictionary"/> class
+    /// Initializes a new instance of the <see cref="BDictionary"/> class
     /// from the specified key-value pairs.
     /// </summary>
     /// <param name="keyValuePairs">
@@ -42,7 +42,7 @@ public sealed class Bdictionary : IBobject, IReadOnlyDictionary<Bstring, IBobjec
     /// Entries are stored in canonical lexicographical order
     /// of their keys.
     /// </remarks>
-    public Bdictionary(IDictionary<Bstring, IBobject> keyValuePairs)
+    public BDictionary(IDictionary<BString, IBObject> keyValuePairs)
     {
         _keyValuePairs = keyValuePairs.ToImmutableSortedDictionary();
     }
@@ -54,17 +54,17 @@ public sealed class Bdictionary : IBobject, IReadOnlyDictionary<Bstring, IBobjec
     /// <param name="key">
     /// The Bencode string key.
     /// </param>
-    public IBobject this[Bstring key] => _keyValuePairs[key];
+    public IBObject this[BString key] => _keyValuePairs[key];
 
     /// <summary>
     /// Gets a collection containing the keys of the dictionary.
     /// </summary>
-    public IEnumerable<Bstring> Keys => _keyValuePairs.Keys;
+    public IEnumerable<BString> Keys => _keyValuePairs.Keys;
 
     /// <summary>
     /// Gets a collection containing the values of the dictionary.
     /// </summary>
-    public IEnumerable<IBobject> Values => _keyValuePairs.Values;
+    public IEnumerable<IBObject> Values => _keyValuePairs.Values;
 
     /// <summary>
     /// Gets the number of key-value pairs contained in the dictionary.
@@ -81,7 +81,7 @@ public sealed class Bdictionary : IBobject, IReadOnlyDictionary<Bstring, IBobjec
     /// <see langword="true"/> if the dictionary contains the specified key;
     /// otherwise, <see langword="false"/>.
     /// </returns>
-    public bool ContainsKey(Bstring key)
+    public bool ContainsKey(BString key)
     {
         return _keyValuePairs.ContainsKey(key);
     }
@@ -90,7 +90,7 @@ public sealed class Bdictionary : IBobject, IReadOnlyDictionary<Bstring, IBobjec
     /// Returns an enumerator that iterates through the key-value pairs
     /// of the dictionary in canonical key order.
     /// </summary>
-    public IEnumerator<KeyValuePair<Bstring, IBobject>> GetEnumerator()
+    public IEnumerator<KeyValuePair<BString, IBObject>> GetEnumerator()
     {
         return _keyValuePairs.GetEnumerator();
     }
@@ -109,17 +109,17 @@ public sealed class Bdictionary : IBobject, IReadOnlyDictionary<Bstring, IBobjec
     /// <see langword="true"/> if the dictionary contains the specified key;
     /// otherwise, <see langword="false"/>.
     /// </returns>
-    public bool TryGetValue(Bstring key, [MaybeNullWhen(false)] out IBobject value)
+    public bool TryGetValue(BString key, [MaybeNullWhen(false)] out IBObject value)
     {
         return _keyValuePairs.TryGetValue(key, out value);
     }
 
     /// <summary>
-    /// Determines whether the current <see cref="Bdictionary"/> is equal to
-    /// another <see cref="Bdictionary"/>.
+    /// Determines whether the current <see cref="BDictionary"/> is equal to
+    /// another <see cref="BDictionary"/>.
     /// </summary>
     /// <param name="other">
-    /// The <see cref="Bdictionary"/> to compare with this instance.
+    /// The <see cref="BDictionary"/> to compare with this instance.
     /// </param>
     /// <returns>
     /// <see langword="true"/> if both dictionaries contain the same keys
@@ -130,7 +130,7 @@ public sealed class Bdictionary : IBobject, IReadOnlyDictionary<Bstring, IBobjec
     /// Equality is independent of insertion order and is evaluated
     /// based on canonical key ordering.
     /// </remarks>
-    public bool Equals(Bdictionary? other)
+    public bool Equals(BDictionary? other)
     {
         if (other == null) return false;
         if (ReferenceEquals(this, other)) return true;
@@ -148,7 +148,7 @@ public sealed class Bdictionary : IBobject, IReadOnlyDictionary<Bstring, IBobjec
     }
 
     /// <summary>
-    /// Serializes the current <see cref="Bdictionary"/> into its binary
+    /// Serializes the current <see cref="BDictionary"/> into its binary
     /// Bencode representation.
     /// </summary>
     /// <returns>
@@ -220,7 +220,7 @@ public sealed class Bdictionary : IBobject, IReadOnlyDictionary<Bstring, IBobjec
     /// </para>
     /// <para>
     /// Both keys and values are written using their respective
-    /// <see cref="IBobject.WriteToPipeAsync"/> implementations.
+    /// <see cref="IBObject.WriteToPipeAsync"/> implementations.
     /// </para>
     /// </remarks>
     public async Task WriteToPipeAsync(PipeWriter writer, CancellationToken cancellationToken = default)
@@ -249,7 +249,7 @@ public sealed class Bdictionary : IBobject, IReadOnlyDictionary<Bstring, IBobjec
     /// <inheritdoc />
     public override bool Equals(object? obj)
     {
-        return obj is Bdictionary other && Equals(other);
+        return obj is BDictionary other && Equals(other);
     }
 
     /// <inheritdoc />

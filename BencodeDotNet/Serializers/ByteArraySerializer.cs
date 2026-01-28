@@ -6,34 +6,34 @@ using System.IO.Pipelines;
 namespace Jordiware.BencodeDotNet.Serializers;
 
 /// <summary>
-/// Provides serialization and deserialization of <see cref="byte[]"/> to and from <see cref="Bstring"/> 
+/// Provides serialization and deserialization of <see cref="byte[]"/> to and from <see cref="BString"/> 
 /// in Bencode format. This serializer treats the byte array purely as raw data, not as a numeric value.
 /// </summary>
-public sealed class ByteArraySerializer : ReferenceTypeBencodeSerializer<byte[], Bstring>
+public sealed class ByteArraySerializer : ReferenceTypeBencodeSerializer<byte[], BString>
 {
     /// <summary>
-    /// Attempts to serialize the provided <see cref="byte[]"/> into a <see cref="Bstring"/>.
+    /// Attempts to serialize the provided <see cref="byte[]"/> into a <see cref="BString"/>.
     /// </summary>
     /// <param name="input">The byte array to serialize.</param>
-    /// <param name="output">When this method returns, contains the serialized <see cref="Bstring"/> if successful; otherwise, <c>null</c>.</param>
+    /// <param name="output">When this method returns, contains the serialized <see cref="BString"/> if successful; otherwise, <c>null</c>.</param>
     /// <returns><c>true</c> if the input was not <c>null</c> and serialization succeeded; otherwise, <c>false</c>.</returns>
-    public override bool TrySerialize(byte[] input, out Bstring? output)
+    public override bool TrySerialize(byte[] input, out BString? output)
     {
         output = default;
         if (input is null)
             return false;
 
-        output = new Bstring(input);
+        output = new BString(input);
         return true;
     }
 
     /// <summary>
-    /// Attempts to deserialize the provided <see cref="Bstring"/> into a <see cref="byte[]"/>.
+    /// Attempts to deserialize the provided <see cref="BString"/> into a <see cref="byte[]"/>.
     /// </summary>
-    /// <param name="input">The <see cref="Bstring"/> to deserialize.</param>
+    /// <param name="input">The <see cref="BString"/> to deserialize.</param>
     /// <param name="output">When this method returns, contains the deserialized byte array if successful; otherwise, <c>null</c>.</param>
     /// <returns><c>true</c> if the input was not <c>null</c> and deserialization succeeded; otherwise, <c>false</c>.</returns>
-    public override bool TryDeserialize(Bstring input, out byte[]? output)
+    public override bool TryDeserialize(BString input, out byte[]? output)
     {
         output = default;
         if (input is null)

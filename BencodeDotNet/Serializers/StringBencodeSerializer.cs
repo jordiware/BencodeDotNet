@@ -7,13 +7,13 @@ namespace Jordiware.BencodeDotNet.Serializers;
 
 /// <summary>
 /// Provides serialization and deserialization support for <see cref="string"/> values
-/// using the Bencode string (<see cref="Bstring"/>) representation.
+/// using the Bencode string (<see cref="BString"/>) representation.
 /// </summary>
 /// <remarks>
 /// <para>
 /// Strings are serialized by encoding their character data into a byte sequence
 /// using a specified <see cref="Encoding"/> and wrapping the result in a
-/// <see cref="Bstring"/>.
+/// <see cref="BString"/>.
 /// </para>
 /// <para>
 /// Bencode does not define or carry encoding metadata. As a result, deserialization
@@ -29,7 +29,7 @@ namespace Jordiware.BencodeDotNet.Serializers;
 /// Empty strings are serialized as empty Bencode strings.
 /// </para>
 /// </remarks>
-public sealed class StringBencodeSerializer : ReferenceTypeBencodeSerializer<string, Bstring>
+public sealed class StringBencodeSerializer : ReferenceTypeBencodeSerializer<string, BString>
 {
     /// <summary>
     /// The default character encoding used by the serializer when none is specified.
@@ -89,14 +89,14 @@ public sealed class StringBencodeSerializer : ReferenceTypeBencodeSerializer<str
     }
 
     /// <summary>
-    /// Attempts to serialize a <see cref="string"/> value into a <see cref="Bstring"/>.
+    /// Attempts to serialize a <see cref="string"/> value into a <see cref="BString"/>.
     /// </summary>
     /// <param name="input">
     /// The string value to serialize.
     /// </param>
     /// <param name="output">
     /// When this method returns <see langword="true"/>, contains the serialized
-    /// <see cref="Bstring"/> representation of <paramref name="input"/>.
+    /// <see cref="BString"/> representation of <paramref name="input"/>.
     /// </param>
     /// <returns>
     /// <see langword="true"/> if serialization succeeded; otherwise,
@@ -105,7 +105,7 @@ public sealed class StringBencodeSerializer : ReferenceTypeBencodeSerializer<str
     /// <remarks>
     /// Empty strings are serialized as empty Bencode strings.
     /// </remarks>
-    public override bool TrySerialize(string input, out Bstring? output)
+    public override bool TrySerialize(string input, out BString? output)
     {
         output = default;
 
@@ -114,20 +114,20 @@ public sealed class StringBencodeSerializer : ReferenceTypeBencodeSerializer<str
 
         if (input == string.Empty)
         {
-            output = new Bstring([]);
+            output = new BString([]);
             return true;
         }
 
         var bytes = _encoding.GetBytes(input);
-        output = new Bstring(bytes);
+        output = new BString(bytes);
         return true;
     }
 
     /// <summary>
-    /// Attempts to deserialize a <see cref="Bstring"/> into a <see cref="string"/>.
+    /// Attempts to deserialize a <see cref="BString"/> into a <see cref="string"/>.
     /// </summary>
     /// <param name="input">
-    /// The <see cref="Bstring"/> value to deserialize.
+    /// The <see cref="BString"/> value to deserialize.
     /// </param>
     /// <param name="output">
     /// When this method returns <see langword="true"/>, contains the deserialized
@@ -138,11 +138,11 @@ public sealed class StringBencodeSerializer : ReferenceTypeBencodeSerializer<str
     /// <see langword="false"/> if <paramref name="input"/> is <see langword="null"/>.
     /// </returns>
     /// <remarks>
-    /// Deserialization assumes that the <see cref="Bstring"/> was originally produced
+    /// Deserialization assumes that the <see cref="BString"/> was originally produced
     /// using the same <see cref="Encoding"/> instance configured for this serializer.
     /// Empty Bencode strings are deserialized as <see cref="string.Empty"/>.
     /// </remarks>
-    public override bool TryDeserialize(Bstring input, out string? output)
+    public override bool TryDeserialize(BString input, out string? output)
     {
         output = default;
 

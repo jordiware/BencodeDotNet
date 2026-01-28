@@ -14,7 +14,7 @@ namespace Jordiware.BencodeDotNet.Serializers;
 /// <remarks>
 /// <para>
 /// <see cref="ReflectionBencodeSerializer{TType}"/> provides a generic serializer that maps a public,
-/// parameterless-constructible CLR type into a <see cref="Bdictionary"/> by inspecting its public
+/// parameterless-constructible CLR type into a <see cref="BDictionary"/> by inspecting its public
 /// instance fields and properties using reflection.
 /// </para>
 /// <para>
@@ -24,7 +24,7 @@ namespace Jordiware.BencodeDotNet.Serializers;
 /// </para>
 /// <para>
 /// Each eligible member is serialized as a dictionary entry whose key is a UTF-8 encoded
-/// <see cref="Bstring"/> derived from the member name or overridden via
+/// <see cref="BString"/> derived from the member name or overridden via
 /// <see cref="BencodeNameAttribute"/>.
 /// </para>
 /// <para>
@@ -36,7 +36,7 @@ namespace Jordiware.BencodeDotNet.Serializers;
 /// The CLR type to serialize and deserialize. Must be non-nullable and expose a public
 /// parameterless constructor.
 /// </typeparam>
-public sealed class ReflectionBencodeSerializer<TType> : BencodeSerializer<TType, Bdictionary>
+public sealed class ReflectionBencodeSerializer<TType> : BencodeSerializer<TType, BDictionary>
     where TType : notnull, new()
 {
     private const BindingFlags Flags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
@@ -44,11 +44,11 @@ public sealed class ReflectionBencodeSerializer<TType> : BencodeSerializer<TType
     private static readonly Lazy<TypeMetadata> metadata = new(GetTypeMetadata, LazyThreadSafetyMode.ExecutionAndPublication);
 
     /// <summary>
-    /// Serializes a CLR object into a <see cref="Bdictionary"/> by reflecting over its public members.
+    /// Serializes a CLR object into a <see cref="BDictionary"/> by reflecting over its public members.
     /// </summary>
     /// <param name="input">The object instance to serialize.</param>
     /// <param name="output">
-    /// When this method returns <c>true</c>, contains the resulting <see cref="Bdictionary"/>.
+    /// When this method returns <c>true</c>, contains the resulting <see cref="BDictionary"/>.
     /// </param>
     /// <returns>
     /// Always returns <c>true</c>. Failures are reported via exceptions.
@@ -66,12 +66,12 @@ public sealed class ReflectionBencodeSerializer<TType> : BencodeSerializer<TType
     /// </para>
     /// <para>
     /// Dictionary keys are emitted in deterministic, lexicographically sorted order based on
-    /// their <see cref="Bstring"/> representation.
+    /// their <see cref="BString"/> representation.
     /// </para>
     /// </remarks>
-    public override bool TrySerialize(TType input, out Bdictionary? output)
+    public override bool TrySerialize(TType input, out BDictionary? output)
     {
-        var dict = new Dictionary<Bstring, IBobject>();
+        var dict = new Dictionary<BString, IBObject>();
 
         foreach (var member in metadata.Value.Members)
         {
@@ -86,14 +86,14 @@ public sealed class ReflectionBencodeSerializer<TType> : BencodeSerializer<TType
             dict.Add(member.Key, bvalue);
         }
 
-        output = new Bdictionary(dict);
+        output = new BDictionary(dict);
         return true;
     }
 
     /// <summary>
-    /// Deserializes a <see cref="Bdictionary"/> into a new instance of <typeparamref name="TType"/>.
+    /// Deserializes a <see cref="BDictionary"/> into a new instance of <typeparamref name="TType"/>.
     /// </summary>
-    /// <param name="input">The source <see cref="Bdictionary"/>.</param>
+    /// <param name="input">The source <see cref="BDictionary"/>.</param>
     /// <param name="output">
     /// When this method returns <c>true</c>, contains the deserialized object instance.
     /// </param>
@@ -116,7 +116,7 @@ public sealed class ReflectionBencodeSerializer<TType> : BencodeSerializer<TType
     /// This allows nullable and optional members to be omitted safely.
     /// </para>
     /// </remarks>
-    public override bool TryDeserialize(Bdictionary input, out TType? output)
+    public override bool TryDeserialize(BDictionary input, out TType? output)
     {
         var instance = new TType();
 
@@ -200,7 +200,7 @@ public sealed class ReflectionBencodeSerializer<TType> : BencodeSerializer<TType
                                                     !p.IsDefined(typeof(BencodeIgnoreAttribute), inherit: false));
 
         var members = new List<MemberMetadata>();
-        var keyset = new HashSet<Bstring>();
+        var keyset = new HashSet<BString>();
         foreach (var info in fields)
         {
             var effectiveType = Nullable.GetUnderlyingType(info.FieldType) ?? info.FieldType;
@@ -213,7 +213,7 @@ public sealed class ReflectionBencodeSerializer<TType> : BencodeSerializer<TType
             var metadata = new MemberMetadata
             {
                 Name = info.Name,
-                Key = nameAttribute?.Name ?? new Bstring(info.Name, Encoding.UTF8),
+                Key = nameAttribute?.Name ?? new BString(info.Name, Encoding.UTF8),
                 MemberType = info.FieldType,
                 Getter = info.GetValue,
                 Setter = info.SetValue,
@@ -238,7 +238,7 @@ public sealed class ReflectionBencodeSerializer<TType> : BencodeSerializer<TType
             var metadata = new MemberMetadata
             {
                 Name = info.Name,
-                Key = nameAttribute?.Name ?? new Bstring(info.Name, Encoding.UTF8),
+                Key = nameAttribute?.Name ?? new BString(info.Name, Encoding.UTF8),
                 MemberType = info.PropertyType,
                 Getter = info.GetValue,
                 Setter = info.SetValue,
@@ -255,7 +255,7 @@ public sealed class ReflectionBencodeSerializer<TType> : BencodeSerializer<TType
         members.Sort((a, b) => a.Key.CompareTo(b.Key));
 
         var membersMetadata = members.ToArray();
-        var memberIndexes = new Dictionary<Bstring, int>(membersMetadata.Length);
+        var memberIndexes = new Dictionary<BString, int>(membersMetadata.Length);
         for (int i = 0; i < membersMetadata.Length; i++)
         {
             memberIndexes[membersMetadata[i].Key] = i;
@@ -276,9 +276,9 @@ public sealed class ReflectionBencodeSerializer<TType> : BencodeSerializer<TType
     private sealed class TypeMetadata
     {
         public required MemberMetadata[] Members;
-        public required IDictionary<Bstring, int> IndexByKey;
+        public required IDictionary<BString, int> IndexByKey;
 
-        public bool TryGetMetadataForKey(Bstring key, out MemberMetadata metadata)
+        public bool TryGetMetadataForKey(BString key, out MemberMetadata metadata)
         {
             if (!IndexByKey.TryGetValue(key, out var index))
             {
@@ -294,7 +294,7 @@ public sealed class ReflectionBencodeSerializer<TType> : BencodeSerializer<TType
     private sealed class MemberMetadata
     {
         public required string Name;
-        public required Bstring Key;
+        public required BString Key;
 
         public required Type MemberType;
 

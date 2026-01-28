@@ -4,15 +4,15 @@ using System.Text;
 
 namespace Jordiware.BencodeDotNet.Tests.Objects;
 
-public class BdictionaryTests
+public class BDictionaryTests
 {
     [Fact]
     public void ConstructorCreatesDictionaryWithCorrectCount()
     {
-        var dict = new Bdictionary(new Dictionary<Bstring, IBobject>
+        var dict = new BDictionary(new Dictionary<BString, IBObject>
         {
-            [new Bstring([0x61])] = new Binteger(1),
-            [new Bstring([0x62])] = new Binteger(2),
+            [new BString([0x61])] = new BInteger(1),
+            [new BString([0x62])] = new BInteger(2),
         });
 
         Assert.Equal(2, dict.Count);
@@ -21,10 +21,10 @@ public class BdictionaryTests
     [Fact]
     public void IndexerReturnsValueForKey()
     {
-        var key = new Bstring([0x61]);
-        var value = new Binteger(1);
+        var key = new BString([0x61]);
+        var value = new BInteger(1);
 
-        var dict = new Bdictionary(new Dictionary<Bstring, IBobject>
+        var dict = new BDictionary(new Dictionary<BString, IBObject>
         {
             [key] = value
         });
@@ -35,11 +35,11 @@ public class BdictionaryTests
     [Fact]
     public void ContainsKeyReturnsTrueForExistingKey()
     {
-        var key = new Bstring([0x61]);
+        var key = new BString([0x61]);
 
-        var dict = new Bdictionary(new Dictionary<Bstring, IBobject>
+        var dict = new BDictionary(new Dictionary<BString, IBObject>
         {
-            [key] = new Binteger(1)
+            [key] = new BInteger(1)
         });
 
         Assert.True(dict.ContainsKey(key));
@@ -48,21 +48,21 @@ public class BdictionaryTests
     [Fact]
     public void ContainsKeyReturnsTrueForInlineKey()
     {
-        var dict = new Bdictionary(new Dictionary<Bstring, IBobject>
+        var dict = new BDictionary(new Dictionary<BString, IBObject>
         {
-            [new Bstring([0x61])] = new Binteger(1)
+            [new BString([0x61])] = new BInteger(1)
         });
 
-        Assert.True(dict.ContainsKey(new Bstring([0x61])));
+        Assert.True(dict.ContainsKey(new BString([0x61])));
     }
 
     [Fact]
     public void TryGetValueReturnsValueWhenKeyExists()
     {
-        var key = new Bstring([0x61]);
-        var value = new Binteger(1);
+        var key = new BString([0x61]);
+        var value = new BInteger(1);
 
-        var dict = new Bdictionary(new Dictionary<Bstring, IBobject>
+        var dict = new BDictionary(new Dictionary<BString, IBObject>
         {
             [key] = value
         });
@@ -76,28 +76,28 @@ public class BdictionaryTests
     [Fact]
     public void TryGetValueReturnsValueWhenInlineKeyAndValueExist()
     {
-        var dict = new Bdictionary(new Dictionary<Bstring, IBobject>
+        var dict = new BDictionary(new Dictionary<BString, IBObject>
         {
-            [new Bstring([0x61])] = new Binteger(1)
+            [new BString([0x61])] = new BInteger(1)
         });
 
-        var found = dict.TryGetValue(new Bstring([0x61]), out var result);
+        var found = dict.TryGetValue(new BString([0x61]), out var result);
 
         Assert.True(found);
-        Assert.Equal(new Binteger(1), result);
+        Assert.Equal(new BInteger(1), result);
     }
 
     [Fact]
     public void ConstructorTakesImmutableSnapshot()
     {
-        var source = new Dictionary<Bstring, IBobject>
+        var source = new Dictionary<BString, IBObject>
         {
-            [new Bstring([0x61])] = new Binteger(1)
+            [new BString([0x61])] = new BInteger(1)
         };
 
-        var dict = new Bdictionary(source);
+        var dict = new BDictionary(source);
 
-        source[new Bstring([0x62])] = new Binteger(2);
+        source[new BString([0x62])] = new BInteger(2);
 
         Assert.Single(dict);
     }
@@ -105,18 +105,18 @@ public class BdictionaryTests
     [Fact]
     public void KeysAreSortedLexicographically()
     {
-        var dict = new Bdictionary(new Dictionary<Bstring, IBobject>
+        var dict = new BDictionary(new Dictionary<BString, IBObject>
         {
-            [new Bstring([0x62])] = new Binteger(2), // "b"
-            [new Bstring([0x61])] = new Binteger(1), // "a"
+            [new BString([0x62])] = new BInteger(2), // "b"
+            [new BString([0x61])] = new BInteger(1), // "a"
         });
 
         var keys = dict.Keys.ToArray();
 
         Assert.Equal(
             new[] {
-                new Bstring([0x61]),
-                new Bstring([0x62])
+                new BString([0x61]),
+                new BString([0x62])
             },
             keys
         );
@@ -125,7 +125,7 @@ public class BdictionaryTests
     [Fact]
     public void ToStringEmptyDictionary()
     {
-        var dict = new Bdictionary(new Dictionary<Bstring, IBobject>());
+        var dict = new BDictionary(new Dictionary<BString, IBObject>());
 
         Assert.Equal("de", dict.ToString());
     }
@@ -133,10 +133,10 @@ public class BdictionaryTests
     [Fact]
     public void ToStringEncodesDictionaryInCanonicalOrder()
     {
-        var dict = new Bdictionary(new Dictionary<Bstring, IBobject>
+        var dict = new BDictionary(new Dictionary<BString, IBObject>
         {
-            [new Bstring([0x62])] = new Binteger(2),
-            [new Bstring([0x61])] = new Binteger(1),
+            [new BString([0x62])] = new BInteger(2),
+            [new BString([0x61])] = new BInteger(1),
         });
 
         Assert.Equal("d1:ai1e1:bi2ee", dict.ToString());
@@ -145,9 +145,9 @@ public class BdictionaryTests
     [Fact]
     public void ToBinaryEncodingMatchesToStringASCII()
     {
-        var dict = new Bdictionary(new Dictionary<Bstring, IBobject>
+        var dict = new BDictionary(new Dictionary<BString, IBObject>
         {
-            [new Bstring([0x61])] = new Binteger(1)
+            [new BString([0x61])] = new BInteger(1)
         });
 
         var bytes = dict.ToBinaryEncoding();
@@ -159,16 +159,16 @@ public class BdictionaryTests
     [Fact]
     public void EqualsReturnsTrueForSameKeyValuePairsInDifferentOrder()
     {
-        var a = new Bdictionary(new Dictionary<Bstring, IBobject>
+        var a = new BDictionary(new Dictionary<BString, IBObject>
         {
-            [new Bstring([0x61])] = new Binteger(1),
-            [new Bstring([0x62])] = new Binteger(2),
+            [new BString([0x61])] = new BInteger(1),
+            [new BString([0x62])] = new BInteger(2),
         });
 
-        var b = new Bdictionary(new Dictionary<Bstring, IBobject>
+        var b = new BDictionary(new Dictionary<BString, IBObject>
         {
-            [new Bstring([0x62])] = new Binteger(2),
-            [new Bstring([0x61])] = new Binteger(1),
+            [new BString([0x62])] = new BInteger(2),
+            [new BString([0x61])] = new BInteger(1),
         });
 
         Assert.True(a.Equals(b));
@@ -177,19 +177,19 @@ public class BdictionaryTests
     [Fact]
     public void EqualsReturnsTrueForNestedStructures()
     {
-        var a = new Bdictionary(new Dictionary<Bstring, IBobject>
+        var a = new BDictionary(new Dictionary<BString, IBObject>
         {
-            [new Bstring([0x61])] = new Blist([
-                new Binteger(1),
-                new Binteger(2)
+            [new BString([0x61])] = new BList([
+                new BInteger(1),
+                new BInteger(2)
             ])
         });
 
-        var b = new Bdictionary(new Dictionary<Bstring, IBobject>
+        var b = new BDictionary(new Dictionary<BString, IBObject>
         {
-            [new Bstring([0x61])] = new Blist([
-                new Binteger(1),
-                new Binteger(2)
+            [new BString([0x61])] = new BList([
+                new BInteger(1),
+                new BInteger(2)
             ])
         });
 
@@ -199,33 +199,33 @@ public class BdictionaryTests
     [Fact]
     public void EqualDictionariesHaveSameHashCode()
     {
-        var a = new Bdictionary(new Dictionary<Bstring, IBobject>
+        var a = new BDictionary(new Dictionary<BString, IBObject>
         {
-            [new Bstring([0x61])] = new Binteger(1)
+            [new BString([0x61])] = new BInteger(1)
         });
 
-        var b = new Bdictionary(new Dictionary<Bstring, IBobject>
+        var b = new BDictionary(new Dictionary<BString, IBObject>
         {
-            [new Bstring([0x61])] = new Binteger(1)
+            [new BString([0x61])] = new BInteger(1)
         });
 
         Assert.Equal(a.GetHashCode(), b.GetHashCode());
     }
 
     [Fact]
-    public void BdictionaryCanBeUsedAsDictionaryKey()
+    public void BDictionaryCanBeUsedAsDictionaryKey()
     {
-        var outer = new Dictionary<IBobject, string>();
+        var outer = new Dictionary<IBObject, string>();
 
-        outer[new Bdictionary(new Dictionary<Bstring, IBobject>
+        outer[new BDictionary(new Dictionary<BString, IBObject>
         {
-            [new Bstring([0x61])] = new Binteger(1)
+            [new BString([0x61])] = new BInteger(1)
         })] = "value";
 
         Assert.True(outer.ContainsKey(
-            new Bdictionary(new Dictionary<Bstring, IBobject>
+            new BDictionary(new Dictionary<BString, IBObject>
             {
-                [new Bstring([0x61])] = new Binteger(1)
+                [new BString([0x61])] = new BInteger(1)
             })
         ));
     }
@@ -233,7 +233,7 @@ public class BdictionaryTests
     [Fact]
     public void EncodedLengthMatchesBinaryEncodingLengthForEmptyDictionary()
     {
-        var bdict = new Bdictionary(ImmutableDictionary<Bstring, IBobject>.Empty);
+        var bdict = new BDictionary(ImmutableDictionary<BString, IBObject>.Empty);
 
         var encoded = bdict.ToBinaryEncoding();
         var length = bdict.GetEncodedLength();
@@ -244,14 +244,14 @@ public class BdictionaryTests
     [Fact]
     public void EncodedLengthMatchesBinaryEncodingLengthForDictionaryWithValues()
     {
-        var bdict = new Bdictionary(new Dictionary<Bstring, IBobject>
+        var bdict = new BDictionary(new Dictionary<BString, IBObject>
         {
-            [new Bstring("key", Encoding.UTF8)] = new Binteger(123),
-            [new Bstring("value", Encoding.UTF8)] = new Bstring("hello", Encoding.UTF8),
-            [new Bstring("nested", Encoding.UTF8)] = new Blist(
+            [new BString("key", Encoding.UTF8)] = new BInteger(123),
+            [new BString("value", Encoding.UTF8)] = new BString("hello", Encoding.UTF8),
+            [new BString("nested", Encoding.UTF8)] = new BList(
             [
-                new Binteger(1),
-                new Binteger(2)
+                new BInteger(1),
+                new BInteger(2)
             ])
         });
 

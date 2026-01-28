@@ -28,7 +28,7 @@ public class DecoderStressTests
         {
             var result = decoder.Decode(bencode);
 
-            var str = Assert.IsType<Bstring>(result);
+            var str = Assert.IsType<BString>(result);
             Assert.Equal(size, str.Value.Length);
             Assert.All(str.Value, b => Assert.Equal((byte)'a', b));
         }
@@ -58,9 +58,9 @@ public class DecoderStressTests
         {
             var result = decoder.Decode(sb.ToString());
 
-            var list = Assert.IsType<Blist>(result);
+            var list = Assert.IsType<BList>(result);
             Assert.Equal(count, list.Count);
-            Assert.All(list, i => Assert.Equal(1, Assert.IsType<Binteger>(i).Value));
+            Assert.All(list, i => Assert.Equal(1, Assert.IsType<BInteger>(i).Value));
         }
     }
 
@@ -88,10 +88,10 @@ public class DecoderStressTests
         {
             var result = decoder.Decode(sb.ToString());
 
-            IBobject current = result;
+            IBObject current = result;
             for (int i = 0; i < depth; i++)
             {
-                var list = Assert.IsType<Blist>(current);
+                var list = Assert.IsType<BList>(current);
                 Assert.Single(list);
                 current = list[0];
             }
@@ -125,11 +125,11 @@ public class DecoderStressTests
         {
             var result = decoder.Decode(sb.ToString());
 
-            IBobject current = result;
+            IBObject current = result;
             for (int i = 0; i < depth; i++)
             {
-                var dict = Assert.IsType<Bdictionary>(current);
-                current = dict[new Bstring("a", Encoding.ASCII)];
+                var dict = Assert.IsType<BDictionary>(current);
+                current = dict[new BString("a", Encoding.ASCII)];
             }
         }
     }

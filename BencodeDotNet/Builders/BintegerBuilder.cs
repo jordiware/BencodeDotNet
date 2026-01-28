@@ -18,7 +18,7 @@ namespace Jordiware.BencodeDotNet.Builders;
 /// </para>
 /// <para>
 /// The builder accumulates the numeric value digit-by-digit and produces
-/// a <see cref="Binteger"/> once construction is complete.
+/// a <see cref="BInteger"/> once construction is complete.
 /// </para>
 /// </remarks>
 internal sealed class BintegerBuilder : BobjectBuilder
@@ -117,10 +117,10 @@ internal sealed class BintegerBuilder : BobjectBuilder
 
     /// <summary>
     /// Finalizes the integer and returns the corresponding
-    /// <see cref="Binteger"/> instance.
+    /// <see cref="BInteger"/> instance.
     /// </summary>
     /// <returns>
-    /// A fully constructed <see cref="Binteger"/>.
+    /// A fully constructed <see cref="BInteger"/>.
     /// </returns>
     /// <exception cref="BencodeFormatException">
     /// Thrown if no digits have been provided.
@@ -128,7 +128,7 @@ internal sealed class BintegerBuilder : BobjectBuilder
     /// <exception cref="ObjectDisposedException">
     /// Thrown if the builder has been disposed.
     /// </exception>
-    public override IBobject ToBobject()
+    public override IBObject ToBobject()
     {
         ThrowIfDisposed();
 
@@ -136,7 +136,7 @@ internal sealed class BintegerBuilder : BobjectBuilder
             throw new BencodeFormatException("Builder has no value");
 
         var value = _isPositive ? _value : -_value;
-        return new Binteger(value.Value);
+        return new BInteger(value.Value);
     }
 
     /// <summary>

@@ -19,7 +19,7 @@ namespace Jordiware.BencodeDotNet.Serializers;
 /// and falls back to the global serializer registry for non-extensible or primitive types.
 /// </para>
 /// <para>
-/// Serialization produces a <see cref="Blist"/> containing the serialized representation
+/// Serialization produces a <see cref="BList"/> containing the serialized representation
 /// of each element in enumeration order. Deserialization materializes the result eagerly
 /// into a concrete collection to avoid deferred execution and lifetime issues.
 /// </para>
@@ -29,7 +29,7 @@ namespace Jordiware.BencodeDotNet.Serializers;
 /// resolved, or if any individual element fails to serialize or deserialize.
 /// </para>
 /// </remarks>
-public sealed class EnumerableBencodeSerializer<TType> : ReferenceTypeBencodeSerializer<IEnumerable<TType>, Blist>
+public sealed class EnumerableBencodeSerializer<TType> : ReferenceTypeBencodeSerializer<IEnumerable<TType>, BList>
 {
     private readonly BencodeOptions _options;
 
@@ -75,13 +75,13 @@ public sealed class EnumerableBencodeSerializer<TType> : ReferenceTypeBencodeSer
     }
 
     /// <summary>
-    /// Attempts to serialize an <see cref="IEnumerable{T}"/> into a <see cref="Blist"/>.
+    /// Attempts to serialize an <see cref="IEnumerable{T}"/> into a <see cref="BList"/>.
     /// </summary>
     /// <param name="input">
     /// The enumerable to serialize.
     /// </param>
     /// <param name="output">
-    /// When this method returns <c>true</c>, contains the resulting <see cref="Blist"/>
+    /// When this method returns <c>true</c>, contains the resulting <see cref="BList"/>
     /// representation of the enumerable; otherwise, <c>null</c>.
     /// </param>
     /// <returns>
@@ -93,7 +93,7 @@ public sealed class EnumerableBencodeSerializer<TType> : ReferenceTypeBencodeSer
     /// serializer for <typeparamref name="TType"/> can be resolved, or if serialization
     /// of any individual element fails.
     /// </remarks>
-    public override bool TrySerialize(IEnumerable<TType> input, out Blist? output)
+    public override bool TrySerialize(IEnumerable<TType> input, out BList? output)
     {
         output = default;
         if (input is null)
@@ -102,7 +102,7 @@ public sealed class EnumerableBencodeSerializer<TType> : ReferenceTypeBencodeSer
         if (!BencodeSerializer.TryGetSerializerForType(typeof(TType), _options, out var serializer))
             return false;
 
-        var objects = new List<IBobject>();
+        var objects = new List<IBObject>();
         foreach (var item in input)
         {
             if (!serializer!.TrySerialize(item!, out var serialized))
@@ -110,15 +110,15 @@ public sealed class EnumerableBencodeSerializer<TType> : ReferenceTypeBencodeSer
             objects.Add(serialized!);
         }
 
-        output = new Blist(objects!);
+        output = new BList(objects!);
         return true;
     }
 
     /// <summary>
-    /// Attempts to deserialize a <see cref="Blist"/> into an <see cref="IEnumerable{T}"/>.
+    /// Attempts to deserialize a <see cref="BList"/> into an <see cref="IEnumerable{T}"/>.
     /// </summary>
     /// <param name="input">
-    /// The <see cref="Blist"/> to deserialize.
+    /// The <see cref="BList"/> to deserialize.
     /// </param>
     /// <param name="output">
     /// When this method returns <c>true</c>, contains a materialized enumerable of
@@ -132,15 +132,15 @@ public sealed class EnumerableBencodeSerializer<TType> : ReferenceTypeBencodeSer
     /// <para>
     /// Deserialization resolves a serializer for <typeparamref name="TType"/> using the same
     /// attribute-first, registry-fallback strategy as serialization. Each element in the
-    /// <see cref="Blist"/> must be compatible with the resolved serializer.
+    /// <see cref="BList"/> must be compatible with the resolved serializer.
     /// </para>
     /// <para>
     /// The resulting enumerable is eagerly materialized into a concrete collection to ensure
     /// deterministic behavior and to decouple the result from the lifetime of the underlying
-    /// <see cref="Blist"/>.
+    /// <see cref="BList"/>.
     /// </para>
     /// </remarks>
-    public override bool TryDeserialize(Blist input, out IEnumerable<TType>? output)
+    public override bool TryDeserialize(BList input, out IEnumerable<TType>? output)
     {
         output = default;
         if (input is null)

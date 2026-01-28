@@ -7,7 +7,7 @@ namespace Jordiware.BencodeDotNet;
 
 /// <summary>
 /// Provides synchronous and asynchronous decoding of Bencode-encoded data
-/// into strongly-typed <see cref="IBobject"/> representations.
+/// into strongly-typed <see cref="IBObject"/> representations.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -53,13 +53,13 @@ public sealed class BencodeDecoder : BencodeIO
     /// A byte array containing exactly one Bencode-encoded value.
     /// </param>
     /// <returns>
-    /// The decoded <see cref="IBobject"/> instance.
+    /// The decoded <see cref="IBObject"/> instance.
     /// </returns>
     /// <exception cref="BencodeFormatException">
     /// Thrown if the input does not contain a valid Bencode object,
     /// contains multiple top-level objects, or includes trailing data.
     /// </exception>
-    public IBobject Decode(byte[] bytes)
+    public IBObject Decode(byte[] bytes)
     {
         var rom = new ReadOnlyMemory<byte>(bytes);
         return Decode(rom);
@@ -72,13 +72,13 @@ public sealed class BencodeDecoder : BencodeIO
     /// The string containing Bencode-encoded data.
     /// </param>
     /// <returns>
-    /// The decoded <see cref="IBobject"/> instance.
+    /// The decoded <see cref="IBObject"/> instance.
     /// </returns>
     /// <exception cref="BencodeFormatException">
     /// Thrown if the encoded data does not represent a valid Bencode object
     /// or contains trailing data.
     /// </exception>
-    public IBobject Decode(string s)
+    public IBObject Decode(string s)
     {
         var bytes = _options.TextEncoding.GetBytes(s);
         var rom = new ReadOnlyMemory<byte>(bytes);
@@ -92,19 +92,19 @@ public sealed class BencodeDecoder : BencodeIO
     /// A read-only span containing exactly one Bencode-encoded value.
     /// </param>
     /// <returns>
-    /// The decoded <see cref="IBobject"/> instance.
+    /// The decoded <see cref="IBObject"/> instance.
     /// </returns>
     /// <exception cref="BencodeFormatException">
     /// Thrown if the input does not represent a valid Bencode object
     /// or contains trailing data.
     /// </exception>
-    public IBobject Decode(ReadOnlySpan<byte> data)
+    public IBObject Decode(ReadOnlySpan<byte> data)
     {
         var rom = new ReadOnlyMemory<byte>(data.ToArray());
         return Decode(rom);
     }
 
-    private IBobject Decode(ReadOnlyMemory<byte> rom)
+    private IBObject Decode(ReadOnlyMemory<byte> rom)
     {
         var stack = new Stack<BobjectBuilder>();
 
@@ -240,7 +240,7 @@ public sealed class BencodeDecoder : BencodeIO
     /// or the serializer produced a <see langword="null"/> result.
     /// </exception>
     public TResult Decode<TResult, TBobject>(byte[] bytes, BencodeSerializer<TResult, TBobject> serializer)
-        where TBobject : IBobject
+        where TBobject : IBObject
     {
         if (bytes is null)
             throw new ArgumentNullException(nameof(bytes));
@@ -282,7 +282,7 @@ public sealed class BencodeDecoder : BencodeIO
     /// or the serializer produced a <see langword="null"/> result.
     /// </exception>
     public TResult Decode<TResult, TBobject>(string s, BencodeSerializer<TResult, TBobject> serializer)
-        where TBobject : IBobject
+        where TBobject : IBObject
     {
         if (string.IsNullOrWhiteSpace(s))
             throw new ArgumentException("Input string cannot be null, empty, or whitespace.", nameof(s));
@@ -321,7 +321,7 @@ public sealed class BencodeDecoder : BencodeIO
     /// or the serializer produced a <see langword="null"/> result.
     /// </exception>
     public TResult Decode<TResult, TBobject>(ReadOnlySpan<byte> data, BencodeSerializer<TResult, TBobject> serializer)
-        where TBobject : IBobject
+        where TBobject : IBObject
     {
         if (serializer is null)
             throw new ArgumentNullException(nameof(serializer));
@@ -331,7 +331,7 @@ public sealed class BencodeDecoder : BencodeIO
     }
 
     private TResult Decode<TResult, TBobject>(ReadOnlyMemory<byte> rom, BencodeSerializer<TResult, TBobject> serializer)
-        where TBobject : IBobject
+        where TBobject : IBObject
     {
         var decoded = Decode(rom);
         if (decoded is not TBobject bobject || !serializer.TryDeserialize(bobject, out var result))

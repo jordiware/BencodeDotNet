@@ -79,11 +79,11 @@ public class StringBencodeSerializerTests
     [InlineData(0)]
     [InlineData(5)]
     [InlineData(128)]
-    public void TryDeserializeEmptyAndNonEmptyBstrings(int byteCount)
+    public void TryDeserializeEmptyAndNonEmptyBStrings(int byteCount)
     {
         var serializer = new StringBencodeSerializer(StringBencodeSerializer.DefaultEncoding);
         var bytes = new byte[byteCount];
-        var bstring = new Bstring(bytes);
+        var bstring = new BString(bytes);
 
         var result = serializer.TryDeserialize(bstring, out var output);
 

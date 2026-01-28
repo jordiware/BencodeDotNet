@@ -33,7 +33,7 @@ public class EnumBencodeSerializerTests
     [InlineData(SimpleEnum.Zero, 0)]
     [InlineData(SimpleEnum.One, 1)]
     [InlineData(SimpleEnum.Two, 2)]
-    public void SerializeNonFlagsEnumProducesExpectedBinteger(SimpleEnum input, long expected)
+    public void SerializeNonFlagsEnumProducesExpectedBInteger(SimpleEnum input, long expected)
     {
         var serializer = new EnumBencodeSerializer<SimpleEnum>();
 
@@ -51,7 +51,7 @@ public class EnumBencodeSerializerTests
     public void DeserializeNonFlagsEnumWithDefinedValueSucceeds(long input, SimpleEnum expected)
     {
         var serializer = new EnumBencodeSerializer<SimpleEnum>();
-        var bencode = new Binteger(input);
+        var bencode = new BInteger(input);
 
         var result = serializer.TryDeserialize(bencode, out var value);
 
@@ -66,7 +66,7 @@ public class EnumBencodeSerializerTests
     public void DeserializeNonFlagsEnumWithUndefinedValueFails(long input)
     {
         var serializer = new EnumBencodeSerializer<SimpleEnum>();
-        var bencode = new Binteger(input);
+        var bencode = new BInteger(input);
 
         var result = serializer.TryDeserialize(bencode, out _);
 
@@ -95,7 +95,7 @@ public class EnumBencodeSerializerTests
     [InlineData(FlagsEnum.Execute, 4)]
     [InlineData(FlagsEnum.Read | FlagsEnum.Write, 3)]
     [InlineData(FlagsEnum.Read | FlagsEnum.Execute, 5)]
-    public void SerializeFlagsEnumProducesExpectedBinteger(FlagsEnum input, long expected)
+    public void SerializeFlagsEnumProducesExpectedBInteger(FlagsEnum input, long expected)
     {
         var serializer = new EnumBencodeSerializer<FlagsEnum>();
 
@@ -114,7 +114,7 @@ public class EnumBencodeSerializerTests
     public void DeserializeFlagsEnumWithCompositeValueSucceeds(long input, FlagsEnum expected)
     {
         var serializer = new EnumBencodeSerializer<FlagsEnum>();
-        var bencode = new Binteger(input);
+        var bencode = new BInteger(input);
 
         var result = serializer.TryDeserialize(bencode, out var value);
 
@@ -146,7 +146,7 @@ public class EnumBencodeSerializerTests
     public void DeserializeFlagsEnumWithOutOfRangeValueFails(long input)
     {
         var serializer = new EnumBencodeSerializer<ByteFlagsEnum>();
-        var bencode = new Binteger(input);
+        var bencode = new BInteger(input);
 
         var result = serializer.TryDeserialize(bencode, out _);
 

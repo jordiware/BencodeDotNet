@@ -21,12 +21,12 @@ namespace Jordiware.BencodeDotNet.Objects;
 /// <c>l4:spami42ee</c>
 /// </para>
 /// </remarks>
-public sealed class Blist : IBobject, IReadOnlyList<IBobject>, IEquatable<Blist>
+public sealed class BList : IBObject, IReadOnlyList<IBObject>, IEquatable<BList>
 {
-    private readonly ImmutableArray<IBobject> _objects;
+    private readonly ImmutableArray<IBObject> _objects;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="Blist"/> class
+    /// Initializes a new instance of the <see cref="BList"/> class
     /// from the specified sequence of Bencode objects.
     /// </summary>
     /// <param name="objects">
@@ -35,7 +35,7 @@ public sealed class Blist : IBobject, IReadOnlyList<IBobject>, IEquatable<Blist>
     /// <exception cref="ArgumentNullException">
     /// Thrown if <paramref name="objects"/> is <see langword="null"/>.
     /// </exception>
-    public Blist(IEnumerable<IBobject> objects)
+    public BList(IEnumerable<IBObject> objects)
     {
         _objects = objects.ToImmutableArray();
     }
@@ -47,7 +47,7 @@ public sealed class Blist : IBobject, IReadOnlyList<IBobject>, IEquatable<Blist>
     /// <param name="index">
     /// The zero-based index of the element to retrieve.
     /// </param>
-    public IBobject this[int index] => _objects[index];
+    public IBObject this[int index] => _objects[index];
 
     /// <summary>
     /// Gets the number of elements contained in the list.
@@ -58,17 +58,17 @@ public sealed class Blist : IBobject, IReadOnlyList<IBobject>, IEquatable<Blist>
     /// Returns an enumerator that iterates through the elements
     /// of the Bencode list.
     /// </summary>
-    public IEnumerator<IBobject> GetEnumerator()
+    public IEnumerator<IBObject> GetEnumerator()
     {
         return _objects.AsEnumerable().GetEnumerator();
     }
 
     /// <summary>
-    /// Determines whether the current <see cref="Blist"/> is equal to
-    /// another <see cref="Blist"/>.
+    /// Determines whether the current <see cref="BList"/> is equal to
+    /// another <see cref="BList"/>.
     /// </summary>
     /// <param name="other">
-    /// The <see cref="Blist"/> to compare with this instance.
+    /// The <see cref="BList"/> to compare with this instance.
     /// </param>
     /// <returns>
     /// <see langword="true"/> if both lists contain the same number
@@ -78,7 +78,7 @@ public sealed class Blist : IBobject, IReadOnlyList<IBobject>, IEquatable<Blist>
     /// <remarks>
     /// Equality is order-sensitive and is evaluated element-by-element.
     /// </remarks>
-    public bool Equals(Blist? other)
+    public bool Equals(BList? other)
     {
         if (other == null) return false;
         if (ReferenceEquals(this, other)) return true;
@@ -87,7 +87,7 @@ public sealed class Blist : IBobject, IReadOnlyList<IBobject>, IEquatable<Blist>
     }
 
     /// <summary>
-    /// Serializes the current <see cref="Blist"/> into its binary
+    /// Serializes the current <see cref="BList"/> into its binary
     /// Bencode representation.
     /// </summary>
     /// <returns>
@@ -97,7 +97,7 @@ public sealed class Blist : IBobject, IReadOnlyList<IBobject>, IEquatable<Blist>
     public byte[] ToBinaryEncoding()
     {
         var encoded = new List<byte>([ Bencode.ListBeginCharacter ]);
-        foreach (IBobject o in _objects)
+        foreach (IBObject o in _objects)
         {
             encoded.AddRange(o.ToBinaryEncoding());
         }
@@ -153,8 +153,8 @@ public sealed class Blist : IBobject, IReadOnlyList<IBobject>, IEquatable<Blist>
     /// <c>l&lt;item1&gt;&lt;item2&gt;...e</c>.
     /// </para>
     /// <para>
-    /// Each contained <see cref="IBobject"/> is written in sequence using its own
-    /// <see cref="IBobject.WriteToPipeAsync"/> implementation.
+    /// Each contained <see cref="IBObject"/> is written in sequence using its own
+    /// <see cref="IBObject.WriteToPipeAsync"/> implementation.
     /// </para>
     /// </remarks>
     public async Task WriteToPipeAsync(PipeWriter writer, CancellationToken cancellationToken = default)
@@ -182,7 +182,7 @@ public sealed class Blist : IBobject, IReadOnlyList<IBobject>, IEquatable<Blist>
     /// <inheritdoc />
     public override bool Equals(object? obj)
     {
-        return obj is Blist other && Equals(other);
+        return obj is BList other && Equals(other);
     }
 
     /// <inheritdoc />

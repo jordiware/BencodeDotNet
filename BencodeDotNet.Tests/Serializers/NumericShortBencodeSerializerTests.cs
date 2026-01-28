@@ -30,7 +30,7 @@ public class ShortBencodeSerializerTests
     [InlineData(32767)]
     public void TryDeserializeValidShortRangeSucceeds(long encodedValue)
     {
-        var binteger = new Binteger(encodedValue);
+        var binteger = new BInteger(encodedValue);
 
         var result = Serializer.TryDeserialize(binteger, out var value);
 
@@ -47,7 +47,7 @@ public class ShortBencodeSerializerTests
     [InlineData(long.MaxValue)]
     public void TryDeserializeOutOfShortRangeFails(long encodedValue)
     {
-        var binteger = new Binteger(encodedValue);
+        var binteger = new BInteger(encodedValue);
 
         var result = Serializer.TryDeserialize(binteger, out var value);
 
@@ -95,7 +95,7 @@ public class UshortBencodeSerializerTests
     [InlineData(65535)]
     public void TryDeserializeValidUshortRangeSucceeds(long encodedValue)
     {
-        var binteger = new Binteger(encodedValue);
+        var binteger = new BInteger(encodedValue);
 
         var result = Serializer.TryDeserialize(binteger, out var value);
 
@@ -112,7 +112,7 @@ public class UshortBencodeSerializerTests
     [InlineData(long.MaxValue)]
     public void TryDeserializeOutOfUshortRangeFails(long encodedValue)
     {
-        var binteger = new Binteger(encodedValue);
+        var binteger = new BInteger(encodedValue);
 
         var result = Serializer.TryDeserialize(binteger, out var value);
 

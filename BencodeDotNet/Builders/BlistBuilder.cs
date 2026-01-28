@@ -3,13 +3,13 @@
 namespace Jordiware.BencodeDotNet.Builders;
 
 /// <summary>
-/// Incrementally builds a <see cref="Blist"/> by collecting fully parsed child objects.
+/// Incrementally builds a <see cref="BList"/> by collecting fully parsed child objects.
 /// </summary>
 /// <remarks>
 /// <para>
 /// This builder is used by the decoder once a list start marker (<c>'l'</c>) has
 /// been encountered. Child objects are pushed in encounter order and preserved
-/// verbatim in the resulting <see cref="Blist"/>.
+/// verbatim in the resulting <see cref="BList"/>.
 /// </para>
 /// <para>
 /// Structural framing (list start and termination characters) is handled externally
@@ -19,7 +19,7 @@ namespace Jordiware.BencodeDotNet.Builders;
 /// </remarks>
 internal sealed class BlistBuilder : BobjectBuilder
 {
-    private List<IBobject>? _objects = new();
+    private List<IBObject>? _objects = new();
 
     /// <summary>
     /// Initializes a new <see cref="BlistBuilder"/>.
@@ -42,7 +42,7 @@ internal sealed class BlistBuilder : BobjectBuilder
     /// <exception cref="ObjectDisposedException">
     /// Thrown if the builder has been disposed.
     /// </exception>
-    public void PushObject(IBobject obj)
+    public void PushObject(IBObject obj)
     {
         ThrowIfDisposed();
 
@@ -53,18 +53,18 @@ internal sealed class BlistBuilder : BobjectBuilder
     }
 
     /// <summary>
-    /// Finalizes the builder and produces a <see cref="Blist"/> containing all
+    /// Finalizes the builder and produces a <see cref="BList"/> containing all
     /// accumulated child objects.
     /// </summary>
-    /// <returns>The constructed <see cref="Blist"/>.</returns>
+    /// <returns>The constructed <see cref="BList"/>.</returns>
     /// <exception cref="ObjectDisposedException">
     /// Thrown if the builder has been disposed.
     /// </exception>
-    public override IBobject ToBobject()
+    public override IBObject ToBobject()
     {
         ThrowIfDisposed();
 
-        return new Blist(_objects!);
+        return new BList(_objects!);
     }
 
     /// <summary>

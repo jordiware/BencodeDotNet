@@ -26,7 +26,7 @@ namespace Jordiware.BencodeDotNet.Objects;
 /// </list>
 /// </para>
 /// </remarks>
-public sealed class Bstring : IBobject, IReadOnlyList<byte>, IEquatable<Bstring>, IComparable<Bstring>
+public sealed class BString : IBObject, IReadOnlyList<byte>, IEquatable<BString>, IComparable<BString>
 {
     private readonly ImmutableArray<byte> _bytes;
 
@@ -39,7 +39,7 @@ public sealed class Bstring : IBobject, IReadOnlyList<byte>, IEquatable<Bstring>
     public byte[] Value => _bytes.ToArray();
 
     /// <summary>
-    /// Initializes a new <see cref="Bstring"/> from a raw byte array.
+    /// Initializes a new <see cref="BString"/> from a raw byte array.
     /// </summary>
     /// <param name="bytes">
     /// The byte sequence represented by the Bencode string.
@@ -47,13 +47,13 @@ public sealed class Bstring : IBobject, IReadOnlyList<byte>, IEquatable<Bstring>
     /// <exception cref="ArgumentNullException">
     /// Thrown if <paramref name="bytes"/> is <see langword="null"/>.
     /// </exception>
-    public Bstring(byte[] bytes)
+    public BString(byte[] bytes)
     {
         _bytes = bytes.ToImmutableArray();
     }
 
     /// <summary>
-    /// Initializes a new <see cref="Bstring"/> from a string using
+    /// Initializes a new <see cref="BString"/> from a string using
     /// the specified text encoding.
     /// </summary>
     /// <param name="s">
@@ -66,7 +66,7 @@ public sealed class Bstring : IBobject, IReadOnlyList<byte>, IEquatable<Bstring>
     /// Thrown if <paramref name="s"/> or <paramref name="encoding"/> is
     /// <see langword="null"/>.
     /// </exception>
-    public Bstring(string s, Encoding encoding)
+    public BString(string s, Encoding encoding)
     {
         _bytes = encoding.GetBytes(s).ToImmutableArray();
     }
@@ -86,11 +86,11 @@ public sealed class Bstring : IBobject, IReadOnlyList<byte>, IEquatable<Bstring>
     public int Count => _bytes.Length;
 
     /// <summary>
-    /// Compares the current <see cref="Bstring"/> with another
-    /// <see cref="Bstring"/> using lexicographical byte ordering.
+    /// Compares the current <see cref="BString"/> with another
+    /// <see cref="BString"/> using lexicographical byte ordering.
     /// </summary>
     /// <param name="other">
-    /// The <see cref="Bstring"/> to compare with this instance.
+    /// The <see cref="BString"/> to compare with this instance.
     /// </param>
     /// <returns>
     /// A value less than zero if this instance precedes <paramref name="other"/>,
@@ -101,7 +101,7 @@ public sealed class Bstring : IBobject, IReadOnlyList<byte>, IEquatable<Bstring>
     /// Comparison is performed byte-by-byte. If all compared bytes are equal,
     /// the shorter string is considered smaller.
     /// </remarks>
-    public int CompareTo(Bstring? other)
+    public int CompareTo(BString? other)
     {
         if (other == null) return 1;
         if (ReferenceEquals(this, other)) return 0;
@@ -117,17 +117,17 @@ public sealed class Bstring : IBobject, IReadOnlyList<byte>, IEquatable<Bstring>
     }
 
     /// <summary>
-    /// Determines whether the current <see cref="Bstring"/> is equal to
-    /// another <see cref="Bstring"/>.
+    /// Determines whether the current <see cref="BString"/> is equal to
+    /// another <see cref="BString"/>.
     /// </summary>
     /// <param name="other">
-    /// The <see cref="Bstring"/> to compare with this instance.
+    /// The <see cref="BString"/> to compare with this instance.
     /// </param>
     /// <returns>
     /// <see langword="true"/> if the underlying byte sequences are equal;
     /// otherwise, <see langword="false"/>.
     /// </returns>
-    public bool Equals(Bstring? other)
+    public bool Equals(BString? other)
     {
         if (other == null) return false;
         if (ReferenceEquals(this, other)) return true;
@@ -145,7 +145,7 @@ public sealed class Bstring : IBobject, IReadOnlyList<byte>, IEquatable<Bstring>
     }
 
     /// <summary>
-    /// Serializes the current <see cref="Bstring"/> into its binary
+    /// Serializes the current <see cref="BString"/> into its binary
     /// Bencode representation.
     /// </summary>
     /// <returns>
@@ -237,7 +237,7 @@ public sealed class Bstring : IBobject, IReadOnlyList<byte>, IEquatable<Bstring>
     /// <inheritdoc />
     public override bool Equals(object? obj)
     {
-        return obj is Bstring other && Equals(other);
+        return obj is BString other && Equals(other);
     }
 
     /// <inheritdoc />

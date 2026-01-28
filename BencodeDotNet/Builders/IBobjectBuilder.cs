@@ -12,7 +12,7 @@ namespace Jordiware.BencodeDotNet.Builders;
 /// from a streaming input source.
 /// <para>
 /// A builder encapsulates the mutable state required during decoding
-/// and produces an immutable <see cref="IBobject"/> when construction
+/// and produces an immutable <see cref="IBObject"/> when construction
 /// is complete.
 /// </para>
 /// <para>
@@ -25,12 +25,12 @@ internal interface IBobjectBuilder : IDisposable
     /// Finalizes construction and returns the built Bencode object.
     /// </summary>
     /// <returns>
-    /// The fully constructed <see cref="IBobject"/>.
+    /// The fully constructed <see cref="IBObject"/>.
     /// </returns>
     /// <remarks>
     /// This method should only be called once the builder has received
     /// all required data. Calling this method multiple times or after
     /// disposal results in undefined behavior.
     /// </remarks>
-    IBobject ToBobject();
+    IBObject ToBobject();
 }

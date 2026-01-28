@@ -40,13 +40,13 @@ public class ReadMultipleTests
     {
         var reader = new BencodeReader();
         var stream = CreateStream(bencode);
-        var results = new List<IBobject>();
+        var results = new List<IBObject>();
         await foreach (var obj in reader.ReadMultipleAsync(stream))
             results.Add(obj);
 
         Assert.Single(results);
-        Assert.IsType<Binteger>(results[0]);
-        Assert.Equal(expected, ((Binteger)results[0]).Value);
+        Assert.IsType<BInteger>(results[0]);
+        Assert.Equal(expected, ((BInteger)results[0]).Value);
     }
 
     [Fact]
@@ -58,7 +58,7 @@ public class ReadMultipleTests
 
         var results = new List<int>();
         await foreach (var obj in reader.ReadMultipleAsync(stream))
-            results.Add((int)((Binteger)obj).Value);
+            results.Add((int)((BInteger)obj).Value);
 
         Assert.Equal(new[] { 1, 2, 3 }, results);
     }
@@ -104,8 +104,8 @@ public class ReadMultipleTests
         var stream = CreateStream(bencode);
         var reader = new BencodeReader();
 
-        var result = (Blist)(await reader.ReadMultipleAsync(stream).FirstAsync());
-        var values = result.OfType<Binteger>().Select(b => (int)b.Value).ToArray();
+        var result = (BList)(await reader.ReadMultipleAsync(stream).FirstAsync());
+        var values = result.OfType<BInteger>().Select(b => (int)b.Value).ToArray();
         Assert.Equal(new[] { 1, 2, 3 }, values);
     }
 
@@ -116,10 +116,10 @@ public class ReadMultipleTests
         var stream = CreateStream(bencode);
         var reader = new BencodeReader();
 
-        var dict = (Bdictionary)(await reader.ReadMultipleAsync(stream).FirstAsync());
+        var dict = (BDictionary)(await reader.ReadMultipleAsync(stream).FirstAsync());
         Assert.Equal(2, dict.Count);
-        Assert.Equal(1, ((Binteger)dict[new Bstring("one", Encoding.UTF8)]).Value);
-        Assert.Equal(2, ((Binteger)dict[new Bstring("two", Encoding.UTF8)]).Value);
+        Assert.Equal(1, ((BInteger)dict[new BString("one", Encoding.UTF8)]).Value);
+        Assert.Equal(2, ((BInteger)dict[new BString("two", Encoding.UTF8)]).Value);
     }
 
     [Fact]
@@ -129,12 +129,12 @@ public class ReadMultipleTests
         var stream = CreateStream(bencode);
         var reader = new BencodeReader();
 
-        var dict = (Bdictionary)(await reader.ReadMultipleAsync(stream).FirstAsync());
-        var list = (Blist)dict[new Bstring("list", Encoding.UTF8)];
-        var nestedDict = (Bdictionary)dict[new Bstring("dict", Encoding.UTF8)];
+        var dict = (BDictionary)(await reader.ReadMultipleAsync(stream).FirstAsync());
+        var list = (BList)dict[new BString("list", Encoding.UTF8)];
+        var nestedDict = (BDictionary)dict[new BString("dict", Encoding.UTF8)];
 
-        Assert.Equal(new[] { 1, 2, 3 }, list.OfType<Binteger>().Select(b => (int)b.Value));
-        Assert.Equal(10, ((Binteger)nestedDict[new Bstring("a", Encoding.UTF8)]).Value);
+        Assert.Equal(new[] { 1, 2, 3 }, list.OfType<BInteger>().Select(b => (int)b.Value));
+        Assert.Equal(10, ((BInteger)nestedDict[new BString("a", Encoding.UTF8)]).Value);
     }
 
     [Fact]
@@ -173,7 +173,7 @@ public class ReadMultipleTests
 
         int sum = 0;
         await foreach (var obj in reader.ReadMultipleAsync(stream))
-            sum += (int)((Binteger)obj).Value;
+            sum += (int)((BInteger)obj).Value;
 
         int expected = Enumerable.Range(0, 10000).Sum();
         Assert.Equal(expected, sum);
@@ -216,7 +216,7 @@ public class ReadMultipleTests
         int totalCount = 0;
         await foreach (var obj in reader.ReadMultipleAsync(stream))
         {
-            var list = (Blist)obj;
+            var list = (BList)obj;
             totalCount += list.Count;
         }
 

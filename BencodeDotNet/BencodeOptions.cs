@@ -13,7 +13,7 @@ namespace Jordiware.BencodeDotNet;
 /// </para>
 /// <para>
 /// These options are enforced by decoders, serializers, and explicit calls to
-/// <see cref="Validate(IBobject)"/>.
+/// <see cref="Validate(IBObject)"/>.
 /// </para>
 /// </remarks>
 public struct BencodeOptions
@@ -182,11 +182,11 @@ public struct BencodeOptions
     /// Validates a Bencode object against the configured structural and size constraints.
     /// </summary>
     /// <param name="root">
-    /// The root <see cref="IBobject"/> to validate.
+    /// The root <see cref="IBObject"/> to validate.
     /// </param>
     /// <remarks>
     /// <para>
-    /// <see cref="Validate(IBobject)"/> enforces all policy constraints defined by this
+    /// <see cref="Validate(IBObject)"/> enforces all policy constraints defined by this
     /// <see cref="BencodeOptions"/> instance, including maximum payload length, maximum
     /// nesting depth, and maximum container cardinality.
     /// </para>
@@ -220,7 +220,7 @@ public struct BencodeOptions
     /// <exception cref="BencodeValidationException">
     /// Thrown when any configured validation constraint is violated.
     /// </exception>
-    public void Validate(IBobject root)
+    public void Validate(IBObject root)
     {
         int encodedLength = 0;
         ValidateInternal(root, depth: 1, ref encodedLength);
@@ -229,14 +229,14 @@ public struct BencodeOptions
             throw new BencodeValidationException($"Encoded payload length ({encodedLength}) exceeds the configured maximum ({MaxPayloadLength}).");
     }
 
-    private void ValidateInternal(IBobject node, int depth, ref int encodedLength)
+    private void ValidateInternal(IBObject node, int depth, ref int encodedLength)
     {
         if (depth > MaxDepth)
             throw new BencodeValidationException($"Maximum Bencode depth ({MaxDepth}) exceeded.");
 
         switch (node)
         {
-            case Blist list:
+            case BList list:
                 if (list.Count > MaxContainerItems)
                     throw new BencodeValidationException($"Bencode list contains {list.Count} items, exceeding the configured maximum ({MaxContainerItems}).");
 
@@ -248,7 +248,7 @@ public struct BencodeOptions
                     ValidateInternal(item, depth + 1, ref encodedLength);
                 break;
 
-            case Bdictionary dict:
+            case BDictionary dict:
                 if (dict.Count > MaxContainerItems)
                     throw new BencodeValidationException($"Bencode dictionary contains {dict.Count} entries, exceeding the configured maximum ({MaxContainerItems}).");
 

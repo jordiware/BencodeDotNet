@@ -11,18 +11,18 @@ namespace Jordiware.BencodeDotNet.Serializers;
 /// </summary>
 /// <remarks>
 /// <see cref="Guid"/> values are serialized as their raw 16-byte binary form using
-/// <see cref="Guid.TryWriteBytes(Span{byte})"/> and stored in a <see cref="Bstring"/>.
+/// <see cref="Guid.TryWriteBytes(Span{byte})"/> and stored in a <see cref="BString"/>.
 /// This representation is compact, culture-independent, and preserves the full
 /// identifier without loss.
 /// 
-/// Deserialization requires the input <see cref="Bstring"/> to contain exactly
+/// Deserialization requires the input <see cref="BString"/> to contain exactly
 /// 16 bytes. When this condition is met, the original <see cref="Guid"/> value is
 /// reconstructed using the <see cref="Guid(byte[])"/> constructor.
 /// 
 /// This serializer guarantees lossless round-trip behavior for all
 /// <see cref="Guid"/> values produced by this implementation.
 /// </remarks>
-public sealed class GuidBencodeSerializer : UnmanagedTypeBencodeSerializer<Guid, Bstring>
+public sealed class GuidBencodeSerializer : UnmanagedTypeBencodeSerializer<Guid, BString>
 {
     /// <summary>
     /// Attempts to serialize a <see cref="Guid"/> value into a Bencode byte string.
@@ -31,7 +31,7 @@ public sealed class GuidBencodeSerializer : UnmanagedTypeBencodeSerializer<Guid,
     /// The <see cref="Guid"/> value to serialize.
     /// </param>
     /// <param name="output">
-    /// When this method returns <see langword="true"/>, contains a <see cref="Bstring"/>
+    /// When this method returns <see langword="true"/>, contains a <see cref="BString"/>
     /// holding the 16-byte binary representation of the <see cref="Guid"/>.
     /// When this method returns <see langword="false"/>, this parameter is set to
     /// <see langword="null"/>.
@@ -46,13 +46,13 @@ public sealed class GuidBencodeSerializer : UnmanagedTypeBencodeSerializer<Guid,
     /// is guaranteed to succeed for valid <see cref="Guid"/> values when a buffer of
     /// at least 16 bytes is provided.
     /// </remarks>
-    public override bool TrySerialize(Guid input, out Bstring? output)
+    public override bool TrySerialize(Guid input, out BString? output)
     {
         output = default;
         Span<byte> bytes = stackalloc byte[16];
         if (input.TryWriteBytes(bytes))
         {
-            output = new Bstring(bytes.ToArray());
+            output = new BString(bytes.ToArray());
             return true;
         }
         return false;
@@ -62,7 +62,7 @@ public sealed class GuidBencodeSerializer : UnmanagedTypeBencodeSerializer<Guid,
     /// Attempts to deserialize a Bencode byte string into a <see cref="Guid"/> value.
     /// </summary>
     /// <param name="input">
-    /// The <see cref="Bstring"/> containing the serialized <see cref="Guid"/> value.
+    /// The <see cref="BString"/> containing the serialized <see cref="Guid"/> value.
     /// The byte string must contain exactly 16 bytes.
     /// </param>
     /// <param name="output">
@@ -72,7 +72,7 @@ public sealed class GuidBencodeSerializer : UnmanagedTypeBencodeSerializer<Guid,
     /// <see langword="default"/>.
     /// </param>
     /// <returns>
-    /// <see langword="true"/> if the <see cref="Bstring"/> contained a valid
+    /// <see langword="true"/> if the <see cref="BString"/> contained a valid
     /// 16-byte <see cref="Guid"/> representation; otherwise, <see langword="false"/>.
     /// </returns>
     /// <remarks>
@@ -80,7 +80,7 @@ public sealed class GuidBencodeSerializer : UnmanagedTypeBencodeSerializer<Guid,
     /// 16 bytes before attempting reconstruction. This prevents invalid or
     /// malformed input from causing exceptions during <see cref="Guid"/> creation.
     /// </remarks>
-    public override bool TryDeserialize(Bstring input, out Guid output)
+    public override bool TryDeserialize(BString input, out Guid output)
     {
         output = default;
 

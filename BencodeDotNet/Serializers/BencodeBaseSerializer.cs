@@ -36,14 +36,14 @@ public interface IBencodeSerializer
     /// </param>
     /// <param name="output">
     /// When this method returns <see langword="true"/>, contains the serialized
-    /// <see cref="IBobject"/> representation of <paramref name="input"/>;
+    /// <see cref="IBObject"/> representation of <paramref name="input"/>;
     /// otherwise, <see langword="null"/>.
     /// </param>
     /// <returns>
     /// <see langword="true"/> if serialization succeeded; otherwise,
     /// <see langword="false"/>.
     /// </returns>
-    bool TrySerialize(object input, out IBobject? output);
+    bool TrySerialize(object input, out IBObject? output);
 
     /// <summary>
     /// Attempts to deserialize a Bencode object into its CLR representation.
@@ -59,7 +59,7 @@ public interface IBencodeSerializer
     /// <see langword="true"/> if deserialization succeeded; otherwise,
     /// <see langword="false"/>.
     /// </returns>
-    bool TryDeserialize(IBobject input, out object? output);
+    bool TryDeserialize(IBObject input, out object? output);
 
     /// <summary>
     /// Serializes a CLR value directly into a <see cref="PipeWriter"/> in Bencode format asynchronously.
@@ -82,7 +82,7 @@ public interface IBencodeSerializer
     /// </returns>
     /// <remarks>
     /// This method writes Bencode data directly into the provided buffer without
-    /// creating intermediate <see cref="IBobject"/> instances. It is intended for
+    /// creating intermediate <see cref="IBObject"/> instances. It is intended for
     /// high-performance scenarios and may produce partial output if cancelled or
     /// if an unexpected failure occurs.
     /// </remarks>
@@ -126,7 +126,7 @@ public interface IBencodeSerializer
 /// </para>
 /// </remarks>
 public abstract class BencodeSerializer<TOrigin, TTarget> : IBencodeSerializer
-    where TTarget : IBobject
+    where TTarget : IBObject
 {
     /// <summary>
     /// Attempts to serialize a CLR value into its corresponding Bencode object.
@@ -199,7 +199,7 @@ public abstract class BencodeSerializer<TOrigin, TTarget> : IBencodeSerializer
     }
 
     /// <inheritdoc />
-    bool IBencodeSerializer.TrySerialize(object input, out IBobject? output)
+    bool IBencodeSerializer.TrySerialize(object input, out IBObject? output)
     {
         output = null;
 
@@ -214,7 +214,7 @@ public abstract class BencodeSerializer<TOrigin, TTarget> : IBencodeSerializer
     }
 
     /// <inheritdoc />
-    bool IBencodeSerializer.TryDeserialize(IBobject input, out object? output)
+    bool IBencodeSerializer.TryDeserialize(IBObject input, out object? output)
     {
         output = null;
 
@@ -255,7 +255,7 @@ public abstract class BencodeSerializer<TOrigin, TTarget> : IBencodeSerializer
 public abstract class ReferenceTypeBencodeSerializer<TOrigin, TTarget>
     : BencodeSerializer<TOrigin, TTarget>
     where TOrigin : class
-    where TTarget : IBobject
+    where TTarget : IBObject
 {
     /// <inheritdoc />
     public abstract override bool TrySerialize(TOrigin input, out TTarget? output);
@@ -284,7 +284,7 @@ public abstract class ReferenceTypeBencodeSerializer<TOrigin, TTarget>
 public abstract class UnmanagedTypeBencodeSerializer<TOrigin, TTarget>
     : BencodeSerializer<TOrigin, TTarget>
     where TOrigin : unmanaged
-    where TTarget : IBobject
+    where TTarget : IBObject
 {
     /// <inheritdoc />
     public abstract override bool TrySerialize(TOrigin input, out TTarget? output);

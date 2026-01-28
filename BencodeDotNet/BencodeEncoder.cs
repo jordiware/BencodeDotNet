@@ -15,7 +15,7 @@ namespace Jordiware.BencodeDotNet;
 ///     <description>Resolving an appropriate Bencode serializer for the runtime type of the input object.</description>
 ///   </item>
 ///   <item>
-///     <description>Invoking the serializer to produce an <see cref="IBobject"/> representation.</description>
+///     <description>Invoking the serializer to produce an <see cref="IBObject"/> representation.</description>
 ///   </item>
 ///   <item>
 ///     <description>Validating the resulting Bencode object against the configured <see cref="BencodeOptions"/>.</description>
@@ -43,7 +43,7 @@ public sealed class BencodeEncoder : BencodeIO
     /// an appropriate Bencode serializer.
     /// </param>
     /// <returns>
-    /// An <see cref="IBobject"/> representing the Bencode-encoded form of <paramref name="value"/>.
+    /// An <see cref="IBObject"/> representing the Bencode-encoded form of <paramref name="value"/>.
     /// </returns>
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="value"/> is <see langword="null"/>.
@@ -63,11 +63,11 @@ public sealed class BencodeEncoder : BencodeIO
     /// including maximum payload length, maximum nesting depth, and container size limits.
     /// </para>
     /// <para>
-    /// The returned <see cref="IBobject"/> is guaranteed to be non-<see langword="null"/> and
+    /// The returned <see cref="IBObject"/> is guaranteed to be non-<see langword="null"/> and
     /// to satisfy all validation constraints if this method completes successfully.
     /// </para>
     /// </remarks>
-    public IBobject Encode(object? value)
+    public IBObject Encode(object? value)
     {
         if (value is null)
             throw new ArgumentNullException(nameof(value));
@@ -96,7 +96,7 @@ public sealed class BencodeEncoder : BencodeIO
     /// The CLR type of the value being encoded.
     /// </typeparam>
     /// <typeparam name="TResult">
-    /// The concrete <see cref="IBobject"/> type produced by the serializer.
+    /// The concrete <see cref="IBObject"/> type produced by the serializer.
     /// </typeparam>
     /// <param name="value">
     /// The object to encode.
@@ -106,7 +106,7 @@ public sealed class BencodeEncoder : BencodeIO
     /// <paramref name="value"/>.
     /// </param>
     /// <returns>
-    /// An <see cref="IBobject"/> representing the Bencode-encoded form of <paramref name="value"/>.
+    /// An <see cref="IBObject"/> representing the Bencode-encoded form of <paramref name="value"/>.
     /// </returns>
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="value"/> or <paramref name="serializer"/> is
@@ -117,8 +117,8 @@ public sealed class BencodeEncoder : BencodeIO
     /// <see langword="null"/> Bencode object, or when the resulting payload violates
     /// the configured <see cref="BencodeOptions"/> constraints.
     /// </exception>
-    public IBobject Encode<TValue, TResult>(TValue value, BencodeSerializer<TValue, TResult> serializer)
-        where TResult : IBobject
+    public IBObject Encode<TValue, TResult>(TValue value, BencodeSerializer<TValue, TResult> serializer)
+        where TResult : IBObject
     {
         if (value is null)
             throw new ArgumentNullException(nameof(value));

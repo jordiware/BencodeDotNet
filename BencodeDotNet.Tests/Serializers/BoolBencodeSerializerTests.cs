@@ -30,7 +30,7 @@ public class BoolBencodeSerializerTests
     [Fact]
     public void TryDeserializeIntegerZeroProducesFalse()
     {
-        var result = Serializer.TryDeserialize(new Binteger(0), out var output);
+        var result = Serializer.TryDeserialize(new BInteger(0), out var output);
 
         Assert.True(result);
         Assert.False(output);
@@ -39,7 +39,7 @@ public class BoolBencodeSerializerTests
     [Fact]
     public void TryDeserializeIntegerOneProducesTrue()
     {
-        var result = Serializer.TryDeserialize(new Binteger(1), out var output);
+        var result = Serializer.TryDeserialize(new BInteger(1), out var output);
 
         Assert.True(result);
         Assert.True(output);
@@ -53,7 +53,7 @@ public class BoolBencodeSerializerTests
     [InlineData(long.MaxValue)]
     public void TryDeserializeInvalidIntegerReturnsFalse(long value)
     {
-        var result = Serializer.TryDeserialize(new Binteger(value), out var output);
+        var result = Serializer.TryDeserialize(new BInteger(value), out var output);
 
         Assert.False(result);
         Assert.False(output);

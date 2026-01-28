@@ -28,9 +28,9 @@ public class FloatBencodeSerializerTests
     [InlineData("-1", -1f)]
     [InlineData("3.5", 3.5f)]
     [InlineData("123.456", 123.456f)]
-    public void TryDeserializeValidBstringReturnsTrue(string text, float expected)
+    public void TryDeserializeValidBStringReturnsTrue(string text, float expected)
     {
-        var input = new Bstring(text, Encoding.ASCII);
+        var input = new BString(text, Encoding.ASCII);
 
         var result = Serializer.TryDeserialize(input, out var value);
 
@@ -58,9 +58,9 @@ public class FloatBencodeSerializerTests
     [InlineData("")]
     [InlineData("not-a-number")]
     [InlineData("3,14")]
-    public void TryDeserializeInvalidBstringReturnsFalse(string text)
+    public void TryDeserializeInvalidBStringReturnsFalse(string text)
     {
-        var input = new Bstring(text, Encoding.ASCII);
+        var input = new BString(text, Encoding.ASCII);
 
         var result = Serializer.TryDeserialize(input, out _);
 
@@ -92,9 +92,9 @@ public class DoubleBencodeSerializerTests
     [InlineData("-1", -1d)]
     [InlineData("3.141592653589793", 3.141592653589793)]
     [InlineData("1.2345678901234567", 1.2345678901234567)]
-    public void TryDeserializeValidBstringReturnsTrue(string text, double expected)
+    public void TryDeserializeValidBStringReturnsTrue(string text, double expected)
     {
-        var input = new Bstring(text, Encoding.ASCII);
+        var input = new BString(text, Encoding.ASCII);
 
         var result = Serializer.TryDeserialize(input, out var value);
 
@@ -122,9 +122,9 @@ public class DoubleBencodeSerializerTests
     [InlineData("")]
     [InlineData("NaNd")]
     [InlineData("invalid")]
-    public void TryDeserializeInvalidBstringReturnsFalse(string text)
+    public void TryDeserializeInvalidBStringReturnsFalse(string text)
     {
-        var input = new Bstring(text, Encoding.ASCII);
+        var input = new BString(text, Encoding.ASCII);
 
         var result = Serializer.TryDeserialize(input, out _);
 
@@ -154,9 +154,9 @@ public class DecimalBencodeSerializerTests
     [InlineData("1", 1)]
     [InlineData("-1", -1)]
     [InlineData("12345.6789", 12345.6789)]
-    public void TryDeserializeValidBstringReturnsTrue(string text, decimal expected)
+    public void TryDeserializeValidBStringReturnsTrue(string text, decimal expected)
     {
-        var input = new Bstring(text, Encoding.ASCII);
+        var input = new BString(text, Encoding.ASCII);
 
         var result = Serializer.TryDeserialize(input, out var value);
 
@@ -186,9 +186,9 @@ public class DecimalBencodeSerializerTests
     [InlineData("")]
     [InlineData("invalid-decimal")]
     [InlineData("1,23")]
-    public void TryDeserializeInvalidBstringReturnsFalse(string text)
+    public void TryDeserializeInvalidBStringReturnsFalse(string text)
     {
-        var input = new Bstring(text, Encoding.ASCII);
+        var input = new BString(text, Encoding.ASCII);
 
         var result = Serializer.TryDeserialize(input, out _);
 

@@ -9,12 +9,12 @@ namespace Jordiware.BencodeDotNet.Serializers;
 /// using the Bencode integer representation.
 /// </summary>
 /// <remarks>
-/// This serializer maps <see cref="int"/> values to <see cref="Binteger"/> objects.
+/// This serializer maps <see cref="int"/> values to <see cref="BInteger"/> objects.
 /// 
 /// Deserialization performs strict range validation and fails if the encoded value
 /// does not fit within the bounds of <see cref="int"/>.
 /// </remarks>
-public sealed class IntBencodeSerializer : UnmanagedTypeBencodeSerializer<int, Binteger>
+public sealed class IntBencodeSerializer : UnmanagedTypeBencodeSerializer<int, BInteger>
 {
     /// <summary>
     /// Serializes a 32-bit signed integer into a Bencode integer.
@@ -24,15 +24,15 @@ public sealed class IntBencodeSerializer : UnmanagedTypeBencodeSerializer<int, B
     /// </param>
     /// <param name="output">
     /// When this method returns <see langword="true"/>, contains the serialized
-    /// <see cref="Binteger"/> instance.
+    /// <see cref="BInteger"/> instance.
     /// </param>
     /// <returns>
     /// Always returns <see langword="true"/>, as all <see cref="int"/> values are
     /// representable in Bencode.
     /// </returns>
-    public override bool TrySerialize(int input, out Binteger output)
+    public override bool TrySerialize(int input, out BInteger output)
     {
-        output = new Binteger(input);
+        output = new BInteger(input);
         return true;
     }
 
@@ -40,7 +40,7 @@ public sealed class IntBencodeSerializer : UnmanagedTypeBencodeSerializer<int, B
     /// Attempts to deserialize a Bencode integer into a 32-bit signed integer.
     /// </summary>
     /// <param name="input">
-    /// The <see cref="Binteger"/> instance to deserialize.
+    /// The <see cref="BInteger"/> instance to deserialize.
     /// </param>
     /// <param name="output">
     /// When this method returns <see langword="true"/>, contains the deserialized
@@ -50,7 +50,7 @@ public sealed class IntBencodeSerializer : UnmanagedTypeBencodeSerializer<int, B
     /// <see langword="true"/> if the encoded value fits within the bounds of
     /// <see cref="int"/>; otherwise, <see langword="false"/>.
     /// </returns>
-    public override bool TryDeserialize(Binteger input, out int output)
+    public override bool TryDeserialize(BInteger input, out int output)
     {
         output = default;
 
@@ -90,12 +90,12 @@ public sealed class IntBencodeSerializer : UnmanagedTypeBencodeSerializer<int, B
 /// using the Bencode integer representation.
 /// </summary>
 /// <remarks>
-/// This serializer maps <see cref="uint"/> values to <see cref="Binteger"/> objects.
+/// This serializer maps <see cref="uint"/> values to <see cref="BInteger"/> objects.
 /// 
 /// Deserialization enforces non-negative values and validates that the encoded
 /// integer fits within the bounds of <see cref="uint"/>.
 /// </remarks>
-public sealed class UintBencodeSerializer : UnmanagedTypeBencodeSerializer<uint, Binteger>
+public sealed class UintBencodeSerializer : UnmanagedTypeBencodeSerializer<uint, BInteger>
 {
     /// <summary>
     /// Serializes a 32-bit unsigned integer into a Bencode integer.
@@ -105,15 +105,15 @@ public sealed class UintBencodeSerializer : UnmanagedTypeBencodeSerializer<uint,
     /// </param>
     /// <param name="output">
     /// When this method returns <see langword="true"/>, contains the serialized
-    /// <see cref="Binteger"/> instance.
+    /// <see cref="BInteger"/> instance.
     /// </param>
     /// <returns>
     /// Always returns <see langword="true"/>, as all <see cref="uint"/> values are
     /// representable in Bencode.
     /// </returns>
-    public override bool TrySerialize(uint input, out Binteger output)
+    public override bool TrySerialize(uint input, out BInteger output)
     {
-        output = new Binteger(input);
+        output = new BInteger(input);
         return true;
     }
 
@@ -121,7 +121,7 @@ public sealed class UintBencodeSerializer : UnmanagedTypeBencodeSerializer<uint,
     /// Attempts to deserialize a Bencode integer into a 32-bit unsigned integer.
     /// </summary>
     /// <param name="input">
-    /// The <see cref="Binteger"/> instance to deserialize.
+    /// The <see cref="BInteger"/> instance to deserialize.
     /// </param>
     /// <param name="output">
     /// When this method returns <see langword="true"/>, contains the deserialized
@@ -131,7 +131,7 @@ public sealed class UintBencodeSerializer : UnmanagedTypeBencodeSerializer<uint,
     /// <see langword="true"/> if the encoded value is non-negative and fits within
     /// the bounds of <see cref="uint"/>; otherwise, <see langword="false"/>.
     /// </returns>
-    public override bool TryDeserialize(Binteger input, out uint output)
+    public override bool TryDeserialize(BInteger input, out uint output)
     {
         output = default;
 

@@ -16,7 +16,7 @@ namespace Jordiware.BencodeDotNet.Serializers;
 /// Deserialization uses <see cref="DateTime.FromBinary(long)"/> and is always
 /// lossless for values produced by this serializer.
 /// </remarks>
-public sealed class DateTimeBencodeSerializer : UnmanagedTypeBencodeSerializer<DateTime, Binteger>
+public sealed class DateTimeBencodeSerializer : UnmanagedTypeBencodeSerializer<DateTime, BInteger>
 {
     /// <summary>
     /// Serializes a <see cref="DateTime"/> value into a Bencode integer.
@@ -26,14 +26,14 @@ public sealed class DateTimeBencodeSerializer : UnmanagedTypeBencodeSerializer<D
     /// </param>
     /// <param name="output">
     /// When this method returns <see langword="true"/>, contains the serialized
-    /// <see cref="Binteger"/> instance.
+    /// <see cref="BInteger"/> instance.
     /// </param>
     /// <returns>
     /// Always returns <see langword="true"/>.
     /// </returns>
-    public override bool TrySerialize(DateTime input, out Binteger? output)
+    public override bool TrySerialize(DateTime input, out BInteger? output)
     {
-        output = new Binteger(input.ToBinary());
+        output = new BInteger(input.ToBinary());
         return true;
     }
 
@@ -41,7 +41,7 @@ public sealed class DateTimeBencodeSerializer : UnmanagedTypeBencodeSerializer<D
     /// Deserializes a Bencode integer into a <see cref="DateTime"/> value.
     /// </summary>
     /// <param name="input">
-    /// The <see cref="Binteger"/> instance to deserialize.
+    /// The <see cref="BInteger"/> instance to deserialize.
     /// </param>
     /// <param name="output">
     /// When this method returns <see langword="true"/>, contains the deserialized
@@ -50,7 +50,7 @@ public sealed class DateTimeBencodeSerializer : UnmanagedTypeBencodeSerializer<D
     /// <returns>
     /// Always returns <see langword="true"/>.
     /// </returns>
-    public override bool TryDeserialize(Binteger input, out DateTime output)
+    public override bool TryDeserialize(BInteger input, out DateTime output)
     {
         output = DateTime.FromBinary(input.Value);
         return true;
@@ -94,7 +94,7 @@ public sealed class DateTimeBencodeSerializer : UnmanagedTypeBencodeSerializer<D
 /// Deserialization performs strict range validation and fails if the encoded value
 /// does not represent a valid <see cref="DateOnly"/>.
 /// </remarks>
-public sealed class DateOnlyBencodeSerializer : UnmanagedTypeBencodeSerializer<DateOnly, Binteger>
+public sealed class DateOnlyBencodeSerializer : UnmanagedTypeBencodeSerializer<DateOnly, BInteger>
 {
     /// <summary>
     /// Serializes a <see cref="DateOnly"/> value into a Bencode integer.
@@ -104,14 +104,14 @@ public sealed class DateOnlyBencodeSerializer : UnmanagedTypeBencodeSerializer<D
     /// </param>
     /// <param name="output">
     /// When this method returns <see langword="true"/>, contains the serialized
-    /// <see cref="Binteger"/> instance.
+    /// <see cref="BInteger"/> instance.
     /// </param>
     /// <returns>
     /// Always returns <see langword="true"/>.
     /// </returns>
-    public override bool TrySerialize(DateOnly input, out Binteger? output)
+    public override bool TrySerialize(DateOnly input, out BInteger? output)
     {
-        output = new Binteger(input.DayNumber);
+        output = new BInteger(input.DayNumber);
         return true;
     }
 
@@ -119,7 +119,7 @@ public sealed class DateOnlyBencodeSerializer : UnmanagedTypeBencodeSerializer<D
     /// Attempts to deserialize a Bencode integer into a <see cref="DateOnly"/> value.
     /// </summary>
     /// <param name="input">
-    /// The <see cref="Binteger"/> instance to deserialize.
+    /// The <see cref="BInteger"/> instance to deserialize.
     /// </param>
     /// <param name="output">
     /// When this method returns <see langword="true"/>, contains the deserialized
@@ -129,7 +129,7 @@ public sealed class DateOnlyBencodeSerializer : UnmanagedTypeBencodeSerializer<D
     /// <see langword="true"/> if the encoded value represents a valid date;
     /// otherwise, <see langword="false"/>.
     /// </returns>
-    public override bool TryDeserialize(Binteger input, out DateOnly output)
+    public override bool TryDeserialize(BInteger input, out DateOnly output)
     {
         output = default;
 
@@ -180,7 +180,7 @@ public sealed class DateOnlyBencodeSerializer : UnmanagedTypeBencodeSerializer<D
 /// 
 /// Deserialization validates that the encoded value represents a valid time of day.
 /// </remarks>
-public sealed class TimeOnlyBencodeSerializer : UnmanagedTypeBencodeSerializer<TimeOnly, Binteger>
+public sealed class TimeOnlyBencodeSerializer : UnmanagedTypeBencodeSerializer<TimeOnly, BInteger>
 {
     /// <summary>
     /// Serializes a <see cref="TimeOnly"/> value into a Bencode integer.
@@ -190,14 +190,14 @@ public sealed class TimeOnlyBencodeSerializer : UnmanagedTypeBencodeSerializer<T
     /// </param>
     /// <param name="output">
     /// When this method returns <see langword="true"/>, contains the serialized
-    /// <see cref="Binteger"/> instance.
+    /// <see cref="BInteger"/> instance.
     /// </param>
     /// <returns>
     /// Always returns <see langword="true"/>.
     /// </returns>
-    public override bool TrySerialize(TimeOnly input, out Binteger? output)
+    public override bool TrySerialize(TimeOnly input, out BInteger? output)
     {
-        output = new Binteger(input.Ticks);
+        output = new BInteger(input.Ticks);
         return true;
     }
 
@@ -205,7 +205,7 @@ public sealed class TimeOnlyBencodeSerializer : UnmanagedTypeBencodeSerializer<T
     /// Attempts to deserialize a Bencode integer into a <see cref="TimeOnly"/> value.
     /// </summary>
     /// <param name="input">
-    /// The <see cref="Binteger"/> instance to deserialize.
+    /// The <see cref="BInteger"/> instance to deserialize.
     /// </param>
     /// <param name="output">
     /// When this method returns <see langword="true"/>, contains the deserialized
@@ -215,7 +215,7 @@ public sealed class TimeOnlyBencodeSerializer : UnmanagedTypeBencodeSerializer<T
     /// <see langword="true"/> if the encoded value represents a valid time of day;
     /// otherwise, <see langword="false"/>.
     /// </returns>
-    public override bool TryDeserialize(Binteger input, out TimeOnly output)
+    public override bool TryDeserialize(BInteger input, out TimeOnly output)
     {
         output = default;
 
@@ -268,7 +268,7 @@ public sealed class TimeOnlyBencodeSerializer : UnmanagedTypeBencodeSerializer<T
 /// Deserialization performs strict range validation to ensure the encoded value
 /// represents a valid <see cref="TimeSpan"/>.
 /// </remarks>
-public sealed class TimeSpanBencodeSerializer : UnmanagedTypeBencodeSerializer<TimeSpan, Binteger>
+public sealed class TimeSpanBencodeSerializer : UnmanagedTypeBencodeSerializer<TimeSpan, BInteger>
 {
     /// <summary>
     /// Serializes a <see cref="TimeSpan"/> value into a Bencode integer.
@@ -278,14 +278,14 @@ public sealed class TimeSpanBencodeSerializer : UnmanagedTypeBencodeSerializer<T
     /// </param>
     /// <param name="output">
     /// When this method returns <see langword="true"/>, contains the serialized
-    /// <see cref="Binteger"/> instance.
+    /// <see cref="BInteger"/> instance.
     /// </param>
     /// <returns>
     /// Always returns <see langword="true"/>.
     /// </returns>
-    public override bool TrySerialize(TimeSpan input, out Binteger? output)
+    public override bool TrySerialize(TimeSpan input, out BInteger? output)
     {
-        output = new Binteger(input.Ticks);
+        output = new BInteger(input.Ticks);
         return true;
     }
 
@@ -293,7 +293,7 @@ public sealed class TimeSpanBencodeSerializer : UnmanagedTypeBencodeSerializer<T
     /// Attempts to deserialize a Bencode integer into a <see cref="TimeSpan"/> value.
     /// </summary>
     /// <param name="input">
-    /// The <see cref="Binteger"/> instance to deserialize.
+    /// The <see cref="BInteger"/> instance to deserialize.
     /// </param>
     /// <param name="output">
     /// When this method returns <see langword="true"/>, contains the deserialized
@@ -303,7 +303,7 @@ public sealed class TimeSpanBencodeSerializer : UnmanagedTypeBencodeSerializer<T
     /// <see langword="true"/> if the encoded value represents a valid
     /// <see cref="TimeSpan"/>; otherwise, <see langword="false"/>.
     /// </returns>
-    public override bool TryDeserialize(Binteger input, out TimeSpan output)
+    public override bool TryDeserialize(BInteger input, out TimeSpan output)
     {
         output = default;
 

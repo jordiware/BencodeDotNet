@@ -48,7 +48,7 @@ public class ArrayBencodeSerializerTests
 
     [Theory]
     [InlineData(null)]
-    public void TryDeserializeReturnsFalseWhenInputIsNull(Blist? input)
+    public void TryDeserializeReturnsFalseWhenInputIsNull(BList? input)
     {
         var serializer = new ArrayBencodeSerializer<int>();
 
@@ -66,11 +66,11 @@ public class ArrayBencodeSerializerTests
     {
         var serializer = new ArrayBencodeSerializer<int>();
 
-        var list = new List<Binteger>();
+        var list = new List<BInteger>();
         foreach (var value in values)
-            list.Add(new Binteger(value));
+            list.Add(new BInteger(value));
 
-        var input = new Blist(list);
+        var input = new BList(list);
 
         var result = serializer.TryDeserialize(input, out var output);
 
@@ -86,11 +86,11 @@ public class ArrayBencodeSerializerTests
 
         var serializer = new ArrayBencodeSerializer<string>();
 
-        var list = new List<Bstring>();
+        var list = new List<BString>();
         foreach (var value in values)
-            list.Add(new Bstring(value, Encoding.UTF8));
+            list.Add(new BString(value, Encoding.UTF8));
 
-        var input = new Blist(list);
+        var input = new BList(list);
 
         var result = serializer.TryDeserialize(input, out var output);
 
@@ -104,7 +104,7 @@ public class ArrayBencodeSerializerTests
     public void TryDeserializeReturnsFalseWhenElementTypeIsInvalid(int value)
     {
         var serializer = new ArrayBencodeSerializer<string>();
-        var input = new Blist([new Binteger(value)]);
+        var input = new BList([new BInteger(value)]);
 
         var result = serializer.TryDeserialize(input, out var output);
 

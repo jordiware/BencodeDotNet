@@ -12,7 +12,7 @@ namespace Jordiware.BencodeDotNet.Serializers;
 /// The enum type to serialize and deserialize.
 /// </typeparam>
 /// <remarks>
-/// Enum values are serialized as <see cref="Binteger"/> instances containing
+/// Enum values are serialized as <see cref="BInteger"/> instances containing
 /// the numeric value of the enum’s underlying type.
 /// 
 /// During deserialization, non-flags enums require values to be explicitly
@@ -20,7 +20,7 @@ namespace Jordiware.BencodeDotNet.Serializers;
 /// <see cref="FlagsAttribute"/> allow composite bitwise values, provided the
 /// numeric value fits within the enum’s underlying type.
 /// </remarks>
-public sealed class EnumBencodeSerializer<TEnum> : BencodeSerializer<TEnum, Binteger> 
+public sealed class EnumBencodeSerializer<TEnum> : BencodeSerializer<TEnum, BInteger> 
     where TEnum : struct, Enum
 {
     private static readonly Type EnumType = typeof(TEnum);
@@ -35,24 +35,24 @@ public sealed class EnumBencodeSerializer<TEnum> : BencodeSerializer<TEnum, Bint
     /// <param name="input">The enum value to serialize.</param>
     /// <param name="output">
     /// When this method returns <see langword="true"/>, contains a
-    /// <see cref="Binteger"/> representing the numeric value of
+    /// <see cref="BInteger"/> representing the numeric value of
     /// <paramref name="input"/>.
     /// </param>
     /// <returns>
     /// <see langword="true"/> if serialization succeeds; otherwise,
     /// <see langword="false"/>.
     /// </returns>
-    public override bool TrySerialize(TEnum input, out Binteger? output)
+    public override bool TrySerialize(TEnum input, out BInteger? output)
     {
         var underlying = Convert.ToInt64(input);
-        output = new Binteger(underlying);
+        output = new BInteger(underlying);
         return true;
     }
 
     /// <summary>
     /// Deserializes the specified Bencode integer into an enum value.
     /// </summary>
-    /// <param name="input">The <see cref="Binteger"/> to deserialize.</param>
+    /// <param name="input">The <see cref="BInteger"/> to deserialize.</param>
     /// <param name="output">
     /// When this method returns <see langword="true"/>, contains the deserialized
     /// enum value.
@@ -68,7 +68,7 @@ public sealed class EnumBencodeSerializer<TEnum> : BencodeSerializer<TEnum, Bint
     /// <see cref="FlagsAttribute"/>, composite values are allowed as long as
     /// the numeric value fits within the enum’s underlying type.
     /// </remarks>
-    public override bool TryDeserialize(Binteger input, out TEnum output)
+    public override bool TryDeserialize(BInteger input, out TEnum output)
     {
         output = default;
 

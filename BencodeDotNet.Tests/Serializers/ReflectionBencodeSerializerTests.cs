@@ -60,11 +60,11 @@ public class ReflectionBencodeSerializerTests
         Assert.True(result);
         Assert.NotNull(dict);
 
-        Assert.True(dict!.ContainsKey(new Bstring(nameof(TestModel.IntField), Encoding.UTF8)));
-        Assert.True(dict.ContainsKey(new Bstring(nameof(TestModel.IntProperty), Encoding.UTF8)));
-        Assert.True(dict.ContainsKey(new Bstring("renamed", Encoding.UTF8)));
+        Assert.True(dict!.ContainsKey(new BString(nameof(TestModel.IntField), Encoding.UTF8)));
+        Assert.True(dict.ContainsKey(new BString(nameof(TestModel.IntProperty), Encoding.UTF8)));
+        Assert.True(dict.ContainsKey(new BString("renamed", Encoding.UTF8)));
 
-        Assert.False(dict.ContainsKey(new Bstring(nameof(TestModel.IgnoredProperty), Encoding.UTF8)));
+        Assert.False(dict.ContainsKey(new BString(nameof(TestModel.IgnoredProperty), Encoding.UTF8)));
     }
 
     [Fact]
@@ -81,7 +81,7 @@ public class ReflectionBencodeSerializerTests
         serializer.TrySerialize(model, out var dict);
 
         Assert.NotNull(dict);
-        Assert.False(dict!.ContainsKey(new Bstring(nameof(TestModel.NullableField), Encoding.UTF8)));
+        Assert.False(dict!.ContainsKey(new BString(nameof(TestModel.NullableField), Encoding.UTF8)));
     }
 
     [Fact]
@@ -109,11 +109,11 @@ public class ReflectionBencodeSerializerTests
     public void TryDeserializePopulatesMatchingMembers()
     {
         var serializer = new ReflectionBencodeSerializer<TestModel>();
-        var dict = new Bdictionary(new Dictionary<Bstring, IBobject>
+        var dict = new BDictionary(new Dictionary<BString, IBObject>
         {
-            [new Bstring(nameof(TestModel.IntField), Encoding.UTF8)] = new Binteger(5),
-            [new Bstring(nameof(TestModel.IntProperty), Encoding.UTF8)] = new Binteger(7),
-            [new Bstring("renamed", Encoding.UTF8)] = new Bstring("abc", Encoding.UTF8)
+            [new BString(nameof(TestModel.IntField), Encoding.UTF8)] = new BInteger(5),
+            [new BString(nameof(TestModel.IntProperty), Encoding.UTF8)] = new BInteger(7),
+            [new BString("renamed", Encoding.UTF8)] = new BString("abc", Encoding.UTF8)
         });
 
         var result = serializer.TryDeserialize(dict, out var model);
@@ -130,10 +130,10 @@ public class ReflectionBencodeSerializerTests
     public void TryDeserializeIgnoresUnknownKeys()
     {
         var serializer = new ReflectionBencodeSerializer<MissingMemberModel>();
-        var dict = new Bdictionary(new Dictionary<Bstring, IBobject>
+        var dict = new BDictionary(new Dictionary<BString, IBObject>
         {
-            [new Bstring("Unknown", Encoding.UTF8)] = new Binteger(123),
-            [new Bstring(nameof(MissingMemberModel.Value), Encoding.UTF8)] = new Binteger(10)
+            [new BString("Unknown", Encoding.UTF8)] = new BInteger(123),
+            [new BString(nameof(MissingMemberModel.Value), Encoding.UTF8)] = new BInteger(10)
         });
 
         serializer.TryDeserialize(dict, out var model);
@@ -146,7 +146,7 @@ public class ReflectionBencodeSerializerTests
     public void TryDeserializeLeavesMissingMembersUnchanged()
     {
         var serializer = new ReflectionBencodeSerializer<NullableModel>();
-        var dict = new Bdictionary(new Dictionary<Bstring, IBobject>());
+        var dict = new BDictionary(new Dictionary<BString, IBObject>());
 
         serializer.TryDeserialize(dict, out var model);
 

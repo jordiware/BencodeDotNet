@@ -27,7 +27,7 @@ public class ReadSingleTests
         try
         {
             var result = await reader.ReadSingleFromFileAsync(path);
-            var integer = Assert.IsType<Binteger>(result);
+            var integer = Assert.IsType<BInteger>(result);
             Assert.Equal(7, integer.Value);
         }
         finally
@@ -71,7 +71,7 @@ public class ReadSingleTests
 
         var result = await reader.ReadSingleAsync(stream);
 
-        var integer = Assert.IsType<Binteger>(result);
+        var integer = Assert.IsType<BInteger>(result);
         Assert.Equal(123456789, integer.Value);
     }
 
@@ -84,7 +84,7 @@ public class ReadSingleTests
 
         var result = await reader.ReadSingleAsync(stream);
 
-        Assert.IsType<Blist>(result);
+        Assert.IsType<BList>(result);
     }
 
     [Fact]
@@ -102,18 +102,18 @@ public class ReadSingleTests
 
         var result = await reader.ReadSingleAsync(stream);
 
-        Assert.IsType<Blist>(result);
+        Assert.IsType<BList>(result);
     }
 
     private sealed class FailingSerializer : IBencodeSerializer
     {
-        public bool TryDeserialize(IBobject value, out object? result)
+        public bool TryDeserialize(IBObject value, out object? result)
         {
             result = null;
             return false;
         }
 
-        public bool TrySerialize(object value, out IBobject? result)
+        public bool TrySerialize(object value, out IBObject? result)
         {
             result = null;
             return false;

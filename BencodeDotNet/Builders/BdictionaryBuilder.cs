@@ -3,7 +3,7 @@
 namespace Jordiware.BencodeDotNet.Builders;
 
 /// <summary>
-/// Incrementally builds a <see cref="Bdictionary"/> by alternating key and value insertion.
+/// Incrementally builds a <see cref="BDictionary"/> by alternating key and value insertion.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -22,9 +22,9 @@ namespace Jordiware.BencodeDotNet.Builders;
 /// </remarks>
 internal sealed class BdictionaryBuilder : BobjectBuilder
 {
-    private Dictionary<Bstring, IBobject>? _objects = new();
-    private Bstring? _pendingKey;
-    private Bstring? _lastKey;
+    private Dictionary<BString, IBObject>? _objects = new();
+    private BString? _pendingKey;
+    private BString? _lastKey;
 
     /// <summary>
     /// Initializes a new <see cref="BdictionaryBuilder"/>.
@@ -41,7 +41,7 @@ internal sealed class BdictionaryBuilder : BobjectBuilder
     /// </summary>
     /// <remarks>
     /// When this property is <c>true</c>, the next operation must be
-    /// <see cref="PushKey(Bstring)"/>.
+    /// <see cref="PushKey(BString)"/>.
     /// </remarks>
     public bool IsExpectingKey => !ThrowIfDisposed() && _pendingKey is null;
 
@@ -50,7 +50,7 @@ internal sealed class BdictionaryBuilder : BobjectBuilder
     /// </summary>
     /// <remarks>
     /// When this property is <c>true</c>, the next operation must be
-    /// <see cref="PushValue(IBobject)"/>.
+    /// <see cref="PushValue(IBObject)"/>.
     /// </remarks>
     public bool IsExpectingValue => !ThrowIfDisposed() && _pendingKey is not null;
 
@@ -67,7 +67,7 @@ internal sealed class BdictionaryBuilder : BobjectBuilder
     /// <exception cref="ObjectDisposedException">
     /// Thrown if the builder has been disposed.
     /// </exception>
-    public void PushKey(Bstring key)
+    public void PushKey(BString key)
     {
         ThrowIfDisposed();
 
@@ -94,7 +94,7 @@ internal sealed class BdictionaryBuilder : BobjectBuilder
     /// <exception cref="ObjectDisposedException">
     /// Thrown if the builder has been disposed.
     /// </exception>
-    public void PushValue(IBobject value)
+    public void PushValue(IBObject value)
     {
         ThrowIfDisposed();
 
@@ -107,24 +107,24 @@ internal sealed class BdictionaryBuilder : BobjectBuilder
     }
 
     /// <summary>
-    /// Finalizes the builder and produces a <see cref="Bdictionary"/> containing
+    /// Finalizes the builder and produces a <see cref="BDictionary"/> containing
     /// all accumulated key/value pairs.
     /// </summary>
-    /// <returns>The constructed <see cref="Bdictionary"/>.</returns>
+    /// <returns>The constructed <see cref="BDictionary"/>.</returns>
     /// <exception cref="BencodeFormatException">
     /// Thrown if a value is still pending for the last key.
     /// </exception>
     /// <exception cref="ObjectDisposedException">
     /// Thrown if the builder has been disposed.
     /// </exception>
-    public override IBobject ToBobject()
+    public override IBObject ToBobject()
     {
         ThrowIfDisposed();
 
         if (IsExpectingValue)
             throw new BencodeFormatException("Value expected");
 
-        return new Bdictionary(_objects!);
+        return new BDictionary(_objects!);
     }
 
     /// <summary>

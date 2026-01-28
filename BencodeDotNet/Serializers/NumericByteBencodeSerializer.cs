@@ -16,7 +16,7 @@ namespace Jordiware.BencodeDotNet.Serializers;
 /// Deserialization performs strict range validation and fails if the encoded value
 /// does not fit within the bounds of <see cref="byte"/>.
 /// </remarks>
-public sealed class NumericByteBencodeSerializer : UnmanagedTypeBencodeSerializer<byte, Binteger>
+public sealed class NumericByteBencodeSerializer : UnmanagedTypeBencodeSerializer<byte, BInteger>
 {
     /// <summary>
     /// Serializes an 8-bit unsigned integer into a Bencode integer.
@@ -26,15 +26,15 @@ public sealed class NumericByteBencodeSerializer : UnmanagedTypeBencodeSerialize
     /// </param>
     /// <param name="output">
     /// When this method returns <see langword="true"/>, contains the serialized
-    /// <see cref="Binteger"/> instance.
+    /// <see cref="BInteger"/> instance.
     /// </param>
     /// <returns>
     /// Always returns <see langword="true"/>, as all <see cref="byte"/> values are
     /// representable in Bencode.
     /// </returns>
-    public override bool TrySerialize(byte input, out Binteger output)
+    public override bool TrySerialize(byte input, out BInteger output)
     {
-        output = new Binteger(input);
+        output = new BInteger(input);
         return true;
     }
 
@@ -42,7 +42,7 @@ public sealed class NumericByteBencodeSerializer : UnmanagedTypeBencodeSerialize
     /// Attempts to deserialize a Bencode integer into an 8-bit unsigned integer.
     /// </summary>
     /// <param name="input">
-    /// The <see cref="Binteger"/> instance to deserialize.
+    /// The <see cref="BInteger"/> instance to deserialize.
     /// </param>
     /// <param name="output">
     /// When this method returns <see langword="true"/>, contains the deserialized
@@ -52,7 +52,7 @@ public sealed class NumericByteBencodeSerializer : UnmanagedTypeBencodeSerialize
     /// <see langword="true"/> if the encoded value fits within the bounds of
     /// <see cref="byte"/>; otherwise, <see langword="false"/>.
     /// </returns>
-    public override bool TryDeserialize(Binteger input, out byte output)
+    public override bool TryDeserialize(BInteger input, out byte output)
     {
         output = default;
 
@@ -92,12 +92,12 @@ public sealed class NumericByteBencodeSerializer : UnmanagedTypeBencodeSerialize
 /// using the Bencode integer representation.
 /// </summary>
 /// <remarks>
-/// This serializer maps <see cref="sbyte"/> values to <see cref="Binteger"/> objects.
+/// This serializer maps <see cref="sbyte"/> values to <see cref="BInteger"/> objects.
 /// 
 /// Deserialization performs strict range validation and fails if the encoded value
 /// does not fit within the bounds of <see cref="sbyte"/>.
 /// </remarks>
-public sealed class SbyteBencodeSerializer : UnmanagedTypeBencodeSerializer<sbyte, Binteger>
+public sealed class SbyteBencodeSerializer : UnmanagedTypeBencodeSerializer<sbyte, BInteger>
 {
     /// <summary>
     /// Serializes an 8-bit signed integer into a Bencode integer.
@@ -107,15 +107,15 @@ public sealed class SbyteBencodeSerializer : UnmanagedTypeBencodeSerializer<sbyt
     /// </param>
     /// <param name="output">
     /// When this method returns <see langword="true"/>, contains the serialized
-    /// <see cref="Binteger"/> instance.
+    /// <see cref="BInteger"/> instance.
     /// </param>
     /// <returns>
     /// Always returns <see langword="true"/>, as all <see cref="sbyte"/> values are
     /// representable in Bencode.
     /// </returns>
-    public override bool TrySerialize(sbyte input, out Binteger output)
+    public override bool TrySerialize(sbyte input, out BInteger output)
     {
-        output = new Binteger(input);
+        output = new BInteger(input);
         return true;
     }
 
@@ -123,7 +123,7 @@ public sealed class SbyteBencodeSerializer : UnmanagedTypeBencodeSerializer<sbyt
     /// Attempts to deserialize a Bencode integer into an 8-bit signed integer.
     /// </summary>
     /// <param name="input">
-    /// The <see cref="Binteger"/> instance to deserialize.
+    /// The <see cref="BInteger"/> instance to deserialize.
     /// </param>
     /// <param name="output">
     /// When this method returns <see langword="true"/>, contains the deserialized
@@ -133,7 +133,7 @@ public sealed class SbyteBencodeSerializer : UnmanagedTypeBencodeSerializer<sbyt
     /// <see langword="true"/> if the encoded value fits within the bounds of
     /// <see cref="sbyte"/>; otherwise, <see langword="false"/>.
     /// </returns>
-    public override bool TryDeserialize(Binteger input, out sbyte output)
+    public override bool TryDeserialize(BInteger input, out sbyte output)
     {
         output = default;
 

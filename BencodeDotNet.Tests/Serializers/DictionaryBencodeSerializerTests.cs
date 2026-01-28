@@ -134,10 +134,10 @@ public class DictionaryBencodeSerializerTests
     {
         var serializer = new DictionaryBencodeSerializer<int, string>();
 
-        var bdict = new Bdictionary(new Dictionary<Bstring, IBobject>
+        var bdict = new BDictionary(new Dictionary<BString, IBObject>
         {
-            [new Bstring("i1e"u8.ToArray())] = new Bstring("a"u8.ToArray()),
-            [new Bstring("i01e"u8.ToArray())] = new Bstring("b"u8.ToArray())
+            [new BString("i1e"u8.ToArray())] = new BString("a"u8.ToArray()),
+            [new BString("i01e"u8.ToArray())] = new BString("b"u8.ToArray())
         });
 
         var result = serializer.TryDeserialize(bdict, out _);

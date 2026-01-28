@@ -28,7 +28,7 @@ public class NumericByteBencodeSerializerTests
     [InlineData(255)]
     public void TryDeserializeValidByteRangeSucceeds(long encodedValue)
     {
-        var binteger = new Binteger(encodedValue);
+        var binteger = new BInteger(encodedValue);
 
         var result = Serializer.TryDeserialize(binteger, out var value);
 
@@ -45,7 +45,7 @@ public class NumericByteBencodeSerializerTests
     [InlineData(long.MaxValue)]
     public void TryDeserializeOutOfByteRangeFails(long encodedValue)
     {
-        var binteger = new Binteger(encodedValue);
+        var binteger = new BInteger(encodedValue);
 
         var result = Serializer.TryDeserialize(binteger, out var value);
 
@@ -94,7 +94,7 @@ public class SbyteBencodeSerializerTests
     [InlineData(127)]
     public void TryDeserializeValidSbyteRangeSucceeds(long encodedValue)
     {
-        var binteger = new Binteger(encodedValue);
+        var binteger = new BInteger(encodedValue);
 
         var result = Serializer.TryDeserialize(binteger, out var value);
 
@@ -111,7 +111,7 @@ public class SbyteBencodeSerializerTests
     [InlineData(long.MaxValue)]
     public void TryDeserializeOutOfSbyteRangeFails(long encodedValue)
     {
-        var binteger = new Binteger(encodedValue);
+        var binteger = new BInteger(encodedValue);
 
         var result = Serializer.TryDeserialize(binteger, out var value);
 

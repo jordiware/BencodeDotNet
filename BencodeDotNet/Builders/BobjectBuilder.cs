@@ -8,7 +8,7 @@ namespace Jordiware.BencodeDotNet.Builders;
 /// <remarks>
 /// This abstract class implements common lifecycle management and option
 /// handling for builders that incrementally construct immutable
-/// <see cref="IBobject"/> instances.
+/// <see cref="IBObject"/> instances.
 /// <para>
 /// Builders derived from <see cref="BobjectBuilder"/> are intended to be
 /// used exclusively by the decoding pipeline and are not thread-safe.
@@ -61,7 +61,7 @@ internal abstract class BobjectBuilder : IBobjectBuilder
     /// Finalizes construction and returns the built Bencode object.
     /// </summary>
     /// <returns>
-    /// The fully constructed <see cref="IBobject"/>.
+    /// The fully constructed <see cref="IBObject"/>.
     /// </returns>
     /// <remarks>
     /// Implementations should validate that all required data has been
@@ -71,7 +71,7 @@ internal abstract class BobjectBuilder : IBobjectBuilder
     /// in undefined behavior unless explicitly guarded by the implementation.
     /// </para>
     /// </remarks>
-    public abstract IBobject ToBobject();
+    public abstract IBObject ToBobject();
 
     /// <summary>
     /// Throws an <see cref="ObjectDisposedException"/> if the builder

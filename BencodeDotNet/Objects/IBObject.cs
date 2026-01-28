@@ -10,7 +10,7 @@ namespace Jordiware.BencodeDotNet.Objects;
 /// implement this interface. Implementations must be able to serialize
 /// themselves into their canonical Bencode binary representation.
 /// </remarks>
-public interface IBobject
+public interface IBObject
 {
     /// <summary>
     /// Serializes the current Bencode object into its binary Bencode encoding.

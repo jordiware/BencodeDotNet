@@ -13,24 +13,24 @@ public class EncoderDecoderRoundTripTests
         public int Value { get; init; }
     }
 
-    private sealed class SimpleObjectSerializer : BencodeSerializer<SimpleObject, Bdictionary>
+    private sealed class SimpleObjectSerializer : BencodeSerializer<SimpleObject, BDictionary>
     {
-        private static readonly Bstring key = new Bstring("value", Encoding.UTF8);
+        private static readonly BString key = new BString("value", Encoding.UTF8);
 
-        public override bool TrySerialize(SimpleObject value, out Bdictionary result)
+        public override bool TrySerialize(SimpleObject value, out BDictionary result)
         {
-            result = new Bdictionary(new Dictionary<Bstring, IBobject>
+            result = new BDictionary(new Dictionary<BString, IBObject>
             {
-                [key] = new Binteger(value.Value)
+                [key] = new BInteger(value.Value)
             });
             return true;
         }
 
-        public override bool TryDeserialize(Bdictionary value, out SimpleObject result)
+        public override bool TryDeserialize(BDictionary value, out SimpleObject result)
         {
             result = new SimpleObject
             {
-                Value = (int)((Binteger)value[key]).Value
+                Value = (int)((BInteger)value[key]).Value
             };
             return true;
         }

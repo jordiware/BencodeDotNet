@@ -8,14 +8,14 @@ namespace Jordiware.BencodeDotNet.Serializers;
 /// <summary>
 /// Provides serialization and deserialization support for
 /// <see cref="IDictionary{TKey, TValue}"/> values using the Bencode
-/// dictionary representation (<see cref="Bdictionary"/>).
+/// dictionary representation (<see cref="BDictionary"/>).
 /// </summary>
 /// <remarks>
 /// Both keys and values are serialized using serializers resolved via
 /// <see cref="BencodeSerializer"/>. Dictionary keys are encoded as
-/// <see cref="Bstring"/> instances, as required by the Bencode specification.
+/// <see cref="BString"/> instances, as required by the Bencode specification.
 /// </remarks>
-public sealed class DictionaryBencodeSerializer<TKey, TValue> : ReferenceTypeBencodeSerializer<IDictionary<TKey, TValue>, Bdictionary>
+public sealed class DictionaryBencodeSerializer<TKey, TValue> : ReferenceTypeBencodeSerializer<IDictionary<TKey, TValue>, BDictionary>
 {
     private readonly BencodeOptions _options;
 
@@ -62,24 +62,24 @@ public sealed class DictionaryBencodeSerializer<TKey, TValue> : ReferenceTypeBen
 
     /// <summary>
     /// Attempts to serialize an <see cref="IDictionary{TKey, TValue}"/> into a
-    /// <see cref="Bdictionary"/>.
+    /// <see cref="BDictionary"/>.
     /// </summary>
     /// <remarks>
     /// Dictionary keys and values are serialized using serializers resolved via
     /// <see cref="BencodeSerializer"/>. Serialized keys are always encoded as
-    /// <see cref="Bstring"/> instances by writing their full Bencode binary
+    /// <see cref="BString"/> instances by writing their full Bencode binary
     /// representation.
     /// </remarks>
     /// <param name="input">The dictionary to serialize.</param>
     /// <param name="output">
-    /// When this method returns, contains the resulting <see cref="Bdictionary"/>
+    /// When this method returns, contains the resulting <see cref="BDictionary"/>
     /// if serialization succeeded; otherwise, <see langword="null"/>.
     /// </param>
     /// <returns>
     /// <see langword="true"/> if the dictionary was successfully serialized;
     /// otherwise, <see langword="false"/>.
     /// </returns>
-    public override bool TrySerialize(IDictionary<TKey, TValue> input, out Bdictionary? output)
+    public override bool TrySerialize(IDictionary<TKey, TValue> input, out BDictionary? output)
     {
         output = default;
         if (input is null)
@@ -87,7 +87,7 @@ public sealed class DictionaryBencodeSerializer<TKey, TValue> : ReferenceTypeBen
 
         if (input.Count == 0)
         {
-            output = new Bdictionary(ImmutableDictionary<Bstring, IBobject>.Empty);
+            output = new BDictionary(ImmutableDictionary<BString, IBObject>.Empty);
             return true;
         }
 
@@ -97,7 +97,7 @@ public sealed class DictionaryBencodeSerializer<TKey, TValue> : ReferenceTypeBen
         if (!BencodeSerializer.TryGetSerializerForType(typeof(TValue), _options, out var valueSerializer))
             return false;
 
-        var result = new Dictionary<Bstring, IBobject>();
+        var result = new Dictionary<BString, IBObject>();
         foreach (var (key, value) in input)
         {
             if (key is null || value is null)
@@ -109,18 +109,18 @@ public sealed class DictionaryBencodeSerializer<TKey, TValue> : ReferenceTypeBen
             if (!valueSerializer!.TrySerialize(value, out var serializedValue))
                 return false;
 
-            var bkey = new Bstring(serializedKey!.ToBinaryEncoding());
+            var bkey = new BString(serializedKey!.ToBinaryEncoding());
 
             if (!result.TryAdd(bkey, serializedValue!))
                 return false;
         }
 
-        output = new Bdictionary(result);
+        output = new BDictionary(result);
         return true;
     }
 
     /// <summary>
-    /// Attempts to deserialize a <see cref="Bdictionary"/> into an
+    /// Attempts to deserialize a <see cref="BDictionary"/> into an
     /// <see cref="IDictionary{TKey, TValue}"/>.
     /// </summary>
     /// <remarks>
@@ -129,7 +129,7 @@ public sealed class DictionaryBencodeSerializer<TKey, TValue> : ReferenceTypeBen
     /// <typeparamref name="TKey"/>. Values are deserialized directly using the
     /// resolved value serializer.
     /// </remarks>
-    /// <param name="input">The <see cref="Bdictionary"/> to deserialize.</param>
+    /// <param name="input">The <see cref="BDictionary"/> to deserialize.</param>
     /// <param name="output">
     /// When this method returns, contains the resulting dictionary if
     /// deserialization succeeded; otherwise, <see langword="null"/>.
@@ -138,7 +138,7 @@ public sealed class DictionaryBencodeSerializer<TKey, TValue> : ReferenceTypeBen
     /// <see langword="true"/> if the dictionary was successfully deserialized;
     /// otherwise, <see langword="false"/>.
     /// </returns>
-    public override bool TryDeserialize(Bdictionary input, out IDictionary<TKey, TValue>? output)
+    public override bool TryDeserialize(BDictionary input, out IDictionary<TKey, TValue>? output)
     {
         output = default;
         if (input is null)
@@ -215,7 +215,7 @@ public sealed class DictionaryBencodeSerializer<TKey, TValue> : ReferenceTypeBen
         var orderedDictionary = input.Where(kvp => kvp.Key is not null && kvp.Value is not null).Select(kvp =>
         {
             keySerializer!.TrySerialize(kvp.Key!, out var serializedKey);
-            return (new Bstring(serializedKey!.ToBinaryEncoding()), kvp.Key!);
+            return (new BString(serializedKey!.ToBinaryEncoding()), kvp.Key!);
         }).ToDictionary().ToImmutableSortedDictionary();
 
         Span<byte> span = writer.GetSpan(1);
@@ -237,7 +237,7 @@ public sealed class DictionaryBencodeSerializer<TKey, TValue> : ReferenceTypeBen
 
     /// <summary>
     /// Decodes a dictionary key back into its original
-    /// <see cref="IBobject"/> representation.
+    /// <see cref="IBObject"/> representation.
     /// </summary>
     /// <remarks>
     /// Dictionary keys are stored as raw byte strings. This method interprets
@@ -245,7 +245,7 @@ public sealed class DictionaryBencodeSerializer<TKey, TValue> : ReferenceTypeBen
     /// <see cref="BencodeDecoder"/> so it can be deserialized into
     /// <typeparamref name="TKey"/>.
     /// </remarks>
-    private static bool TryDecodeKey(Bstring key, BencodeOptions options, out IBobject value)
+    private static bool TryDecodeKey(BString key, BencodeOptions options, out IBObject value)
     {
         value = default!;
 

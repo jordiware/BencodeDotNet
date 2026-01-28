@@ -2,7 +2,7 @@
 
 namespace Jordiware.BencodeDotNet.Tests.Objects;
 
-public class BintegerTests
+public class BIntegerTests
 {
     [Theory]
     [InlineData(0)]
@@ -12,7 +12,7 @@ public class BintegerTests
     [InlineData(long.MinValue)]
     public void ConstructorStoresValue(long value)
     {
-        var binteger = new Binteger(value);
+        var binteger = new BInteger(value);
 
         Assert.Equal(value, binteger.Value);
     }
@@ -25,7 +25,7 @@ public class BintegerTests
     [InlineData(long.MinValue, "i-9223372036854775808e")]
     public void ToStringReturnsValidBencode(long value, string expected)
     {
-        var binteger = new Binteger(value);
+        var binteger = new BInteger(value);
         var result = binteger.ToString();
 
         Assert.Equal(expected, result);
@@ -37,7 +37,7 @@ public class BintegerTests
     [InlineData(-123, new byte[] { 0x69, 0x2d, 0x31, 0x32, 0x33, 0x65 })]
     public void ToBinaryEncodingMatchesBencode(long value, byte[] expected)
     {
-        var binteger = new Binteger(value);
+        var binteger = new BInteger(value);
         var bytes = binteger.ToBinaryEncoding();
 
         Assert.Equal(expected, bytes);
@@ -46,8 +46,8 @@ public class BintegerTests
     [Fact]
     public void EqualsReturnsTrueForSameValue()
     {
-        var a = new Binteger(42);
-        var b = new Binteger(42);
+        var a = new BInteger(42);
+        var b = new BInteger(42);
 
         Assert.True(a.Equals(b));
     }
@@ -55,8 +55,8 @@ public class BintegerTests
     [Fact]
     public void EqualsReturnsFalseForDifferentValue()
     {
-        var a = new Binteger(42);
-        var b = new Binteger(43);
+        var a = new BInteger(42);
+        var b = new BInteger(43);
 
         Assert.False(a.Equals(b));
     }
@@ -64,7 +64,7 @@ public class BintegerTests
     [Fact]
     public void EqualsReturnsFalseForNull()
     {
-        var a = new Binteger(42);
+        var a = new BInteger(42);
 
         Assert.False(a.Equals(null));
     }
@@ -72,8 +72,8 @@ public class BintegerTests
     [Fact]
     public void CompareToReturnsZeroForEqualValues()
     {
-        var a = new Binteger(10);
-        var b = new Binteger(10);
+        var a = new BInteger(10);
+        var b = new BInteger(10);
 
         Assert.Equal(0, a.CompareTo(b));
     }
@@ -81,8 +81,8 @@ public class BintegerTests
     [Fact]
     public void CompareToReturnsPositiveWhenGreater()
     {
-        var a = new Binteger(10);
-        var b = new Binteger(5);
+        var a = new BInteger(10);
+        var b = new BInteger(5);
 
         Assert.True(a.CompareTo(b) > 0);
     }
@@ -90,8 +90,8 @@ public class BintegerTests
     [Fact]
     public void CompareToReturnsNegativeWhenLess()
     {
-        var a = new Binteger(5);
-        var b = new Binteger(10);
+        var a = new BInteger(5);
+        var b = new BInteger(10);
 
         Assert.True(a.CompareTo(b) < 0);
     }
@@ -99,7 +99,7 @@ public class BintegerTests
     [Fact]
     public void CompareToReturnsPositiveWhenOtherIsNull()
     {
-        var a = new Binteger(10);
+        var a = new BInteger(10);
 
         Assert.True(a.CompareTo(null) > 0);
     }
@@ -114,7 +114,7 @@ public class BintegerTests
     [InlineData(int.MinValue)]
     public void EncodedLengthMatchesBinaryEncodingLength(int value)
     {
-        var binteger = new Binteger(value);
+        var binteger = new BInteger(value);
 
         var encoded = binteger.ToBinaryEncoding();
         var length = binteger.GetEncodedLength();

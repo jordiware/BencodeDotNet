@@ -30,7 +30,7 @@ public class CharBencodeSerializerTests
     [InlineData(65535)]
     public void TryDeserializeSucceedsForValidCharRange(long value)
     {
-        var bencode = new Binteger(value);
+        var bencode = new BInteger(value);
 
         var result = Serializer.TryDeserialize(bencode, out var output);
 
@@ -45,7 +45,7 @@ public class CharBencodeSerializerTests
     [InlineData(long.MaxValue)]
     public void TryDeserializeFailsForOutOfRangeValues(long value)
     {
-        var bencode = new Binteger(value);
+        var bencode = new BInteger(value);
 
         var result = Serializer.TryDeserialize(bencode, out var output);
 

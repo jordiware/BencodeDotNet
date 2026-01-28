@@ -12,7 +12,7 @@ namespace Jordiware.BencodeDotNet;
 /// <see cref="BencodeIO"/> is an abstract base class that encapsulates the parsing logic
 /// for Bencoded data. It exposes a <see cref="TryParseBencode"/> method for derived classes
 /// to incrementally parse bytes from a <see cref="SequenceReader{Byte}"/> and construct
-/// <see cref="IBobject"/> instances using builder types.
+/// <see cref="IBObject"/> instances using builder types.
 /// </para>
 /// <para>
 /// Derived types are responsible for managing the input source (e.g., stream) and for
@@ -39,12 +39,12 @@ public abstract class BencodeIO
 
     /// <summary>
     /// Attempts to parse Bencoded data from a <see cref="SequenceReader{Byte}"/> and constructs
-    /// <see cref="IBobject"/> instances as they are completed.
+    /// <see cref="IBObject"/> instances as they are completed.
     /// </summary>
     /// <param name="reader">The sequence reader supplying the bytes to parse.</param>
     /// <param name="stack">A stack of <see cref="BobjectBuilder"/> instances used for nested structures.</param>
     /// <param name="value">
-    /// When this method returns <c>true</c>, contains the top-level <see cref="IBobject"/>
+    /// When this method returns <c>true</c>, contains the top-level <see cref="IBObject"/>
     /// that was fully parsed; otherwise, <c>null</c>.
     /// </param>
     /// <returns>
@@ -69,7 +69,7 @@ public abstract class BencodeIO
     /// or <see cref="InvalidOperationException"/> being thrown.
     /// </para>
     /// </remarks>
-    private protected bool TryParseBencode(ref SequenceReader<byte> reader, ref Stack<BobjectBuilder> stack, out IBobject? value)
+    private protected bool TryParseBencode(ref SequenceReader<byte> reader, ref Stack<BobjectBuilder> stack, out IBObject? value)
     {
         value = null;
 
@@ -139,7 +139,7 @@ public abstract class BencodeIO
         return false;
     }
 
-    private bool TryReadBintegerByte(ref BintegerBuilder bintegerBuilder, byte b, ref Stack<BobjectBuilder> stack, out IBobject? value)
+    private bool TryReadBintegerByte(ref BintegerBuilder bintegerBuilder, byte b, ref Stack<BobjectBuilder> stack, out IBObject? value)
     {
         value = null;
         switch (b)
@@ -159,7 +159,7 @@ public abstract class BencodeIO
         return false;
     }
 
-    private bool TryReadBstringByte(ref BstringBuilder bstringBuilder, byte b, ref Stack<BobjectBuilder> stack, out IBobject? value)
+    private bool TryReadBstringByte(ref BstringBuilder bstringBuilder, byte b, ref Stack<BobjectBuilder> stack, out IBObject? value)
     {
         value = null;
         if (b is >= Bencode.MinNumberCharacter and <= Bencode.MaxNumberCharacter && !bstringBuilder.IsLengthFinished)
@@ -188,13 +188,13 @@ public abstract class BencodeIO
         return false;
     }
 
-    private bool TryCloseStringBuilder(ref BstringBuilder bstringBuilder, ref Stack<BobjectBuilder> stack, out IBobject? value)
+    private bool TryCloseStringBuilder(ref BstringBuilder bstringBuilder, ref Stack<BobjectBuilder> stack, out IBObject? value)
     {
         value = null;
         if (bstringBuilder.IsCompleted)
         {
             var sb = (BstringBuilder)stack.Pop();
-            var bstring = (Bstring)sb.ToBobject();
+            var bstring = (BString)sb.ToBobject();
 
             if (AttachOrReturn(bstring, ref stack, out value))
                 return true;
@@ -202,7 +202,7 @@ public abstract class BencodeIO
         return false;
     }
 
-    private bool AttachOrReturn(IBobject obj, ref Stack<BobjectBuilder> stack, out IBobject? value)
+    private bool AttachOrReturn(IBObject obj, ref Stack<BobjectBuilder> stack, out IBObject? value)
     {
         value = null;
 
@@ -216,7 +216,7 @@ public abstract class BencodeIO
         return false;
     }
 
-    private void AttachToParent(BobjectBuilder parent, IBobject obj)
+    private void AttachToParent(BobjectBuilder parent, IBObject obj)
     {
         switch (parent)
         {
@@ -226,7 +226,7 @@ public abstract class BencodeIO
             case BdictionaryBuilder db:
                 if (db.IsExpectingKey)
                 {
-                    if (obj is Bstring bstring)
+                    if (obj is BString bstring)
                         db.PushKey(bstring);
                     else
                         throw new BencodeFormatException("String key expected");

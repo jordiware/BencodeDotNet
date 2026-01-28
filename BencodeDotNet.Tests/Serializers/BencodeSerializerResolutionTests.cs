@@ -11,14 +11,14 @@ public sealed class AttributedType
 {
 }
 
-public sealed class FakeAttributedSerializer : BencodeSerializer<AttributedType, IBobject>
+public sealed class FakeAttributedSerializer : BencodeSerializer<AttributedType, IBObject>
 {
-    public override bool TrySerialize(AttributedType input, out IBobject? output)
+    public override bool TrySerialize(AttributedType input, out IBObject? output)
     {
         throw new NotImplementedException();
     }
 
-    public override bool TryDeserialize(IBobject input, out AttributedType? output)
+    public override bool TryDeserialize(IBObject input, out AttributedType? output)
     {
         throw new NotImplementedException();
     }
@@ -38,14 +38,14 @@ public sealed class AttributedEnumerableType : IEnumerable<int>
     }
 }
 
-public sealed class FakeAttributedEnumerableSerializer : BencodeSerializer<AttributedEnumerableType, IBobject>
+public sealed class FakeAttributedEnumerableSerializer : BencodeSerializer<AttributedEnumerableType, IBObject>
 {
-    public override bool TrySerialize(AttributedEnumerableType input, out IBobject? output)
+    public override bool TrySerialize(AttributedEnumerableType input, out IBObject? output)
     {
         throw new NotImplementedException();
     }
 
-    public override bool TryDeserialize(IBobject input, out AttributedEnumerableType? output)
+    public override bool TryDeserialize(IBObject input, out AttributedEnumerableType? output)
     {
         throw new NotImplementedException();
     }

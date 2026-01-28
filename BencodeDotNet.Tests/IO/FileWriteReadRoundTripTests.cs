@@ -8,7 +8,7 @@ public class FileWriteReadRoundTripTests
     [Fact]
     public async Task WriteAndReadSingleIntegerFile()
     {
-        var value = new Binteger(42);
+        var value = new BInteger(42);
         var filePath = await CreateTempFilePath();
 
         try
@@ -19,7 +19,7 @@ public class FileWriteReadRoundTripTests
             var reader = new BencodeReader();
             await foreach (var readValue in reader.ReadMultipleFromFileAsync(filePath))
             {
-                var integer = Assert.IsType<Binteger>(readValue);
+                var integer = Assert.IsType<BInteger>(readValue);
                 Assert.Equal(42, integer.Value);
             }
         }
@@ -32,7 +32,7 @@ public class FileWriteReadRoundTripTests
     [Fact]
     public async Task WriteAndReadSingleStringFile()
     {
-        var value = new Bstring(Encoding.ASCII.GetBytes("spam"));
+        var value = new BString(Encoding.ASCII.GetBytes("spam"));
         var filePath = await CreateTempFilePath();
 
         try
@@ -43,7 +43,7 @@ public class FileWriteReadRoundTripTests
             var reader = new BencodeReader();
             await foreach (var readValue in reader.ReadMultipleFromFileAsync(filePath))
             {
-                var str = Assert.IsType<Bstring>(readValue);
+                var str = Assert.IsType<BString>(readValue);
                 Assert.Equal("spam", Encoding.ASCII.GetString(str.Value));
             }
         }
@@ -56,15 +56,15 @@ public class FileWriteReadRoundTripTests
     [Fact]
     public async Task WriteAndReadNestedStructuresFile()
     {
-        var value = new Blist(
+        var value = new BList(
         [
-            new Bdictionary(new Dictionary<Bstring, IBobject>() {
-                [new Bstring("x", Encoding.ASCII)] = new Binteger(9)
+            new BDictionary(new Dictionary<BString, IBObject>() {
+                [new BString("x", Encoding.ASCII)] = new BInteger(9)
             }),
-            new Blist(
+            new BList(
             [
-                new Binteger(1),
-                new Binteger(2)
+                new BInteger(1),
+                new BInteger(2)
             ])
         ]);
 
@@ -78,14 +78,14 @@ public class FileWriteReadRoundTripTests
             var reader = new BencodeReader();
             await foreach (var readValue in reader.ReadMultipleFromFileAsync(filePath))
             {
-                var list = Assert.IsType<Blist>(readValue);
+                var list = Assert.IsType<BList>(readValue);
 
-                var dict = Assert.IsType<Bdictionary>(list[0]);
-                Assert.Equal(9, ((Binteger)dict[new Bstring(Encoding.ASCII.GetBytes("x"))]).Value);
+                var dict = Assert.IsType<BDictionary>(list[0]);
+                Assert.Equal(9, ((BInteger)dict[new BString(Encoding.ASCII.GetBytes("x"))]).Value);
 
-                var innerList = Assert.IsType<Blist>(list[1]);
-                Assert.Equal(1, ((Binteger)innerList[0]).Value);
-                Assert.Equal(2, ((Binteger)innerList[1]).Value);
+                var innerList = Assert.IsType<BList>(list[1]);
+                Assert.Equal(1, ((BInteger)innerList[0]).Value);
+                Assert.Equal(2, ((BInteger)innerList[1]).Value);
             }
         }
         finally
@@ -103,8 +103,8 @@ public class FileWriteReadRoundTripTests
         {
             var writer = new BencodeWriter();
 
-            await writer.WriteToFileAsync(new Binteger(1), filePath, overwrite: true);
-            await writer.WriteToFileAsync(new Binteger(2), filePath, overwrite: true); // overwrite for single-file semantics
+            await writer.WriteToFileAsync(new BInteger(1), filePath, overwrite: true);
+            await writer.WriteToFileAsync(new BInteger(2), filePath, overwrite: true); // overwrite for single-file semantics
 
             var reader = new BencodeReader();
             int[] expected = { 2 }; // only last write survives overwrite
@@ -112,7 +112,7 @@ public class FileWriteReadRoundTripTests
 
             await foreach (var readValue in reader.ReadMultipleFromFileAsync(filePath))
             {
-                var integer = Assert.IsType<Binteger>(readValue);
+                var integer = Assert.IsType<BInteger>(readValue);
                 Assert.Equal(expected[i], integer.Value);
                 i++;
             }
@@ -126,7 +126,7 @@ public class FileWriteReadRoundTripTests
     [Fact]
     public async Task WriteAndReadGenericTypedObjectsFile()
     {
-        var value = new Binteger(123);
+        var value = new BInteger(123);
         var filePath = await CreateTempFilePath();
 
         try
@@ -137,7 +137,7 @@ public class FileWriteReadRoundTripTests
             var reader = new BencodeReader();
             await foreach (var readValue in reader.ReadMultipleFromFileAsync(filePath))
             {
-                Assert.Equal(123, ((Binteger)readValue).Value);
+                Assert.Equal(123, ((BInteger)readValue).Value);
             }
         }
         finally
@@ -154,14 +154,14 @@ public class FileWriteReadRoundTripTests
         try
         {
             var writer = new BencodeWriter();
-            await writer.WriteBencodeToFileAsync(new Binteger(7), filePath, overwrite: true);
+            await writer.WriteBencodeToFileAsync(new BInteger(7), filePath, overwrite: true);
 
             var reader = new BencodeReader();
             int count = 0;
 
             await foreach (var readValue in reader.ReadMultipleFromFileAsync(filePath))
             {
-                Assert.Equal(7, ((Binteger)readValue).Value);
+                Assert.Equal(7, ((BInteger)readValue).Value);
                 count++;
             }
 
@@ -176,7 +176,7 @@ public class FileWriteReadRoundTripTests
     [Fact]
     public async Task WriteAndReadFilePreservesByteEquality()
     {
-        var value = new Bstring(Encoding.ASCII.GetBytes("roundtrip"));
+        var value = new BString(Encoding.ASCII.GetBytes("roundtrip"));
         var filePath = await CreateTempFilePath();
 
         try

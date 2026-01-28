@@ -8,60 +8,60 @@ public class ReaderWriterRoundTripTests
     [Fact]
     public async Task RoundTripIntegerPreservesValue()
     {
-        var original = new Binteger(42);
+        var original = new BInteger(42);
 
         var result = await RoundTripAsync(original);
 
-        var integer = Assert.IsType<Binteger>(result);
+        var integer = Assert.IsType<BInteger>(result);
         Assert.Equal(original.Value, integer.Value);
     }
 
     [Fact]
     public async Task RoundTripStringPreservesValue()
     {
-        var original = new Bstring(Encoding.ASCII.GetBytes("spam"));
+        var original = new BString(Encoding.ASCII.GetBytes("spam"));
 
         var result = await RoundTripAsync(original);
 
-        var str = Assert.IsType<Bstring>(result);
+        var str = Assert.IsType<BString>(result);
         Assert.Equal(original.Value, str.Value);
     }
 
     [Fact]
     public async Task RoundTripListPreservesStructure()
     {
-        var original = new Blist(
+        var original = new BList(
         [
-            new Binteger(1),
-            new Bstring(Encoding.ASCII.GetBytes("eggs")),
-            new Binteger(3)
+            new BInteger(1),
+            new BString(Encoding.ASCII.GetBytes("eggs")),
+            new BInteger(3)
         ]);
 
         var result = await RoundTripAsync(original);
 
-        var list = Assert.IsType<Blist>(result);
+        var list = Assert.IsType<BList>(result);
         Assert.Equal(3, list.Count);
-        Assert.Equal(1, ((Binteger)list[0]).Value);
-        Assert.Equal("eggs", Encoding.ASCII.GetString(((Bstring)list[1]).Value));
-        Assert.Equal(3, ((Binteger)list[2]).Value);
+        Assert.Equal(1, ((BInteger)list[0]).Value);
+        Assert.Equal("eggs", Encoding.ASCII.GetString(((BString)list[1]).Value));
+        Assert.Equal(3, ((BInteger)list[2]).Value);
     }
 
     [Fact]
     public async Task RoundTripDictionaryPreservesKeysAndValues()
     {
-        var original = new Bdictionary(new Dictionary<Bstring, IBobject>()
+        var original = new BDictionary(new Dictionary<BString, IBObject>()
         {
-            [new Bstring(Encoding.ASCII.GetBytes("a"))] = new Binteger(1),
-            [new Bstring(Encoding.ASCII.GetBytes("b"))] = new Bstring(Encoding.ASCII.GetBytes("spam"))
+            [new BString(Encoding.ASCII.GetBytes("a"))] = new BInteger(1),
+            [new BString(Encoding.ASCII.GetBytes("b"))] = new BString(Encoding.ASCII.GetBytes("spam"))
         });
 
         var result = await RoundTripAsync(original);
 
-        var dict = Assert.IsType<Bdictionary>(result);
+        var dict = Assert.IsType<BDictionary>(result);
 
         Assert.Equal(2, dict.Count);
-        Assert.Equal(1, ((Binteger)dict[new Bstring(Encoding.ASCII.GetBytes("a"))]).Value);
-        Assert.Equal("spam", Encoding.ASCII.GetString(((Bstring)dict[new Bstring(Encoding.ASCII.GetBytes("b"))]).Value));
+        Assert.Equal(1, ((BInteger)dict[new BString(Encoding.ASCII.GetBytes("a"))]).Value);
+        Assert.Equal("spam", Encoding.ASCII.GetString(((BString)dict[new BString(Encoding.ASCII.GetBytes("b"))]).Value));
     }
 
     [Fact]
@@ -72,9 +72,9 @@ public class ReaderWriterRoundTripTests
 
         using var stream = new MemoryStream();
 
-        await writer.WriteBencodeAsync(new Binteger(1), stream);
-        await writer.WriteBencodeAsync(new Binteger(2), stream);
-        await writer.WriteBencodeAsync(new Binteger(3), stream);
+        await writer.WriteBencodeAsync(new BInteger(1), stream);
+        await writer.WriteBencodeAsync(new BInteger(2), stream);
+        await writer.WriteBencodeAsync(new BInteger(3), stream);
 
         stream.Position = 0;
 
@@ -84,46 +84,46 @@ public class ReaderWriterRoundTripTests
         var second = streamedArray[1];
         var third = streamedArray[2];
 
-        Assert.Equal(1, ((Binteger)first).Value);
-        Assert.Equal(2, ((Binteger)second).Value);
-        Assert.Equal(3, ((Binteger)third).Value);
+        Assert.Equal(1, ((BInteger)first).Value);
+        Assert.Equal(2, ((BInteger)second).Value);
+        Assert.Equal(3, ((BInteger)third).Value);
     }
 
     [Fact]
     public async Task NestedStructuresRoundTripCorrectly()
     {
-        var original = new Blist(
+        var original = new BList(
         [
-            new Bdictionary(new Dictionary<Bstring, IBobject>()
+            new BDictionary(new Dictionary<BString, IBObject>()
             {
-                [new Bstring(Encoding.ASCII.GetBytes("x"))] = new Binteger(9)
+                [new BString(Encoding.ASCII.GetBytes("x"))] = new BInteger(9)
             }),
-            new Blist(
+            new BList(
             [
-                new Binteger(1),
-                new Binteger(2)
+                new BInteger(1),
+                new BInteger(2)
             ])
         ]);
 
         var result = await RoundTripAsync(original);
 
-        var list = Assert.IsType<Blist>(result);
+        var list = Assert.IsType<BList>(result);
 
-        var dict = Assert.IsType<Bdictionary>(list[0]);
-        Assert.Equal(9, ((Binteger)dict[new Bstring(Encoding.ASCII.GetBytes("x"))]).Value);
+        var dict = Assert.IsType<BDictionary>(list[0]);
+        Assert.Equal(9, ((BInteger)dict[new BString(Encoding.ASCII.GetBytes("x"))]).Value);
 
-        var innerList = Assert.IsType<Blist>(list[1]);
-        Assert.Equal(1, ((Binteger)innerList[0]).Value);
-        Assert.Equal(2, ((Binteger)innerList[1]).Value);
+        var innerList = Assert.IsType<BList>(list[1]);
+        Assert.Equal(1, ((BInteger)innerList[0]).Value);
+        Assert.Equal(2, ((BInteger)innerList[1]).Value);
     }
 
     [Fact]
     public async Task WriterReaderWriterProducesStableEncoding()
     {
-        var original = new Blist(
+        var original = new BList(
         [
-            new Binteger(1),
-            new Bstring(Encoding.ASCII.GetBytes("spam"))
+            new BInteger(1),
+            new BString(Encoding.ASCII.GetBytes("spam"))
         ]);
 
         var writer = new BencodeWriter();
@@ -143,7 +143,7 @@ public class ReaderWriterRoundTripTests
         Assert.Equal(stream1.ToArray(), stream2.ToArray());
     }
 
-    private static async Task<IBobject?> RoundTripAsync(IBobject value)
+    private static async Task<IBObject?> RoundTripAsync(IBObject value)
     {
         var writer = new BencodeWriter();
         var reader = new BencodeReader();

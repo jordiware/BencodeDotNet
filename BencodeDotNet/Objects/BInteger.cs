@@ -19,7 +19,7 @@ namespace Jordiware.BencodeDotNet.Objects;
 /// </list>
 /// </para>
 /// </remarks>
-public sealed class Binteger : IBobject, IEquatable<Binteger>, IComparable<Binteger>
+public sealed class BInteger : IBObject, IEquatable<BInteger>, IComparable<BInteger>
 {
     private readonly long _value;
 
@@ -29,31 +29,31 @@ public sealed class Binteger : IBobject, IEquatable<Binteger>, IComparable<Binte
     public long Value => _value;
 
     /// <summary>
-    /// Initializes a new instance of the <see cref="Binteger"/> class
+    /// Initializes a new instance of the <see cref="BInteger"/> class
     /// with the specified numeric value.
     /// </summary>
     /// <param name="value">
     /// The integer value to encode.
     /// </param>
-    public Binteger(long value)
+    public BInteger(long value)
     {
         _value = value;
     }
 
     #region Interfaces implementation
     /// <summary>
-    /// Compares the current <see cref="Binteger"/> with another
-    /// <see cref="Binteger"/> instance.
+    /// Compares the current <see cref="BInteger"/> with another
+    /// <see cref="BInteger"/> instance.
     /// </summary>
     /// <param name="other">
-    /// The <see cref="Binteger"/> to compare with this instance.
+    /// The <see cref="BInteger"/> to compare with this instance.
     /// </param>
     /// <returns>
     /// A value less than zero if this instance is less than <paramref name="other"/>,
     /// zero if they are equal, or a value greater than zero if this instance
     /// is greater than <paramref name="other"/>.
     /// </returns>
-    public int CompareTo(Binteger? other)
+    public int CompareTo(BInteger? other)
     {
         if (other == null) return 1;
 
@@ -61,17 +61,17 @@ public sealed class Binteger : IBobject, IEquatable<Binteger>, IComparable<Binte
     }
 
     /// <summary>
-    /// Determines whether the current <see cref="Binteger"/> is equal to
-    /// another <see cref="Binteger"/>.
+    /// Determines whether the current <see cref="BInteger"/> is equal to
+    /// another <see cref="BInteger"/>.
     /// </summary>
     /// <param name="other">
-    /// The <see cref="Binteger"/> to compare with this instance.
+    /// The <see cref="BInteger"/> to compare with this instance.
     /// </param>
     /// <returns>
     /// <see langword="true"/> if the values are equal; otherwise,
     /// <see langword="false"/>.
     /// </returns>
-    public bool Equals(Binteger? other)
+    public bool Equals(BInteger? other)
     {
         if (other == null) return false;
 
@@ -79,7 +79,7 @@ public sealed class Binteger : IBobject, IEquatable<Binteger>, IComparable<Binte
     }
 
     /// <summary>
-    /// Serializes the current <see cref="Binteger"/> into its binary
+    /// Serializes the current <see cref="BInteger"/> into its binary
     /// Bencode representation.
     /// </summary>
     /// <returns>
@@ -166,7 +166,7 @@ public sealed class Binteger : IBobject, IEquatable<Binteger>, IComparable<Binte
     /// <inheritdoc />
     public override bool Equals(object? obj)
     {
-        return obj is Binteger other && Equals(other);
+        return obj is BInteger other && Equals(other);
     }
 
     /// <inheritdoc />

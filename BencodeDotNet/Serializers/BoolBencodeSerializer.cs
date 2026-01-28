@@ -11,7 +11,7 @@ namespace Jordiware.BencodeDotNet.Serializers;
 /// <remarks>
 /// <para>
 /// In Bencode, boolean values are not a native primitive. This serializer
-/// represents <see cref="bool"/> values as <see cref="Binteger"/> instances,
+/// represents <see cref="bool"/> values as <see cref="BInteger"/> instances,
 /// following the conventional mapping:
 /// </para>
 /// <list type="bullet">
@@ -24,37 +24,37 @@ namespace Jordiware.BencodeDotNet.Serializers;
 /// and causes the operation to fail.
 /// </para>
 /// </remarks>
-public sealed class BoolBencodeSerializer : UnmanagedTypeBencodeSerializer<bool, Binteger>
+public sealed class BoolBencodeSerializer : UnmanagedTypeBencodeSerializer<bool, BInteger>
 {
     /// <summary>
     /// Attempts to serialize a <see cref="bool"/> value into its
-    /// corresponding <see cref="Binteger"/> representation.
+    /// corresponding <see cref="BInteger"/> representation.
     /// </summary>
     /// <param name="input">
     /// The boolean value to serialize.
     /// </param>
     /// <param name="output">
     /// When this method returns <see langword="true"/>, contains a
-    /// <see cref="Binteger"/> with value <c>0</c> or <c>1</c>, depending on
+    /// <see cref="BInteger"/> with value <c>0</c> or <c>1</c>, depending on
     /// <paramref name="input"/>.
     /// </param>
     /// <returns>
     /// Always returns <see langword="true"/>, as all <see cref="bool"/> values
     /// can be represented using the integer mapping.
     /// </returns>
-    public override bool TrySerialize(bool input, out Binteger output)
+    public override bool TrySerialize(bool input, out BInteger output)
     {
         var value = input ? 1 : 0;
-        output = new Binteger(value);
+        output = new BInteger(value);
         return true;
     }
 
     /// <summary>
-    /// Attempts to deserialize a <see cref="Binteger"/> into a
+    /// Attempts to deserialize a <see cref="BInteger"/> into a
     /// <see cref="bool"/> value.
     /// </summary>
     /// <param name="input">
-    /// The <see cref="Binteger"/> instance to deserialize.
+    /// The <see cref="BInteger"/> instance to deserialize.
     /// </param>
     /// <param name="output">
     /// When this method returns <see langword="true"/>, contains the
@@ -69,7 +69,7 @@ public sealed class BoolBencodeSerializer : UnmanagedTypeBencodeSerializer<bool,
     /// boolean encodings and are explicitly rejected to ensure strict and
     /// predictable deserialization semantics.
     /// </remarks>
-    public override bool TryDeserialize(Binteger input, out bool output)
+    public override bool TryDeserialize(BInteger input, out bool output)
     {
         output = default;
 

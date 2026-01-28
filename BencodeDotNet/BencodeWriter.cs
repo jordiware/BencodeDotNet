@@ -71,7 +71,7 @@ public sealed class BencodeWriter : BencodeIO
     /// Stream lifetime management remains the responsibility of the caller.
     /// </para>
     /// </remarks>
-    public async Task WriteBencodeAsync(IBobject value, Stream output, CancellationToken cancellationToken = default)
+    public async Task WriteBencodeAsync(IBObject value, Stream output, CancellationToken cancellationToken = default)
     {
         if (value is null)
             throw new ArgumentNullException(nameof(value));
@@ -115,7 +115,7 @@ public sealed class BencodeWriter : BencodeIO
         if (!output.CanWrite)
             throw new BencodeIOException("The output stream must be writable.");
 
-        if (value is IBobject b)
+        if (value is IBObject b)
         {
             await WriteBencodeAsync(b, output, cancellationToken);
             return;
@@ -163,14 +163,14 @@ public sealed class BencodeWriter : BencodeIO
     /// <remarks>
     /// <para>
     /// This method creates or opens a file using asynchronous I/O and writes the raw
-    /// Bencode representation of the provided <see cref="IBobject"/> to it.
+    /// Bencode representation of the provided <see cref="IBObject"/> to it.
     /// </para>
     /// <para>
     /// The file stream is owned by this method and is disposed upon completion of the
     /// write operation.
     /// </para>
     /// </remarks>
-    public async Task WriteBencodeToFileAsync(IBobject value, string filePath, bool overwrite = false, CancellationToken cancellationToken = default)
+    public async Task WriteBencodeToFileAsync(IBObject value, string filePath, bool overwrite = false, CancellationToken cancellationToken = default)
     {
         if (value is null)
             throw new ArgumentNullException(nameof(value));
@@ -235,7 +235,7 @@ public sealed class BencodeWriter : BencodeIO
         if (string.IsNullOrWhiteSpace(filePath))
             throw new ArgumentNullException(nameof(filePath));
 
-        if (value is IBobject b)
+        if (value is IBObject b)
         {
             await WriteBencodeToFileAsync(b, filePath, overwrite, cancellationToken);
             return;

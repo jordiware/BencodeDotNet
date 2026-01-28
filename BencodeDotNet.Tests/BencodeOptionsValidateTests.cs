@@ -10,7 +10,7 @@ public class BencodeOptionsValidateTests
     {
         var options = new BencodeOptions(maxDepth: 4, maxContainerItems: 10, maxPayloadLength: 32);
 
-        var node = new Binteger(42);
+        var node = new BInteger(42);
 
         options.Validate(node);
     }
@@ -18,7 +18,7 @@ public class BencodeOptionsValidateTests
     [Fact]
     public void ValidateDoesNotThrowWhenPayloadLengthEqualsMaximum()
     {
-        var value = new Bstring("abcd", Encoding.UTF8); // "4:abcd" → length 6
+        var value = new BString("abcd", Encoding.UTF8); // "4:abcd" → length 6
 
         var options = new BencodeOptions(maxDepth: 1, maxContainerItems: 1, maxPayloadLength: value.GetEncodedLength());
 
@@ -28,7 +28,7 @@ public class BencodeOptionsValidateTests
     [Fact]
     public void ValidateThrowsWhenPayloadLengthExceeded()
     {
-        var value = new Bstring("abcd", Encoding.UTF8);
+        var value = new BString("abcd", Encoding.UTF8);
 
         var options = new BencodeOptions(maxDepth: 1, maxContainerItems: 1, maxPayloadLength: value.GetEncodedLength() - 1);
 
@@ -38,10 +38,10 @@ public class BencodeOptionsValidateTests
     [Fact]
     public void ValidateThrowsWhenMaxDepthExceeded()
     {
-        var node = new Blist([
-            new Blist([
-                new Blist([
-                    new Binteger(1)
+        var node = new BList([
+            new BList([
+                new BList([
+                    new BInteger(1)
                 ])
             ])
         ]);
@@ -54,9 +54,9 @@ public class BencodeOptionsValidateTests
     [Fact]
     public void ValidateDoesNotThrowWhenDepthEqualsMaximum()
     {
-        var node = new Blist([
-            new Blist([
-                new Binteger(1)
+        var node = new BList([
+            new BList([
+                new BInteger(1)
             ])
         ]);
 
@@ -68,10 +68,10 @@ public class BencodeOptionsValidateTests
     [Fact]
     public void ValidateThrowsWhenListItemCountExceeded()
     {
-        var list = new Blist([
-            new Binteger(1),
-            new Binteger(2),
-            new Binteger(3)
+        var list = new BList([
+            new BInteger(1),
+            new BInteger(2),
+            new BInteger(3)
         ]);
 
         var options = new BencodeOptions(maxDepth: 1, maxContainerItems: 2, maxPayloadLength: 64);
@@ -82,10 +82,10 @@ public class BencodeOptionsValidateTests
     [Fact]
     public void ValidateThrowsWhenDictionaryEntryCountExceeded()
     {
-        var dict = new Bdictionary(new Dictionary<Bstring, IBobject>
+        var dict = new BDictionary(new Dictionary<BString, IBObject>
         {
-            [new Bstring("a", Encoding.UTF8)] = new Binteger(1),
-            [new Bstring("b", Encoding.UTF8)] = new Binteger(2)
+            [new BString("a", Encoding.UTF8)] = new BInteger(1),
+            [new BString("b", Encoding.UTF8)] = new BInteger(2)
         });
 
         var options = new BencodeOptions(maxDepth: 1, maxContainerItems: 1, maxPayloadLength: 64);
@@ -96,15 +96,15 @@ public class BencodeOptionsValidateTests
     [Fact]
     public void ValidateCountsDictionaryKeyLengthTowardsPayload()
     {
-        var dict = new Bdictionary(new Dictionary<Bstring, IBobject>
+        var dict = new BDictionary(new Dictionary<BString, IBObject>
         {
-            [new Bstring("longkey", Encoding.UTF8)] = new Binteger(1)
+            [new BString("longkey", Encoding.UTF8)] = new BInteger(1)
         });
 
         var encodedLength =
             2 +
-            new Bstring("longkey", Encoding.UTF8).GetEncodedLength() +
-            new Binteger(1).GetEncodedLength();
+            new BString("longkey", Encoding.UTF8).GetEncodedLength() +
+            new BInteger(1).GetEncodedLength();
 
         var options = new BencodeOptions(maxDepth: 1, maxContainerItems: 1, maxPayloadLength: encodedLength - 1);
 
@@ -114,15 +114,15 @@ public class BencodeOptionsValidateTests
     [Fact]
     public void ValidateThrowsWhenNestedPayloadExceedsMaximum()
     {
-        var node = new Blist([
-            new Bstring("abcd", Encoding.UTF8),
-            new Bstring("abcd", Encoding.UTF8)
+        var node = new BList([
+            new BString("abcd", Encoding.UTF8),
+            new BString("abcd", Encoding.UTF8)
         ]);
 
         var encodedLength =
             2 +
-            new Bstring("abcd", Encoding.UTF8).GetEncodedLength() +
-            new Bstring("abcd", Encoding.UTF8).GetEncodedLength();
+            new BString("abcd", Encoding.UTF8).GetEncodedLength() +
+            new BString("abcd", Encoding.UTF8).GetEncodedLength();
 
         var options = new BencodeOptions(maxDepth: 2, maxContainerItems: 2, maxPayloadLength: encodedLength - 1);
 
@@ -132,13 +132,13 @@ public class BencodeOptionsValidateTests
     [Fact]
     public void ValidateDoesNotThrowForComplexValidStructure()
     {
-        var node = new Bdictionary(new Dictionary<Bstring, IBobject>
+        var node = new BDictionary(new Dictionary<BString, IBObject>
         {
-            [new Bstring("numbers", Encoding.UTF8)] = new Blist([
-                new Binteger(1),
-                new Binteger(2)
+            [new BString("numbers", Encoding.UTF8)] = new BList([
+                new BInteger(1),
+                new BInteger(2)
             ]),
-            [new Bstring("value", Encoding.UTF8)] = new Bstring("ok", Encoding.UTF8)
+            [new BString("value", Encoding.UTF8)] = new BString("ok", Encoding.UTF8)
         });
 
         var options = new BencodeOptions(maxDepth: 3, maxContainerItems: 4, maxPayloadLength: 128);

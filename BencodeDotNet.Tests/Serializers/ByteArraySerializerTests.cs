@@ -34,7 +34,7 @@ public class ByteArraySerializerTests
     {
         var serializer = new ByteArraySerializer();
 
-        bool result = serializer.TrySerialize(input, out Bstring? output);
+        bool result = serializer.TrySerialize(input, out BString? output);
 
         Assert.True(result);
         Assert.NotNull(output);
@@ -46,7 +46,7 @@ public class ByteArraySerializerTests
     public void TryDeserializeReturnsTrueAndPreservesData(byte[] expected)
     {
         var serializer = new ByteArraySerializer();
-        var bstring = new Bstring(expected);
+        var bstring = new BString(expected);
 
         bool result = serializer.TryDeserialize(bstring, out byte[]? output);
 
@@ -61,7 +61,7 @@ public class ByteArraySerializerTests
     {
         var serializer = new ByteArraySerializer();
 
-        bool serialized = serializer.TrySerialize(original, out Bstring? bstring);
+        bool serialized = serializer.TrySerialize(original, out BString? bstring);
         bool deserialized = serializer.TryDeserialize(bstring!, out byte[]? result);
 
         Assert.True(serialized);
@@ -75,7 +75,7 @@ public class ByteArraySerializerTests
     {
         var serializer = new ByteArraySerializer();
 
-        bool result = serializer.TrySerialize(null!, out Bstring? output);
+        bool result = serializer.TrySerialize(null!, out BString? output);
 
         Assert.False(result);
         Assert.Null(output);

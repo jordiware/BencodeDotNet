@@ -9,7 +9,7 @@ public class WriterTests
 {
     [Theory]
     [InlineData(null)]
-    public async Task WriteAsyncThrowsWhenBobjectIsNull(IBobject? value)
+    public async Task WriteAsyncThrowsWhenBobjectIsNull(IBObject? value)
     {
         var writer = new BencodeWriter();
         using var stream = new MemoryStream();
@@ -160,7 +160,7 @@ public class WriterTests
     }
 
     #region Test types
-    private sealed class TestBobject : IBobject
+    private sealed class TestBobject : IBObject
     {
         private readonly byte[] _data;
 
@@ -194,12 +194,12 @@ public class WriterTests
             _data = Encoding.ASCII.GetBytes(value);
         }
 
-        public bool TryDeserialize(IBobject input, out object? output)
+        public bool TryDeserialize(IBObject input, out object? output)
         {
             throw new NotImplementedException();
         }
 
-        public bool TrySerialize(object input, out IBobject? output)
+        public bool TrySerialize(object input, out IBObject? output)
         {
             throw new NotImplementedException();
         }

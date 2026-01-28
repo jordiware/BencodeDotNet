@@ -8,7 +8,7 @@ public class GuidBencodeSerializerTests
     private static readonly GuidBencodeSerializer Serializer = new();
 
     [Fact]
-    public void TrySerializeValidGuidReturnsTrueAndBstringWith16Bytes()
+    public void TrySerializeValidGuidReturnsTrueAndBStringWith16Bytes()
     {
         var guid = Guid.NewGuid();
 
@@ -20,11 +20,11 @@ public class GuidBencodeSerializerTests
     }
 
     [Fact]
-    public void TryDeserializeValidBstringWith16BytesReturnsTrueAndGuid()
+    public void TryDeserializeValidBStringWith16BytesReturnsTrueAndGuid()
     {
         var guid = Guid.NewGuid();
         var bytes = guid.ToByteArray();
-        var bstring = new Bstring(bytes);
+        var bstring = new BString(bytes);
 
         var result = Serializer.TryDeserialize(bstring, out var deserialized);
 
@@ -38,10 +38,10 @@ public class GuidBencodeSerializerTests
     [InlineData(15)]
     [InlineData(17)]
     [InlineData(32)]
-    public void TryDeserializeInvalidBstringLengthReturnsFalse(int length)
+    public void TryDeserializeInvalidBStringLengthReturnsFalse(int length)
     {
         var bytes = new byte[length];
-        var bstring = new Bstring(bytes);
+        var bstring = new BString(bytes);
 
         var result = Serializer.TryDeserialize(bstring, out var deserialized);
 
@@ -50,7 +50,7 @@ public class GuidBencodeSerializerTests
     }
 
     [Fact]
-    public void TryDeserializeNullBstringReturnsFalse()
+    public void TryDeserializeNullBStringReturnsFalse()
     {
         var result = Serializer.TryDeserialize(null!, out var deserialized);
 

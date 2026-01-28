@@ -41,7 +41,7 @@ public class EnumerableBencodeSerializerTests
 
     [Theory]
     [MemberData(nameof(IntEnumerableSerializationData))]
-    public void TrySerializeIntEnumerableProducesBlist(IEnumerable<int> input)
+    public void TrySerializeIntEnumerableProducesBList(IEnumerable<int> input)
     {
         var serializer = new EnumerableBencodeSerializer<int>();
 
@@ -54,7 +54,7 @@ public class EnumerableBencodeSerializerTests
 
     [Theory]
     [MemberData(nameof(StringEnumerableSerializationData))]
-    public void TrySerializeStringEnumerableProducesBlist(IEnumerable<string> input)
+    public void TrySerializeStringEnumerableProducesBList(IEnumerable<string> input)
     {
         var serializer = new EnumerableBencodeSerializer<string>();
 
@@ -79,7 +79,7 @@ public class EnumerableBencodeSerializerTests
 
     [Theory]
     [MemberData(nameof(IntEnumerableSerializationData))]
-    public void TryDeserializeBlistProducesEnumerableOfInt(IEnumerable<int> input)
+    public void TryDeserializeBListProducesEnumerableOfInt(IEnumerable<int> input)
     {
         var serializer = new EnumerableBencodeSerializer<int>();
 
@@ -94,7 +94,7 @@ public class EnumerableBencodeSerializerTests
 
     [Theory]
     [MemberData(nameof(StringEnumerableSerializationData))]
-    public void TryDeserializeBlistProducesEnumerableOfString(IEnumerable<string> input)
+    public void TryDeserializeBListProducesEnumerableOfString(IEnumerable<string> input)
     {
         var serializer = new EnumerableBencodeSerializer<string>();
 

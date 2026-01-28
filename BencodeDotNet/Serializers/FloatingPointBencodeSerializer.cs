@@ -32,35 +32,35 @@ namespace Jordiware.BencodeDotNet.Serializers;
 /// within the precision limits of the <see cref="float"/> type.
 /// </para>
 /// </remarks>
-public sealed class FloatBencodeSerializer : UnmanagedTypeBencodeSerializer<float, Bstring>
+public sealed class FloatBencodeSerializer : UnmanagedTypeBencodeSerializer<float, BString>
 {
     /// <summary>
-    /// Attempts to serialize a <see cref="float"/> value into a <see cref="Bstring"/>.
+    /// Attempts to serialize a <see cref="float"/> value into a <see cref="BString"/>.
     /// </summary>
     /// <param name="input">The <see cref="float"/> value to serialize.</param>
     /// <param name="output">
-    /// When this method returns <c>true</c>, contains the resulting <see cref="Bstring"/>
+    /// When this method returns <c>true</c>, contains the resulting <see cref="BString"/>
     /// representing the formatted floating-point value; otherwise, <c>null</c>.
     /// </param>
     /// <returns>
     /// <c>true</c> if the value was successfully formatted and serialized;
     /// otherwise, <c>false</c>.
     /// </returns>
-    public override bool TrySerialize(float input, out Bstring? output)
+    public override bool TrySerialize(float input, out BString? output)
     {
         output = default;
         if (FloatingPointNumberFormatter.TryFormat(input, out var s))
         {
-            output = new Bstring(s, Encoding.ASCII);
+            output = new BString(s, Encoding.ASCII);
             return true;
         }
         return false;
     }
 
     /// <summary>
-    /// Attempts to deserialize a <see cref="Bstring"/> into a <see cref="float"/> value.
+    /// Attempts to deserialize a <see cref="BString"/> into a <see cref="float"/> value.
     /// </summary>
-    /// <param name="input">The <see cref="Bstring"/> containing the textual representation.</param>
+    /// <param name="input">The <see cref="BString"/> containing the textual representation.</param>
     /// <param name="output">
     /// When this method returns <c>true</c>, contains the parsed <see cref="float"/> value;
     /// otherwise, the default value of <see cref="float"/>.
@@ -69,7 +69,7 @@ public sealed class FloatBencodeSerializer : UnmanagedTypeBencodeSerializer<floa
     /// <c>true</c> if the value was successfully parsed;
     /// otherwise, <c>false</c>.
     /// </returns>
-    public override bool TryDeserialize(Bstring input, out float output)
+    public override bool TryDeserialize(BString input, out float output)
     {
         var s = Encoding.ASCII.GetString(input.Value);
         return float.TryParse(s,
@@ -129,35 +129,35 @@ public sealed class FloatBencodeSerializer : UnmanagedTypeBencodeSerializer<floa
 /// within the precision guarantees of the <see cref="double"/> type.
 /// </para>
 /// </remarks>
-public sealed class DoubleBencodeSerializer : UnmanagedTypeBencodeSerializer<double, Bstring>
+public sealed class DoubleBencodeSerializer : UnmanagedTypeBencodeSerializer<double, BString>
 {
     /// <summary>
-    /// Attempts to serialize a <see cref="double"/> value into a <see cref="Bstring"/>.
+    /// Attempts to serialize a <see cref="double"/> value into a <see cref="BString"/>.
     /// </summary>
     /// <param name="input">The <see cref="double"/> value to serialize.</param>
     /// <param name="output">
-    /// When this method returns <c>true</c>, contains the resulting <see cref="Bstring"/>
+    /// When this method returns <c>true</c>, contains the resulting <see cref="BString"/>
     /// representing the formatted floating-point value; otherwise, <c>null</c>.
     /// </param>
     /// <returns>
     /// <c>true</c> if the value was successfully formatted and serialized;
     /// otherwise, <c>false</c>.
     /// </returns>
-    public override bool TrySerialize(double input, out Bstring? output)
+    public override bool TrySerialize(double input, out BString? output)
     {
         output = default;
         if (FloatingPointNumberFormatter.TryFormat(input, out var s))
         {
-            output = new Bstring(s, Encoding.ASCII);
+            output = new BString(s, Encoding.ASCII);
             return true;
         }
         return false;
     }
 
     /// <summary>
-    /// Attempts to deserialize a <see cref="Bstring"/> into a <see cref="double"/> value.
+    /// Attempts to deserialize a <see cref="BString"/> into a <see cref="double"/> value.
     /// </summary>
-    /// <param name="input">The <see cref="Bstring"/> containing the textual representation.</param>
+    /// <param name="input">The <see cref="BString"/> containing the textual representation.</param>
     /// <param name="output">
     /// When this method returns <c>true</c>, contains the parsed <see cref="double"/> value;
     /// otherwise, the default value of <see cref="double"/>.
@@ -166,7 +166,7 @@ public sealed class DoubleBencodeSerializer : UnmanagedTypeBencodeSerializer<dou
     /// <c>true</c> if the value was successfully parsed;
     /// otherwise, <c>false</c>.
     /// </returns>
-    public override bool TryDeserialize(Bstring input, out double output)
+    public override bool TryDeserialize(BString input, out double output)
     {
         var s = Encoding.ASCII.GetString(input.Value);
         return double.TryParse(s,
@@ -222,35 +222,35 @@ public sealed class DoubleBencodeSerializer : UnmanagedTypeBencodeSerializer<dou
 /// independent of the current culture.
 /// </para>
 /// </remarks>
-public sealed class DecimalBencodeSerializer : UnmanagedTypeBencodeSerializer<decimal, Bstring>
+public sealed class DecimalBencodeSerializer : UnmanagedTypeBencodeSerializer<decimal, BString>
 {
     /// <summary>
-    /// Attempts to serialize a <see cref="decimal"/> value into a <see cref="Bstring"/>.
+    /// Attempts to serialize a <see cref="decimal"/> value into a <see cref="BString"/>.
     /// </summary>
     /// <param name="input">The <see cref="decimal"/> value to serialize.</param>
     /// <param name="output">
-    /// When this method returns <c>true</c>, contains the resulting <see cref="Bstring"/>
+    /// When this method returns <c>true</c>, contains the resulting <see cref="BString"/>
     /// representing the formatted decimal value; otherwise, <c>null</c>.
     /// </param>
     /// <returns>
     /// <c>true</c> if the value was successfully formatted and serialized;
     /// otherwise, <c>false</c>.
     /// </returns>
-    public override bool TrySerialize(decimal input, out Bstring? output)
+    public override bool TrySerialize(decimal input, out BString? output)
     {
         output = default;
         if (FloatingPointNumberFormatter.TryFormat(input, out var s))
         {
-            output = new Bstring(s, Encoding.ASCII);
+            output = new BString(s, Encoding.ASCII);
             return true;
         }
         return false;
     }
 
     /// <summary>
-    /// Attempts to deserialize a <see cref="Bstring"/> into a <see cref="decimal"/> value.
+    /// Attempts to deserialize a <see cref="BString"/> into a <see cref="decimal"/> value.
     /// </summary>
-    /// <param name="input">The <see cref="Bstring"/> containing the textual representation.</param>
+    /// <param name="input">The <see cref="BString"/> containing the textual representation.</param>
     /// <param name="output">
     /// When this method returns <c>true</c>, contains the parsed <see cref="decimal"/> value;
     /// otherwise, the default value of <see cref="decimal"/>.
@@ -259,7 +259,7 @@ public sealed class DecimalBencodeSerializer : UnmanagedTypeBencodeSerializer<de
     /// <c>true</c> if the value was successfully parsed;
     /// otherwise, <c>false</c>.
     /// </returns>
-    public override bool TryDeserialize(Bstring input, out decimal output)
+    public override bool TryDeserialize(BString input, out decimal output)
     {
         var s = Encoding.ASCII.GetString(input.Value);
         return decimal.TryParse(s,

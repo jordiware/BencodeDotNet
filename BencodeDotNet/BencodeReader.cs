@@ -54,7 +54,7 @@ public sealed class BencodeReader : BencodeIO
     /// A cancellation token used to cancel the asynchronous enumeration.
     /// </param>
     /// <returns>
-    /// An asynchronous sequence of decoded <see cref="IBobject"/> instances, yielded
+    /// An asynchronous sequence of decoded <see cref="IBObject"/> instances, yielded
     /// as soon as each top-level object is fully parsed and validated.
     /// </returns>
     /// <exception cref="ArgumentNullException">
@@ -78,7 +78,7 @@ public sealed class BencodeReader : BencodeIO
     /// while a Bencode object is only partially read, a <see cref="BencodeFormatException"/> is thrown.
     /// </para>
     /// </remarks>
-    public async IAsyncEnumerable<IBobject> ReadMultipleAsync(Stream stream, [EnumeratorCancellation] CancellationToken ct = default)
+    public async IAsyncEnumerable<IBObject> ReadMultipleAsync(Stream stream, [EnumeratorCancellation] CancellationToken ct = default)
     {
         if (stream is null)
             throw new ArgumentNullException(nameof(stream));
@@ -134,7 +134,7 @@ public sealed class BencodeReader : BencodeIO
     /// A readable stream containing one or more Bencode-encoded objects.
     /// </param>
     /// <param name="serializer">
-    /// An optional serializer used to convert decoded <see cref="IBobject"/> instances
+    /// An optional serializer used to convert decoded <see cref="IBObject"/> instances
     /// into values of type <typeparamref name="TType"/>. If <c>null</c>, a serializer is
     /// resolved using the configured serializer discovery mechanism.
     /// </param>
@@ -180,7 +180,7 @@ public sealed class BencodeReader : BencodeIO
     }
 
     /// <summary>
-    /// Reads Bencoded data from a file and emits fully parsed top-level <see cref="IBobject"/> instances.
+    /// Reads Bencoded data from a file and emits fully parsed top-level <see cref="IBObject"/> instances.
     /// </summary>
     /// <param name="filePath">
     /// The path to the file containing Bencoded data. Must not be <c>null</c>, empty, or whitespace.
@@ -200,7 +200,7 @@ public sealed class BencodeReader : BencodeIO
     /// should not be used concurrently by multiple consumers.
     /// </para>
     /// </remarks>
-    public async IAsyncEnumerable<IBobject> ReadMultipleFromFileAsync(string filePath, [EnumeratorCancellation] CancellationToken ct = default)
+    public async IAsyncEnumerable<IBObject> ReadMultipleFromFileAsync(string filePath, [EnumeratorCancellation] CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(filePath))
             throw new ArgumentException("File path can not be empty.");
@@ -274,7 +274,7 @@ public sealed class BencodeReader : BencodeIO
     /// A cancellation token used to cancel the asynchronous read operation.
     /// </param>
     /// <returns>
-    /// A task that completes with the decoded <see cref="IBobject"/>.
+    /// A task that completes with the decoded <see cref="IBObject"/>.
     /// </returns>
     /// <exception cref="ArgumentNullException">
     /// Thrown when <paramref name="stream"/> is <c>null</c>.
@@ -292,7 +292,7 @@ public sealed class BencodeReader : BencodeIO
     /// <exception cref="BencodeException">
     /// Thrown when no complete Bencode object can be read from the stream.
     /// </exception>
-    public async Task<IBobject> ReadSingleAsync(Stream stream, CancellationToken ct = default)
+    public async Task<IBObject> ReadSingleAsync(Stream stream, CancellationToken ct = default)
     {
         if (stream is null)
             throw new ArgumentNullException(nameof(stream));
@@ -304,7 +304,7 @@ public sealed class BencodeReader : BencodeIO
 
         var reader = PipeReader.Create(stream, new StreamPipeReaderOptions(leaveOpen: true));
         ReadResult result = default!;
-        IBobject? bobject = null;
+        IBObject? bobject = null;
         try
         {
             while (!result.IsCompleted)
@@ -356,7 +356,7 @@ public sealed class BencodeReader : BencodeIO
     /// A readable stream containing at least one complete Bencode-encoded object.
     /// </param>
     /// <param name="serializer">
-    /// An optional serializer used to convert the decoded <see cref="IBobject"/> into
+    /// An optional serializer used to convert the decoded <see cref="IBObject"/> into
     /// <typeparamref name="TType"/>. If <c>null</c>, a serializer is resolved automatically.
     /// </param>
     /// <param name="ct">
@@ -410,7 +410,7 @@ public sealed class BencodeReader : BencodeIO
     /// A cancellation token used to cancel the asynchronous read operation.
     /// </param>
     /// <returns>
-    /// A task that completes with the decoded <see cref="IBobject"/>.
+    /// A task that completes with the decoded <see cref="IBObject"/>.
     /// </returns>
     /// <exception cref="ArgumentException">
     /// Thrown when <paramref name="filePath"/> is <c>null</c>, empty, or whitespace.
@@ -418,7 +418,7 @@ public sealed class BencodeReader : BencodeIO
     /// <exception cref="BencodeFormatException">
     /// Thrown when the file contains malformed Bencode data or ends unexpectedly.
     /// </exception>
-    public async Task<IBobject> ReadSingleFromFileAsync(string filePath, CancellationToken ct = default)
+    public async Task<IBObject> ReadSingleFromFileAsync(string filePath, CancellationToken ct = default)
     {
         if (string.IsNullOrWhiteSpace(filePath))
             throw new ArgumentException("File path can not be empty.");
@@ -478,10 +478,10 @@ public sealed class BencodeReader : BencodeIO
         return await ReadSingleAsync<TType>(stream, serializer, ct);
     }
 
-    private IEnumerable<IBobject> ParseBufferForMultiple(ReadOnlySequence<byte> buffer, Stack<BobjectBuilder> stack)
+    private IEnumerable<IBObject> ParseBufferForMultiple(ReadOnlySequence<byte> buffer, Stack<BobjectBuilder> stack)
     {
         var seqReader = new SequenceReader<byte>(buffer);
-        var results = new List<IBobject>();
+        var results = new List<IBObject>();
 
         while (TryParseBencode(ref seqReader, ref stack, out var element))
         {
@@ -492,7 +492,7 @@ public sealed class BencodeReader : BencodeIO
         return results;
     }
 
-    private IBobject? ParseBufferForSingle(ReadOnlySequence<byte> buffer, Stack<BobjectBuilder> stack)
+    private IBObject? ParseBufferForSingle(ReadOnlySequence<byte> buffer, Stack<BobjectBuilder> stack)
     {
         var seqReader = new SequenceReader<byte>(buffer);
 

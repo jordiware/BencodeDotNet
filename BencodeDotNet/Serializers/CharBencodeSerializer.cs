@@ -6,7 +6,7 @@ namespace Jordiware.BencodeDotNet.Serializers;
 
 /// <summary>
 /// Provides serialization and deserialization support for <see cref="char"/> values
-/// using the Bencode <see cref="Binteger"/> representation.
+/// using the Bencode <see cref="BInteger"/> representation.
 /// </summary>
 /// <remarks>
 /// <para>
@@ -15,7 +15,7 @@ namespace Jordiware.BencodeDotNet.Serializers;
 /// </para>
 /// <para>
 /// This serializer maps <see cref="char"/> values directly to their numeric
-/// representation using <see cref="Binteger"/>, ensuring lossless, encoding-agnostic,
+/// representation using <see cref="BInteger"/>, ensuring lossless, encoding-agnostic,
 /// and round-trip-safe conversion.
 /// </para>
 /// <para>
@@ -24,33 +24,33 @@ namespace Jordiware.BencodeDotNet.Serializers;
 /// (<see cref="char.MinValue"/> to <see cref="char.MaxValue"/>).
 /// </para>
 /// </remarks>
-public sealed class CharBencodeSerializer : UnmanagedTypeBencodeSerializer<char, Binteger>
+public sealed class CharBencodeSerializer : UnmanagedTypeBencodeSerializer<char, BInteger>
 {
     /// <summary>
-    /// Attempts to serialize a <see cref="char"/> value into a <see cref="Binteger"/>.
+    /// Attempts to serialize a <see cref="char"/> value into a <see cref="BInteger"/>.
     /// </summary>
     /// <param name="input">
     /// The <see cref="char"/> value to serialize.
     /// </param>
     /// <param name="output">
     /// When this method returns <see langword="true"/>, contains the resulting
-    /// <see cref="Binteger"/> representation of <paramref name="input"/>.
+    /// <see cref="BInteger"/> representation of <paramref name="input"/>.
     /// </param>
     /// <returns>
     /// Always returns <see langword="true"/>, as all <see cref="char"/> values
-    /// are valid and serializable as <see cref="Binteger"/>.
+    /// are valid and serializable as <see cref="BInteger"/>.
     /// </returns>
-    public override bool TrySerialize(char input, out Binteger? output)
+    public override bool TrySerialize(char input, out BInteger? output)
     {
-        output = new Binteger(input);
+        output = new BInteger(input);
         return true;
     }
 
     /// <summary>
-    /// Attempts to deserialize a <see cref="Binteger"/> into a <see cref="char"/>.
+    /// Attempts to deserialize a <see cref="BInteger"/> into a <see cref="char"/>.
     /// </summary>
     /// <param name="input">
-    /// The <see cref="Binteger"/> instance containing the numeric value to deserialize.
+    /// The <see cref="BInteger"/> instance containing the numeric value to deserialize.
     /// </param>
     /// <param name="output">
     /// When this method returns <see langword="true"/>, contains the deserialized
@@ -60,7 +60,7 @@ public sealed class CharBencodeSerializer : UnmanagedTypeBencodeSerializer<char,
     /// <see langword="true"/> if the integer value is within the valid range of
     /// <see cref="char"/>; otherwise, <see langword="false"/>.
     /// </returns>
-    public override bool TryDeserialize(Binteger input, out char output)
+    public override bool TryDeserialize(BInteger input, out char output)
     {
         output = default;
 

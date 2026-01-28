@@ -79,7 +79,7 @@ public class DateOnlyBencodeSerializerTests
     [InlineData(long.MaxValue)]
     public void DeserializeFailsForOutOfDateOnlyRangeValues(long dayNumber)
     {
-        var binteger = new Binteger(dayNumber);
+        var binteger = new BInteger(dayNumber);
 
         Assert.False(Serializer.TryDeserialize(binteger, out _));
     }
@@ -123,7 +123,7 @@ public class TimeOnlyBencodeSerializerTests
     [InlineData(long.MaxValue)]
     public void DeserializeFailsForOutOfTimeOnlyRangeValues(long ticks)
     {
-        var binteger = new Binteger(ticks);
+        var binteger = new BInteger(ticks);
 
         Assert.False(Serializer.TryDeserialize(binteger, out _));
     }
@@ -167,7 +167,7 @@ public class TimeSpanBencodeSerializerTests
     [InlineData(long.MinValue)]
     public void DeserializeFailsForOutOfTimeSpanRangeValues(long ticks)
     {
-        var binteger = new Binteger(ticks);
+        var binteger = new BInteger(ticks);
 
         // Only fail if the ticks exceed TimeSpan bounds
         var success = Serializer.TryDeserialize(binteger, out _);

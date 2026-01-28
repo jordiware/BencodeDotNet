@@ -158,10 +158,10 @@ internal sealed class BstringBuilder : BobjectBuilder
 
     /// <summary>
     /// Finalizes the string and returns the corresponding
-    /// <see cref="Bstring"/> instance.
+    /// <see cref="BString"/> instance.
     /// </summary>
     /// <returns>
-    /// A fully constructed <see cref="Bstring"/>.
+    /// A fully constructed <see cref="BString"/>.
     /// </returns>
     /// <exception cref="ObjectDisposedException">
     /// Thrown if the builder has been disposed.
@@ -169,7 +169,7 @@ internal sealed class BstringBuilder : BobjectBuilder
     /// <exception cref="BencodeFormatException">
     /// Thrown if the length or payload is incomplete.
     /// </exception>
-    public override IBobject ToBobject()
+    public override IBObject ToBobject()
     {
         ThrowIfDisposed();
 
@@ -179,7 +179,7 @@ internal sealed class BstringBuilder : BobjectBuilder
         if (!IsCompleted)
             throw new BencodeFormatException("Unfinished value");
 
-        return new Bstring(_bytes);
+        return new BString(_bytes);
     }
 
     /// <summary>

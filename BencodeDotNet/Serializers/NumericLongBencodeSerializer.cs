@@ -10,12 +10,12 @@ namespace Jordiware.BencodeDotNet.Serializers;
 /// </summary>
 /// <remarks>
 /// This serializer provides a direct, lossless mapping between <see cref="long"/>
-/// values and <see cref="Binteger"/> objects.
+/// values and <see cref="BInteger"/> objects.
 /// 
 /// No range validation is required during deserialization, as the Bencode integer
 /// representation is natively backed by a 64-bit signed integer.
 /// </remarks>
-public sealed class LongBencodeSerializer : UnmanagedTypeBencodeSerializer<long, Binteger>
+public sealed class LongBencodeSerializer : UnmanagedTypeBencodeSerializer<long, BInteger>
 {
     /// <summary>
     /// Serializes a 64-bit signed integer into a Bencode integer.
@@ -25,15 +25,15 @@ public sealed class LongBencodeSerializer : UnmanagedTypeBencodeSerializer<long,
     /// </param>
     /// <param name="output">
     /// When this method returns <see langword="true"/>, contains the serialized
-    /// <see cref="Binteger"/> instance.
+    /// <see cref="BInteger"/> instance.
     /// </param>
     /// <returns>
     /// Always returns <see langword="true"/>, as all <see cref="long"/> values are
     /// representable in Bencode.
     /// </returns>
-    public override bool TrySerialize(long input, out Binteger output)
+    public override bool TrySerialize(long input, out BInteger output)
     {
-        output = new Binteger(input);
+        output = new BInteger(input);
         return true;
     }
 
@@ -41,7 +41,7 @@ public sealed class LongBencodeSerializer : UnmanagedTypeBencodeSerializer<long,
     /// Deserializes a Bencode integer into a 64-bit signed integer.
     /// </summary>
     /// <param name="input">
-    /// The <see cref="Binteger"/> instance to deserialize.
+    /// The <see cref="BInteger"/> instance to deserialize.
     /// </param>
     /// <param name="output">
     /// When this method returns <see langword="true"/>, contains the deserialized
@@ -50,7 +50,7 @@ public sealed class LongBencodeSerializer : UnmanagedTypeBencodeSerializer<long,
     /// <returns>
     /// Always returns <see langword="true"/>, as the conversion is lossless.
     /// </returns>
-    public override bool TryDeserialize(Binteger input, out long output)
+    public override bool TryDeserialize(BInteger input, out long output)
     {
         output = input.Value;
         return true;
@@ -87,7 +87,7 @@ public sealed class LongBencodeSerializer : UnmanagedTypeBencodeSerializer<long,
 /// 
 /// Deserialization additionally enforces that the encoded value is non-negative.
 /// </remarks>
-public sealed class UlongBencodeSerializer : UnmanagedTypeBencodeSerializer<ulong, Binteger>
+public sealed class UlongBencodeSerializer : UnmanagedTypeBencodeSerializer<ulong, BInteger>
 {
     /// <summary>
     /// Attempts to serialize a 64-bit unsigned integer into a Bencode integer.
@@ -97,20 +97,20 @@ public sealed class UlongBencodeSerializer : UnmanagedTypeBencodeSerializer<ulon
     /// </param>
     /// <param name="output">
     /// When this method returns <see langword="true"/>, contains the serialized
-    /// <see cref="Binteger"/> instance; otherwise, <see langword="null"/>.
+    /// <see cref="BInteger"/> instance; otherwise, <see langword="null"/>.
     /// </param>
     /// <returns>
     /// <see langword="true"/> if <paramref name="input"/> is less than or equal to
     /// <see cref="long.MaxValue"/>; otherwise, <see langword="false"/>.
     /// </returns>
-    public override bool TrySerialize(ulong input, out Binteger? output)
+    public override bool TrySerialize(ulong input, out BInteger? output)
     {
         output = default;
 
         if (input > long.MaxValue)
             return false;
 
-        output = new Binteger((long)input);
+        output = new BInteger((long)input);
         return true;
     }
 
@@ -118,7 +118,7 @@ public sealed class UlongBencodeSerializer : UnmanagedTypeBencodeSerializer<ulon
     /// Attempts to deserialize a Bencode integer into a 64-bit unsigned integer.
     /// </summary>
     /// <param name="input">
-    /// The <see cref="Binteger"/> instance to deserialize.
+    /// The <see cref="BInteger"/> instance to deserialize.
     /// </param>
     /// <param name="output">
     /// When this method returns <see langword="true"/>, contains the deserialized
@@ -128,7 +128,7 @@ public sealed class UlongBencodeSerializer : UnmanagedTypeBencodeSerializer<ulon
     /// <see langword="true"/> if the encoded value is non-negative; otherwise,
     /// <see langword="false"/>.
     /// </returns>
-    public override bool TryDeserialize(Binteger input, out ulong output)
+    public override bool TryDeserialize(BInteger input, out ulong output)
     {
         output = default;
 

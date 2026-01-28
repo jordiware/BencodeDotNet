@@ -136,7 +136,7 @@ public class WriterStressTests
     }
 
     #region Test types
-    private sealed class TestBobject : IBobject
+    private sealed class TestBobject : IBObject
     {
         private readonly byte[] _data;
         private readonly int _delayMs;
@@ -177,12 +177,12 @@ public class WriterStressTests
             _delayMs = delayMs;
         }
 
-        public bool TryDeserialize(IBobject input, out object? output)
+        public bool TryDeserialize(IBObject input, out object? output)
         {
             throw new NotImplementedException();
         }
 
-        public bool TrySerialize(object input, out IBobject? output)
+        public bool TrySerialize(object input, out IBObject? output)
         {
             throw new NotImplementedException();
         }
