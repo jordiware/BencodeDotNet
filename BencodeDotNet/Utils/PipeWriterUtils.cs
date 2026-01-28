@@ -140,11 +140,11 @@ internal static class PipeWriterUtils
         int length = data.Length;
         do
         {
-            prefixBuffer[--pos] = (byte)('0' + (length % 10));
+            prefixBuffer[--pos] = (byte)(Bencode.MinNumberCharacter + (length % 10));
             length /= 10;
         } while (length > 0);
 
-        prefixBuffer[--pos] = (byte)':';
+        prefixBuffer[--pos] = Bencode.StringPaddingCharacter;
         int prefixLength = prefixBuffer.Length - pos;
 
         var span = writer.GetSpan(prefixLength);
@@ -198,10 +198,10 @@ internal static class PipeWriterUtils
         int len = byteCount;
         do
         {
-            prefixBuffer[--pos] = (byte)('0' + (len % 10));
+            prefixBuffer[--pos] = (byte)(Bencode.MinNumberCharacter + (len % 10));
             len /= 10;
         } while (len > 0);
-        prefixBuffer[--pos] = (byte)':';
+        prefixBuffer[--pos] = Bencode.StringPaddingCharacter;
         int prefixLength = prefixBuffer.Length - pos;
 
         var span = writer.GetSpan(prefixLength);
