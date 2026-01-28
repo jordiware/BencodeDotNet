@@ -1,4 +1,17 @@
-﻿# v0.3.0
+﻿# v1.0.0-preview1
+
+## Changed
+- Improved performance in async writing
+- Bencode primitive type names' capitalization: 
+  - `IBobject` → `IBObject`
+  - `Binteger` → `BInteger`
+  - `Bstring` → `BString`
+  - `Blist` → `BList`
+  - `Bdictionary` → `BDictionary`
+
+---
+
+# v0.3.0
 
 ## Added
 - Asynchronous Stream-based reader and writer APIs
@@ -12,6 +25,8 @@
 - `BencodeDecoder` file/stream async reads moved to `BencodeReader`
 - Changed thrown exceptions to custom `BencodeException` types
 
+---
+
 # v0.2.0
 
 ## Added
@@ -24,10 +39,14 @@
 ## Changed
 - Decoding and validation behavior now consistently honors `BencodeOptions`
 
+---
+
 # v0.1.1
 
 ## Fixed
 - Minor edge case handling issues in decoding logic
+
+---
 
 # v0.1.0
 

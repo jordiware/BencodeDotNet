@@ -4,8 +4,6 @@ BencodeDotNet is a modern, high‑performance **Bencode** library for .NET.
 
 It provides a **correct, strict, and memory‑efficient** implementation of the Bencode specification, designed for production‑grade parsing and encoding of large or streaming inputs such as BitTorrent metadata and network payloads.
 
-> **Project status**: BencodeDotNet is now in **v0.3**, fully locked and pre‑v1.0. The core architecture, reading, and writing APIs are stable, validated, and production-ready.
-
 ---
 
 ## Features
@@ -28,10 +26,10 @@ BencodeDotNet implements the four canonical Bencode data types:
 
 | Bencode Type | .NET Type     |
 | ------------ | ------------- |
-| Integer      | `Binteger`    |
-| Byte String  | `Bstring`     |
-| List         | `Blist`       |
-| Dictionary   | `Bdictionary` |
+| Integer      | `BInteger`    |
+| Byte String  | `BString`     |
+| List         | `BList`       |
+| Dictionary   | `BDictionary` |
 
 This allows uniform handling of decoded values while preserving strong typing and explicit type semantics.
 
